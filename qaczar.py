@@ -127,10 +127,11 @@ def first_visitation():
 
 def process_request(request):
     log.info(f'Processing request: {request}')
-    if request == 'reset':
-        for table in enlist_topics():
-            forget(table)
-        return 'Reset complete.'
+    # Get the name of all module functions.
+    functions = [f for f in globals() if callable(globals()[f]) and not f.startswith('_')]
+    if request in functions:
+        return globals()[request]()
+    
     
 
 def modulate_facade():
