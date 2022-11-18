@@ -116,24 +116,6 @@ if __name__ == "__main__":
 
 # --- FACADE ELEMENTS ---
 
-def first_visitation():
-    global RUNLEVEL
-    assert RUNLEVEL == 2, "Improper first visitation."
-    with open(__file__, 'r') as f:
-        remember('source', f.read())
-    log.info(f'First visit in {time.time() - EPOCH}s')
-    RUNLEVEL = 3
-
-
-def process_request(request):
-    log.info(f'Processing request: {request}')
-    # Get the name of all module functions.
-    functions = [f for f in globals() if callable(globals()[f]) and not f.startswith('_')]
-    if request in functions:
-        return globals()[request]()
-    
-    
-
 def modulate_facade():
     BASE_CSS = '''
         body { 
@@ -256,6 +238,15 @@ def api_request():
 
 # --- UPKEEP ---
 
+def first_visitation():
+    global RUNLEVEL
+    assert RUNLEVEL == 2, "Improper first visitation."
+    with open(__file__, 'r') as f:
+        remember('source', f.read())
+    log.info(f'First visit in {time.time() - EPOCH}s')
+    RUNLEVEL = 3
+
+
 def upkeep_cycle():
     while True:
         if RUNLEVEL < 3:
@@ -264,6 +255,19 @@ def upkeep_cycle():
         # Avoid calling the database, use HTTP API calls instead.
         os.system(f'git add . && git commit -m "Upkeep commit" && git push')
 
+
+# --- REQUEST PROCESSING ---
+
+def process_request(request):
+    log.info(f'Processing request: {request}')
+    # Get the name of all module functions.
+    functions = [f for f in globals() if callable(globals()[f]) and not f.startswith('_')]
+    if request in functions:
+        return globals()[request]()
+
+
+
+# --- MAIN ---
 
 HOST = os.environ.get('HOST', 'localhost')
 PORT = int(os.environ.get('PORT', 8080))
