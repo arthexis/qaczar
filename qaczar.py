@@ -162,7 +162,7 @@ def get_todos():
 
 # --- STYLES ---
 
-CSS = '''
+BASE_CSS = '''
     body { 
         font-family: monospace; 
         background-color: #000; 
@@ -177,6 +177,12 @@ CSS = '''
     th { text-align: left; }
     .todos { list-style: none; padding: 0; }
 '''	
+
+# Generate a random variation of the base CSS.
+def get_css():
+    return BASE_CSS + f'''
+        body {{ background-color: #{random.randint(0, 0xffffff):06x}; }}
+    '''
 
 
 # --- BOTTLE ROUTES ---
@@ -208,13 +214,13 @@ def view_request_post():
 def view_index():
     if RUNLEVEL == 2:
         first_load()
-    # Format current time as a string.
     current_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
     active_table = bottle.request.query.get('table', 'request')
     main_content = list(get_text(active_table, reverse=True))
+    refresh = random.randint(500, 2000)
     tables = get_tables()
     uptime =  get_uptime()
-    refresh = random.randint(500, 2000)
+    css = get_css()
     return bottle.template('''
         <style>{{css}}</style>
 
@@ -266,9 +272,13 @@ def view_index():
                 };
                 xhr.send();
             }, {{ refresh }});
+            // Make the form stick to the bottom of the page.
+            window.addEventListener('resize', function() {
+                document.querySelector('form').style.bottom = window.innerHeight - document.querySelector('form').getBoundingClientRect().top + 'px';
+            });
         </script>
     
-    ''', **locals(), css=CSS)
+    ''', **locals())
 
 
 # Upkeep tasks performed periodically.
@@ -279,11 +289,4 @@ def upkeep_thread():
         log.info('Upkeep cycle completed.')
 
 
-# Start the bottle server for user requests.
-if __name__ == '__main__':
-    RUNLEVEL = 2
-    if len(sys.argv) == 2 and sys.argv[1] == '--server':
-        threading.Thread(target=upkeep_thread).start()
-        log.info('Starting bottle server.')
-        bottle.run(host=HOST, port=PORT)
-        
+# Start th
