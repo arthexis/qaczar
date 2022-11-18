@@ -210,8 +210,8 @@ def view_index():
     # Format current time as a string.
     current_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
     table = bottle.request.query.get('table', 'request')
-    main_content = get_text(table, reverse=True)
-    log_history = get_text('log', reverse=True)
+    main_content = list(get_text(table, reverse=True))
+    log_history = list(get_text('log', reverse=True))
     todos = get_todos()
     tables = get_tables()
     uptime = get_uptime()
