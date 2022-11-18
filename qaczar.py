@@ -151,6 +151,12 @@ def get_todos():
     for title, text in get_text('todo'):
         yield f'<li><input type="checkbox" id="{title}"><label for="{title}">{text}</label></li>'
 
+
+# Get the git status and commit hash.
+def get_git_status():
+    return os.popen('git rev-parse HEAD').read()[-6:]
+    
+
 # --- STYLES ---
 
 BASE_CSS = '''
@@ -169,31 +175,11 @@ BASE_CSS = '''
     .todos { list-style: none; padding: 0; }
 '''	
 
+
 # Generate a random variation of the base CSS.
 def get_css():
-    def get_color():
-        while True:
-            color = '#%06x' % random.randint(0, 0xFFFFFF)
-            r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
-            if r + g + b < 128:
-                return color
-    def get_text_color():
-        while True:
-            color = '#%06x' % random.randint(0, 0xFFFFFF)
-            r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
-            if r + g + b > 128:
-                return color
-    def get_link_color():
-        while True:
-            color = '#%06x' % random.randint(0, 0xFFFFFF)
-            r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
-            if r + g + b > 128:
-                return color
-    return BASE_CSS + f'''
-        body {{ background-color: {get_color()}; color: {get_text_color()} }}
-        a {{ color: {get_link_color()} }}
-    '''
-    
+    return BASE_CSS
+
 
 # --- BOTTLE ROUTES ---
 
@@ -231,6 +217,7 @@ def view_index():
     refresh = random.randint(500, 2000)
     tables = get_tables()
     uptime =  get_uptime()
+    git = get_git_status()
     css = get_css()
 
     return bottle.template('''
@@ -255,9 +242,10 @@ def view_index():
         
         <div class="right">
             
+            <span> Git: {{ git[1] }} </span>
             <span id="uptime"> Uptime: {{ uptime }} </span> 
             <span> Loaded: {{ current_time }} </span>
-
+            
             <form action="/api/request" method="post">
                 <textarea name="request" rows="10" cols="50"></textarea><br />
                 <input type="submit" value="Submit (Ctrl+Enter)" />
