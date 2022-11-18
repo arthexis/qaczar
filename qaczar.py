@@ -12,6 +12,7 @@ import threading
 
 HOST = os.environ.get('HOST', 'localhost')
 PORT = int(os.environ.get('PORT', 8080))
+
 LOGLEVEL = log.INFO
 RUNLEVEL = 0
 
@@ -21,15 +22,15 @@ def sleep_unpredictably(a, b=None):
     
 
 epoch = os.path.getmtime(__file__)
-def get_uptime():
+def time_since_awake():
     return int(time.time() - epoch)
 
 
-# --- DATABASE ---
+# --- MIND PALACE ---
 
 us = sqlite3.connect('u.sqlite')
 
-def store_text(table, text):
+def remember(table, text):
     with us:
         us.execute(f'CREATE TABLE IF NOT EXISTS {table} (id INTEGER PRIMARY KEY, ts TEXT, text TEXT)')
         us.execute(f'INSERT INTO {table} (ts, text) VALUES (?, ?)', (time.time(), text))
@@ -37,14 +38,13 @@ def store_text(table, text):
 
 class DbHandler(log.Handler):
     def emit(self, record):
-        store_text('log', self.format(record))
+        remember('log', self.format(record))
 
 
 log.basicConfig(level=LOGLEVEL, handlers=[DbHandler()])
 
 
-# Get the latest text stored in the database table. Log the timestamp.
-def get_latest_text(table):
+def last(table):
     with us:
         try:
             us.execute(f'SELECT ts, text FROM {table} ORDER BY id DESC LIMIT 1')
@@ -59,7 +59,7 @@ def get_latest_text(table):
 
 
 # Get all the text from a table in time order.
-def get_text(table, reverse=False, limit=10):
+def recollect(table, reverse=False, limit=10):
     with us:
         try:
             r = us.execute(f'SELECT id, ts, text FROM {table} ORDER BY id {"DESC" if reverse else ""} LIMIT {limit}')
@@ -73,14 +73,14 @@ def get_text(table, reverse=False, limit=10):
 
 
 # Insert a backup of the running script into the database.
-def backup_script():
+def backup_self():
     with open(__file__, 'r') as f:
-        store_text('source', f.read())
+        remember('source', f.read())
     log.info('Source backed to db.')
 
 
 # Get a list of all the tables in the database.
-def get_tables():
+def topics():
     c = us.cursor()
     c.execute('SELECT name FROM sqlite_master WHERE type="table"')
     return [t[0] for t in c.fetchall()]
@@ -118,7 +118,7 @@ if __name__ == "__main__":
                     break
                 if server.poll() is not None:  # Server has crashed.
                     log.info("Server terminated unexpectedly. Reverting source.")
-                    original = get_latest_text('source')
+                    original = last('source')
                     if not original:
                         log.info("No source backup found. Exiting.")
                         sys.exit(1)
@@ -135,7 +135,7 @@ if __name__ == "__main__":
 # Initialize some application state on startup.
 def first_load():
     global RUNLEVEL
-    backup_script()
+    backup_self()
     log.info(f'First load in {time.time() - epoch}s')
     RUNLEVEL = 3
 
@@ -148,7 +148,7 @@ def process_request(request):
 
 # Generate a checklist of all the todos.
 def get_todos():
-    for title, text in get_text('todo'):
+    for title, text in recollect('todo'):
         yield f'<li><input type="checkbox" id="{title}"><label for="{title}">{text}</label></li>'
 
 
@@ -189,7 +189,7 @@ import bottle
 # Return the server uptime (since the script was last modified).
 @bottle.route('/api/uptime')
 def view_uptime():
-    return str(get_uptime())
+    return str(time_since_awake())
 
 
 # Process a request as text and redirect to the main page.
@@ -197,10 +197,10 @@ def view_uptime():
 def view_request_post():
     request = bottle.request.forms.get('request')
     if request:
-        store_text('request', request.strip())
+        remember('request', request.strip())
         result = process_request(request)
         if result:
-            store_text('result', result)
+            remember('result', result)
             log.info(f'Result: {result}')
     bottle.redirect('/?table=result')
 
@@ -213,10 +213,10 @@ def view_index():
     
     current_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
     active_table = bottle.request.query.get('table', 'request')
-    main_content = list(get_text(active_table, reverse=True))
+    main_content = list(recollect(active_table, reverse=True))
     refresh = random.randint(500, 2000)
-    tables = get_tables()
-    uptime =  get_uptime()
+    tables = topics()
+    uptime =  time_since_awake()
     git = get_git_status()
     css = get_css()
 
