@@ -35,9 +35,6 @@ def get_uptime():
     return time.time() - epoch
 
 
-
-
-
 # --- VERSION CONTROL ---
 
 # Commit to git.
