@@ -27,14 +27,14 @@ def awake_time():
 us = sqlite3.connect('u.sqlite')
 
 
-def remember(topic, text, link=None):
+def remember(topic, text, ref=None):
     with us:
         us.execute(
             f'CREATE TABLE IF NOT EXISTS {topic} '
-            f'(id INTEGER PRIMARY KEY, ts TEXT, text TEXT, link INTEGER)'
+            f'(id INTEGER PRIMARY KEY, ts TEXT, text TEXT, ref INTEGER)'
         )
         try:
-            us.execute(f'INSERT INTO {topic} (time, text) VALUES (?, ?)', (awake_time(), text))
+            us.execute(f'INSERT INTO {topic} (ts, text) VALUES (?, ?)', (awake_time(), text))
         except Exception as e:
             log.error(f'Could not remember {topic}: {e}')
             return False
@@ -43,7 +43,7 @@ def remember(topic, text, link=None):
 def last(table):
     with us:
         try:
-            us.execute(f'SELECT id, ts, text, context FROM {table} ORDER BY id DESC LIMIT 1')
+            us.execute(f'SELECT id, ts, text, ref FROM {table} ORDER BY id DESC LIMIT 1')
             ts, text = us.fetchone()
         except sqlite3.OperationalError:
             log.info(f'No last memory of {table}.')
@@ -247,7 +247,7 @@ def api_request():
         remember('request', request.strip())
         result = process_request(request)
         if result:
-            remember('result', result)
+            remember('result', result, )
             log.info(f'Result: {result}')
     bottle.redirect('/?table=result')
 
