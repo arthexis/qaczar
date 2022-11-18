@@ -183,6 +183,7 @@ CSS = '''
 
 import bottle
 
+
 # Return the server uptime (since the script was last modified).
 @bottle.route('/api/uptime')
 def view_uptime():
@@ -209,8 +210,8 @@ def view_index():
         first_load()
     # Format current time as a string.
     current_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-    table = bottle.request.query.get('table', 'request')
-    main_content = list(get_text(table, reverse=True))
+    active_table = bottle.request.query.get('table', 'request')
+    main_content = list(get_text(active_table, reverse=True))
     tables = get_tables()
     uptime =  get_uptime()
     refresh = random.randint(500, 2000)
@@ -220,7 +221,11 @@ def view_index():
         <div class="left">
             <table><tr>
                 % for table in tables:
-                    <th><a href="/?table={{table}}">{{table}}</a></th>
+                    % if table == active_table:
+                        <th>{{table}}</th>
+                    % else:
+                        <th><a href="/?table={{table}}">{{table}}</a></th>
+                    % end
                 % end
             </tr></table>
             <table>
