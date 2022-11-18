@@ -272,10 +272,6 @@ def view_index():
                 };
                 xhr.send();
             }, {{ refresh }});
-            // Make the form stick to the bottom of the page.
-            window.addEventListener('resize', function() {
-                document.querySelector('form').style.bottom = window.innerHeight - document.querySelector('form').getBoundingClientRect().top + 'px';
-            });
         </script>
     
     ''', **locals())
@@ -289,4 +285,11 @@ def upkeep_thread():
         log.info('Upkeep cycle completed.')
 
 
-# Start th
+# Start the bottle server for user requests.
+if __name__ == '__main__':
+    RUNLEVEL = 2
+    if len(sys.argv) == 2 and sys.argv[1] == '--server':
+        threading.Thread(target=upkeep_thread).start()
+        log.info('Starting bottle server.')
+        bottle.run(host=HOST, port=PORT)
+        
