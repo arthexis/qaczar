@@ -118,6 +118,7 @@ if __name__ == "__main__":
 
 def first_visitation():
     global RUNLEVEL
+    assert RUNLEVEL == 2, "Improper first visitation."
     with open(__file__, 'r') as f:
         remember('source', f.read())
     log.info(f'First visit in {time.time() - EPOCH}s')
@@ -127,12 +128,10 @@ def first_visitation():
 def process_request(request):
     log.info(f'Processing request: {request}')
     if request == 'reset':
-        # Remove all database tables.
         for table in enlist_topics():
             forget(table)
-        log.info('Reset complete.')
-    return 'Success'
-
+        return 'Reset complete.'
+    
 
 def modulate_facade():
     BASE_CSS = '''
@@ -204,11 +203,8 @@ def facade_console():
     awoken =  awake_time()
 
     return bottle.template('''
-        
-        <span id="awake"> Awake: {{ awoken }} </span> |
-        <span> Loaded: {{ loaded }} </span>
-        
         <form action="/api/request" method="post">
+            <span id="awake"> @{{ awoken }} </span> (@{{awoken}} = {{ loaded }}) 
             <textarea name="request" rows="10" cols="50"></textarea><br />
             <input type="submit" value="Submit (Ctrl+Enter)" />
         </form>
@@ -228,7 +224,7 @@ def facade_console():
                 xhr.onload = function() {
                     if (xhr.status == 200) {
                         if (xhr.responseText < {{ awoken }}) location.reload();
-                        else document.querySelector('#awake').innerHTML = 'Uptime: ' + xhr.responseText;
+                        else document.querySelector('#awake').innerHTML = '@' + xhr.responseText;
                     }
                 };
                 xhr.send();
@@ -251,8 +247,10 @@ def api_request():
     if request:
         result = process_request(request)
         if result:
-            remember('request', f'{request} → {result}')
-    bottle.redirect('/?t=result')
+            remember('done', f'@{awake_time()} {request} → {result}')
+        else:
+            remember('todo', f'Process request: {request}')
+    bottle.redirect('/?t=done')
 
 
 # --- UPKEEP ---
@@ -269,6 +267,7 @@ PORT = int(os.environ.get('PORT', 8080))
 
 
 if __name__ == '__main__':
+    assert RUNLEVEL == 1, 'Facade already running.'
     RUNLEVEL = 2
     if len(sys.argv) == 2 and sys.argv[1] == '--facade':
         threading.Thread(target=upkeep_cycle).start()
