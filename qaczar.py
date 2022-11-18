@@ -211,8 +211,6 @@ def view_index():
     current_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
     table = bottle.request.query.get('table', 'request')
     main_content = list(get_text(table, reverse=True))
-    log_history = list(get_text('log', reverse=True))
-    todos = get_todos()
     tables = get_tables()
     uptime =  get_uptime()
     refresh = random.randint(500, 2000)
@@ -233,8 +231,10 @@ def view_index():
         </div>
         
         <div class="right">
-            <span>Uptime: {{ uptime }} </span>
-            <span>Refresh: {{ current_time }} </span>
+            
+            <span id="uptime"> Uptime: {{ uptime }} </span> 
+            <span> Loaded: {{ current_time }} </span>
+
             <form action="/api/request" method="post">
                 <textarea name="request" rows="10" cols="50"></textarea><br />
                 <input type="submit" value="Submit (Ctrl+Enter)" />
@@ -256,7 +256,7 @@ def view_index():
                 xhr.onload = function() {
                     if (xhr.status == 200) {
                         if (xhr.responseText < {{ uptime }}) location.reload();
-                        else document.querySelector('p').innerHTML = 'Uptime: ' + xhr.responseText;
+                        else document.querySelector('#uptime').innerHTML = 'Uptime: ' + xhr.responseText;
                     }
                 };
                 xhr.send();
