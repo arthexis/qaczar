@@ -214,6 +214,7 @@ def view_request_post():
 def view_index():
     if RUNLEVEL == 2:
         first_load()
+    
     current_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
     active_table = bottle.request.query.get('table', 'request')
     main_content = list(get_text(active_table, reverse=True))
@@ -221,6 +222,7 @@ def view_index():
     tables = get_tables()
     uptime =  get_uptime()
     css = get_css()
+
     return bottle.template('''
         <style>{{css}}</style>
 
@@ -282,7 +284,6 @@ def upkeep_thread():
     while True:
         sleep_unpredictably(60, 120)
         os.system(f'git add . && git commit -m "Upkeep" && git push')
-        log.info('Upkeep cycle completed.')
 
 
 # Start the bottle server for user requests.
