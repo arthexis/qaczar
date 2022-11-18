@@ -129,10 +129,6 @@ def process_request(request):
     return 'Success'
 
 
-def github_commit_id():
-    return os.popen('git rev-parse HEAD').read()[-6:]
-    
-
 def modulate_facade():
     BASE_CSS = '''
         body { 
@@ -166,9 +162,8 @@ def view_index():
     active_table = bottle.request.query.get('table', 'request')
     main_content = list(recollect(active_table, reverse=True))
     refresh = random.randint(500, 2000)
-    tables = topics()
-    uptime =  awake_time()
-    git = github_commit_id()
+    topics = topics()
+    awake_time =  awake_time()
     css = modulate_facade()
 
     return bottle.template('''
@@ -178,9 +173,9 @@ def view_index():
             <table><tr>
                 % for table in tables:
                     % if table == active_table:
-                        <th>{{table}}</th>
+                        <th>{{topic}}</th>
                     % else:
-                        <th><a href="/?table={{table}}">{{table}}</a></th>
+                        <th><a href="/?t={{topic}}">{{topic}}</a></th>
                     % end
                 % end
             </tr></table>
@@ -192,8 +187,7 @@ def view_index():
         </div>
         
         <div class="right">
-            <span> Git: {{ git[1] }} </span> |
-            <span id="uptime"> Uptime: {{ uptime }} </span> |
+            <span id="uptime"> Uptime: {{ awake_time }} </span> |
             <span> Loaded: {{ load_time }} </span>
             
             <form action="/api/request" method="post">
