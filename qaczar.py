@@ -126,6 +126,11 @@ def first_visitation():
 
 def process_request(request):
     log.info(f'Processing request: {request}')
+    if request == 'reset':
+        # Remove all database tables.
+        for table in enlist_topics():
+            forget(table)
+        log.info('Reset complete.')
     return 'Success'
 
 
@@ -232,11 +237,9 @@ def api_uptime():
 def api_request():
     request = bottle.request.forms.get('request')
     if request:
-        remember('request', request.strip())
         result = process_request(request)
         if result:
-            remember('result', result, )
-            log.info(f'Result: {result}')
+            remember('request', f'{request} → {result}')
     bottle.redirect('/?t=result')
 
 
