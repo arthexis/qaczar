@@ -249,7 +249,7 @@ def api_request():
         if result:
             remember('done', f'@{awake_time()} {request} → {result}')
         else:
-            remember('todo', f'Process request: {request}')
+            remember('done', f'@{awake_time()} {request}')
     bottle.redirect('/?t=done')
 
 
@@ -257,8 +257,10 @@ def api_request():
 
 def upkeep_cycle():
     while True:
-        # Avoid calling the database, use HTTP API calls instead.
+        if RUNLEVEL < 3:
+            continue
         sleep_unpredictably(60, 120)
+        # Avoid calling the database, use HTTP API calls instead.
         os.system(f'git add . && git commit -m "Upkeep commit" && git push')
 
 
