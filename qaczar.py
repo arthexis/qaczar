@@ -52,13 +52,11 @@ def last(table):
         except sqlite3.OperationalError:
             log.info(f'No last memory of {table}.')
             return ''
-    # Format the timestamp.
     ts = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(ts)))
     log.info(f'Last {table} @ {ts} ({len(text)}b)')
     return text
 
 
-# Get all the text from a table in time order.
 def recollect(table, reverse=False, limit=10):
     with us:
         try:
@@ -72,21 +70,18 @@ def recollect(table, reverse=False, limit=10):
         yield f'{table} #{id} at {ts}', text
 
 
-# Insert a backup of the running script into the database.
 def backup_self():
     with open(__file__, 'r') as f:
         remember('source', f.read())
     log.info('Self backed to mind palace.')
 
 
-# Get a list of all the tables in the database.
 def topics():
     c = us.cursor()
     c.execute('SELECT name FROM sqlite_master WHERE type="table"')
     return [t[0] for t in c.fetchall()]
 
 
-# Drop a table from the database.
 def forget(table):
     c = us.cursor()
     c.execute(f'DROP TABLE IF EXISTS {table}')
@@ -130,7 +125,7 @@ if __name__ == "__main__":
             server.wait()
 
 
-# --- FACADE COMPONENTS ---
+# --- FACADE ELEMENTS ---
 
 def first_visitation():
     global RUNLEVEL
@@ -144,60 +139,34 @@ def process_request(request):
     return 'Success'
 
 
-# Get the git status and commit hash.
-def get_git_status():
+def github_commit_id():
     return os.popen('git rev-parse HEAD').read()[-6:]
     
 
-# --- STYLES ---
-
-BASE_CSS = '''
-    body { 
-        font-family: monospace; 
-        background-color: #000; 
-        color: #fff; font-size: 12px; 
-    }
-    table { border-collapse: collapse; }
-    td, th { border: 0; font-size: 12px; padding-right: 5px; }
-    .left { width: 70%; float: left; }
-    .right { width: 30%; float: right; }
-    textarea { height: 100px;}
-    img { max-width: 100%; }
-    th { text-align: left; }
-    .todos { list-style: none; padding: 0; }
-'''	
-
-
-# Generate a random variation of the base CSS.
-def get_css():
+def modulate_facade():
+    BASE_CSS = '''
+        body { 
+            font-family: monospace; 
+            background-color: #000; 
+            color: #fff; font-size: 12px; 
+        }
+        table { border-collapse: collapse; }
+        td, th { border: 0; font-size: 12px; padding-right: 5px; }
+        .left { width: 70%; float: left; }
+        .right { width: 30%; float: right; }
+        textarea { height: 100px;}
+        img { max-width: 100%; }
+        th { text-align: left; }
+        .todos { list-style: none; padding: 0; }
+    '''	
     return BASE_CSS
 
 
-# --- BOTTLE ROUTES ---
+# --- FACADE INTEGRATION ---
 
 import bottle
 
 
-# Return the server uptime (since the script was last modified).
-@bottle.route('/api/uptime')
-def view_uptime():
-    return str(awake_time())
-
-
-# Process a request as text and redirect to the main page.
-@bottle.route('/api/request', method='POST')
-def view_request_post():
-    request = bottle.request.forms.get('request')
-    if request:
-        remember('request', request.strip())
-        result = process_request(request)
-        if result:
-            remember('result', result)
-            log.info(f'Result: {result}')
-    bottle.redirect('/?table=result')
-
-
-# Render the main view (index)
 @bottle.route('/')
 def view_index():
     if RUNLEVEL == 2:
@@ -209,8 +178,8 @@ def view_index():
     refresh = random.randint(500, 2000)
     tables = topics()
     uptime =  awake_time()
-    git = get_git_status()
-    css = get_css()
+    git = github_commit_id()
+    css = modulate_facade()
 
     return bottle.template('''
         <style>{{css}}</style>
@@ -269,20 +238,39 @@ def view_index():
     ''', **locals())
 
 
-# Upkeep tasks performed periodically.
-def upkeep_thread():
-    # Create a separate database connection for this thread.
-    db = sqlite3.connect('db.sqlite')
+# Return the server uptime (since the script was last modified).
+@bottle.route('/api/uptime')
+def api_uptime():
+    return str(awake_time())
+
+
+# Process a request as text and redirect to the main page.
+@bottle.route('/api/request', method='POST')
+def api_request():
+    request = bottle.request.forms.get('request')
+    if request:
+        remember('request', request.strip())
+        result = process_request(request)
+        if result:
+            remember('result', result)
+            log.info(f'Result: {result}')
+    bottle.redirect('/?table=result')
+
+
+# --- UPKEEP ---
+
+def upkeep_cycle():
     while True:
+        # Avoid calling the database, use HTTP API calls instead.
         sleep_unpredictably(60, 120)
         os.system(f'git add . && git commit -m "Upkeep" && git push')
+        
 
 
-# Start the bottle server for user requests.
 if __name__ == '__main__':
     RUNLEVEL = 2
     if len(sys.argv) == 2 and sys.argv[1] == '--server':
-        threading.Thread(target=upkeep_thread).start()
+        threading.Thread(target=upkeep_cycle).start()
         log.info('Starting bottle server.')
         bottle.run(host=HOST, port=PORT)
         
