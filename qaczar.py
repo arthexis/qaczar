@@ -6,39 +6,23 @@ import sys
 import time
 import random
 import sqlite3
+import logging as log
 import threading
 
 
 HOST = os.environ.get('HOST', 'localhost')
 PORT = int(os.environ.get('PORT', 8080))
+LOGLEVEL = log.DEBUG
 RUNLEVEL = 0
-LOG = []
 
 
 def sleep_unpredictably(a, b=None):
     time.sleep(random.uniform(a, b or a))
+    
 
-
-# Log a message to the console and to the log file.
-def log(text):
-    global LOG
-    ts = time.strftime('%Y-%m-%d %H:%M:%S')
-    print(ts + ' - ' + text)
-    LOG.append((ts, text))
-
-
-# Calculate the uptime.
 epoch = os.path.getmtime(__file__)
 def get_uptime():
     return time.time() - epoch
-
-
-# --- VERSION CONTROL ---
-
-# Commit to git.
-def git_commit(message):
-    log('Committing to git.')
-    os.system(f'git add . && git commit -m "{message}" && git push')
 
 
 # --- DATABASE FUNCTIONS ---
@@ -53,6 +37,14 @@ def store_text(table, text):
     db.commit()
 
 
+class DbHandler(log.Handler):
+    def emit(self, record):
+        store_text('log', self.format(record))
+
+
+log.basicConfig(level=LOGLEVEL, handlers=[DbHandler()])
+
+
 # Get the latest text stored in the database table. Log the timestamp.
 def get_latest_text(table):
     c = db.cursor()
@@ -60,22 +52,22 @@ def get_latest_text(table):
         c.execute(f'SELECT ts, text FROM {table} ORDER BY id DESC LIMIT 1')
         ts, text = c.fetchone()
     except sqlite3.OperationalError:
-        log(f'No data in table {table}.')
+        log.info(f'No data in table {table}.')
         return ''
     # Format the timestamp.
     ts = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(ts)))
-    log(f'Last {table} from {ts} ({len(text)} bytes)')
+    log.info(f'Last {table} from {ts} ({len(text)} bytes)')
     return text
 
 
 # Get all the text from a table in time order.
 def get_text(table, reverse=False, limit=10):
-    log(f'Get {table} from db.')
+    log.info(f'Get {table} from db.')
     c = db.cursor()
     try:
         c.execute(f'SELECT id, ts, text FROM {table} ORDER BY id {"DESC" if reverse else ""} LIMIT {limit}')
     except sqlite3.OperationalError:
-        log(f'No data in table {table}.')
+        log.info(f'No data in table {table}.')
         return []
     for row in c.fetchall():
         id, ts, text = row
@@ -87,7 +79,7 @@ def get_text(table, reverse=False, limit=10):
 def backup_script():
     with open(__file__, 'r') as f:
         store_text('source', f.read())
-    log('Source backed to db.')
+    log.info('Source backed to db.')
 
 
 # Get a list of all the tables in the database.
@@ -102,7 +94,7 @@ def drop_table(table):
     c = db.cursor()
     c.execute(f'DROP TABLE IF EXISTS {table}')
     db.commit()
-    log(f'Dropped table {table}.')
+    log.info(f'Dropped table {table}.')
 
 
 # --- WATCHER FORK ---
@@ -112,10 +104,10 @@ def drop_table(table):
 
 db = sqlite3.connect('db.sqlite')
 if __name__ == "__main__":
-    log('Connecting to sqlite database.')
+    log.info('Connecting to sqlite database.')
     RUNLEVEL = 1
     if len(sys.argv) == 1:
-        log("Preparing watch fork.")
+        log.info("Preparing watch fork.")
         import subprocess
         import atexit
         while True:
@@ -126,18 +118,18 @@ if __name__ == "__main__":
             while True: 
                 time.sleep(1)
                 if os.path.getmtime(__file__) != mtime:
-                    log("Change detected. Restarting server.")
+                    log.info("Change detected. Restarting server.")
                     break
                 if server.poll() is not None:  # Server has crashed.
-                    log("Server terminated unexpectedly. Reverting source.")
+                    log.info("Server terminated unexpectedly. Reverting source.")
                     original = get_latest_text('source')
                     if not original:
-                        log("No source backup found. Exiting.")
+                        log.info("No source backup found. Exiting.")
                         sys.exit(1)
                     with open(__file__, 'w') as f:
                         f.write(original)
                     break
-            log("Stopping server.")
+            log.info("Stopping server.")
             server.terminate()
             server.wait()
 
@@ -153,13 +145,13 @@ def url_to_img(url, alt=''):
 def first_load():
     global RUNLEVEL
     backup_script()
-    log(f'First load in {time.time() - epoch}s')
+    log.info(f'First load in {time.time() - epoch}s')
     RUNLEVEL = 3
 
 
 # Process an incoming request.
 def process_request(request):
-    log(f'Processing request: {request}')
+    log.info(f'Processing request: {request}')
     return 'Success'
 
 
@@ -206,7 +198,7 @@ def view_request_post():
         result = process_request(request)
         if result:
             store_text('result', result)
-            log(f'Result: {result}')
+            log.info(f'Result: {result}')
     bottle.redirect('/')
 
 
@@ -219,6 +211,7 @@ def view_index():
     current_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
     table = bottle.request.query.get('table', 'request')
     main_content = get_text(table, reverse=True)
+    log_history = get_text('log', reverse=True)
     todos = get_todos()
     tables = get_tables()
     uptime = get_uptime()
@@ -281,16 +274,15 @@ def view_index():
             }, {{ refresh }});
         </script>
     
-    ''', **locals(), log_history=LOG, css=CSS)
+    ''', **locals(), css=CSS)
 
 
 # Upkeep tasks performed periodically.
 def upkeep_thread():
-    log('Starting upkeep thread.')
     while True:
         sleep_unpredictably(60, 120)
-        git_commit("Upkeep commit")
-        log('Upkeep cycle complete.')
+        os.system(f'git add . && git commit -m "Upkeep" && git push')
+        log.info('Upkeep cycle completed.')
 
 
 # Start the bottle server for user requests.
@@ -298,6 +290,6 @@ if __name__ == '__main__':
     RUNLEVEL = 2
     if len(sys.argv) == 2 and sys.argv[1] == '--server':
         threading.Thread(target=upkeep_thread).start()
-        log('Starting bottle server.')
+        log.info('Starting bottle server.')
         bottle.run(host=HOST, port=PORT)
         
