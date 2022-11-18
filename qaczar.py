@@ -13,8 +13,14 @@ import threading
 HOST = os.environ.get('HOST', 'localhost')
 PORT = int(os.environ.get('PORT', 8080))
 
-runlevel = 0
+RUNLEVEL = 0
+
+
+def sleep_unpredictably(a, b=None):
+    time.sleep(random.uniform(a, b or a))
+
 log_history = []
+
 
 # Log a message to the console and to the log file.
 def log(text):
@@ -29,9 +35,7 @@ def get_uptime():
     return time.time() - epoch
 
 
-# Sleep for a random amount of time between a and b seconds.
-def random_sleep(a, b=None):
-    time.sleep(random.uniform(a, b or a))
+
 
 
 # --- VERSION CONTROL ---
@@ -115,7 +119,7 @@ def drop_table(table):
 db = sqlite3.connect('db.sqlite')
 if __name__ == "__main__":
     log('Connecting to sqlite database.')
-    runlevel = 1
+    RUNLEVEL = 1
     if len(sys.argv) == 1:
         log("Preparing watch fork.")
         import subprocess
@@ -153,10 +157,10 @@ def url_to_img(url, alt=''):
 
 # Initialize some application state on startup.
 def first_load():
-    global runlevel
+    global RUNLEVEL
     backup_script()
     log(f'First load in {time.time() - epoch}s')
-    runlevel = 3
+    RUNLEVEL = 3
 
 
 # Calculate levenstein distance between two strings.
@@ -233,7 +237,7 @@ def view_request_post():
 # Render the main view (index)
 @bottle.route('/')
 def view_index():
-    if runlevel == 2:
+    if RUNLEVEL == 2:
         first_load()
     # Format current time as a string.
     current_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
@@ -308,14 +312,14 @@ def view_index():
 def upkeep_thread():
     log('Starting upkeep thread.')
     while True:
-        random_sleep(60, 120)
+        sleep_unpredictably(60, 120)
         git_commit("Upkeep commit")
         log('Upkeep cycle complete.')
 
 
 # Start the bottle server for user requests.
 if __name__ == '__main__':
-    runlevel = 2
+    RUNLEVEL = 2
     if len(sys.argv) == 2 and sys.argv[1] == '--server':
         threading.Thread(target=upkeep_thread).start()
         log('Starting bottle server.')
