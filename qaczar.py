@@ -10,47 +10,40 @@ import logging as log
 import threading
 
 
-HOST = os.environ.get('HOST', 'localhost')
-PORT = int(os.environ.get('PORT', 8080))
-
-LOGLEVEL = log.INFO
 RUNLEVEL = 0
+EPOCH = os.path.getmtime(__file__)
 
 
 def sleep_unpredictably(a, b=None):
     time.sleep(random.uniform(a, b or a))
     
 
-epoch = os.path.getmtime(__file__)
 def awake_time():
-    return int(time.time() - epoch)
+    return int(time.time() - EPOCH)
 
 
 # --- MIND PALACE ---
 
 us = sqlite3.connect('u.sqlite')
 
-def remember(table, text, context=None):
+
+def remember(topic, text, link=None):
     with us:
         us.execute(
-            f'CREATE TABLE IF NOT EXISTS {table} '
-            f'(id INTEGER PRIMARY KEY, ts TEXT, text TEXT, context BLOB)'
+            f'CREATE TABLE IF NOT EXISTS {topic} '
+            f'(id INTEGER PRIMARY KEY, ts TEXT, text TEXT, link INTEGER)'
         )
-        us.execute(f'INSERT INTO {table} (ts, text) VALUES (?, ?)', (time.time(), text))
-    
-
-class USHandler(log.Handler):
-    def emit(self, record):
-        remember('log', self.format(record))
-
-
-log.basicConfig(level=LOGLEVEL, handlers=[USHandler()])
+        try:
+            us.execute(f'INSERT INTO {topic} (time, text) VALUES (?, ?)', (awake_time(), text))
+        except Exception as e:
+            log.error(f'Could not remember {topic}: {e}')
+            return False
 
 
 def last(table):
     with us:
         try:
-            us.execute(f'SELECT ts, text FROM {table} ORDER BY id DESC LIMIT 1')
+            us.execute(f'SELECT id, ts, text, context FROM {table} ORDER BY id DESC LIMIT 1')
             ts, text = us.fetchone()
         except sqlite3.OperationalError:
             log.info(f'No last memory of {table}.')
@@ -133,7 +126,7 @@ if __name__ == "__main__":
 def first_visitation():
     global RUNLEVEL
     backup_self()
-    log.info(f'First visit in {time.time() - epoch}s')
+    log.info(f'First visit in {time.time() - EPOCH}s')
     RUNLEVEL = 3
 
 
@@ -175,7 +168,7 @@ def view_index():
     if RUNLEVEL == 2:
         first_visitation()
     
-    current_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+    load_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
     active_table = bottle.request.query.get('table', 'request')
     main_content = list(recollect(active_table, reverse=True))
     refresh = random.randint(500, 2000)
@@ -205,10 +198,9 @@ def view_index():
         </div>
         
         <div class="right">
-            
-            <span> Git: {{ git[1] }} </span>
-            <span id="uptime"> Uptime: {{ uptime }} </span> 
-            <span> Loaded: {{ current_time }} </span>
+            <span> Git: {{ git[1] }} </span> |
+            <span id="uptime"> Uptime: {{ uptime }} </span> |
+            <span> Loaded: {{ load_time }} </span>
             
             <form action="/api/request" method="post">
                 <textarea name="request" rows="10" cols="50"></textarea><br />
@@ -267,7 +259,10 @@ def upkeep_cycle():
         # Avoid calling the database, use HTTP API calls instead.
         sleep_unpredictably(60, 120)
         os.system(f'git add . && git commit -m "Upkeep" && git push')
-        
+
+
+HOST = os.environ.get('HOST', 'localhost')
+PORT = int(os.environ.get('PORT', 8080))
 
 
 if __name__ == '__main__':
