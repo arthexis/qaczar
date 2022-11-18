@@ -30,9 +30,12 @@ def awake_time():
 
 us = sqlite3.connect('u.sqlite')
 
-def remember(table, text):
+def remember(table, text, context=None):
     with us:
-        us.execute(f'CREATE TABLE IF NOT EXISTS {table} (id INTEGER PRIMARY KEY, ts TEXT, text TEXT)')
+        us.execute(
+            f'CREATE TABLE IF NOT EXISTS {table} '
+            f'(id INTEGER PRIMARY KEY, ts TEXT, text TEXT, context BLOB)'
+        )
         us.execute(f'INSERT INTO {table} (ts, text) VALUES (?, ?)', (time.time(), text))
     
 
