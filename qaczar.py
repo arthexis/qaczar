@@ -4,7 +4,6 @@
 import os
 import sys
 import time
-import bottle
 import random
 import sqlite3
 import threading
@@ -12,21 +11,19 @@ import threading
 
 HOST = os.environ.get('HOST', 'localhost')
 PORT = int(os.environ.get('PORT', 8080))
-
 RUNLEVEL = 0
+LOG = []
 
 
 def sleep_unpredictably(a, b=None):
     time.sleep(random.uniform(a, b or a))
-
-log_history = []
 
 
 # Log a message to the console and to the log file.
 def log(text):
     ts = time.strftime('%Y-%m-%d %H:%M:%S')
     print(ts + ' - ' + text)
-    log_history.append((ts, text))
+    LOG.append((ts, text))
 
 
 # Calculate the uptime.
@@ -212,6 +209,8 @@ CSS = '''
 
 # --- BOTTLE ROUTES ---
 
+import bottle
+
 # Return the server uptime (since the script was last modified).
 @bottle.route('/api/uptime')
 def view_uptime():
@@ -302,7 +301,7 @@ def view_index():
             }, {{ refresh }});
         </script>
     
-    ''', **locals(), log_history=log_history, css=CSS)
+    ''', **locals(), log_history=LOG, css=CSS)
 
 
 # Upkeep tasks performed periodically.
