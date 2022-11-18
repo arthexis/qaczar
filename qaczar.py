@@ -163,12 +163,10 @@ def view_index():
     if RUNLEVEL == 2:
         first_visitation()
     
-    loaded = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
     active_topic = bottle.request.query.get('t', 'request')
     main_content = list(recollect(active_topic, reverse=True))
-    refresh = random.randint(500, 2000)
+    console = facade_console()
     topics = enlist_topics()
-    awoken =  awake_time()
     css = modulate_facade()
 
     return bottle.template('''
@@ -190,45 +188,21 @@ def view_index():
                 % end
             </table>
         </div>
-        
         <div class="right">
-            <span id="awake"> Awake: {{ awoken }} </span> |
-            <span> Loaded: {{ loaded }} </span>
-            
-            <form action="/api/request" method="post">
-                <textarea name="request" rows="10" cols="50"></textarea><br />
-                <input type="submit" value="Submit (Ctrl+Enter)" />
-            </form>
-        </div>    
+            {{! console}}
+        </div>
 
-        <script>
-            window.scrollTo(0, document.body.scrollHeight);
-            document.querySelector('textarea').addEventListener('keydown', function(e) {
-                if (e.keyCode == 13 && e.ctrlKey) {
-                    e.preventDefault();
-                    document.querySelector('form').submit();
-                }
-            });
-            document.querySelector('textarea').focus();
-            setInterval(function() {
-                var xhr = new XMLHttpRequest();
-                xhr.open('GET', '/api/uptime');
-                xhr.onload = function() {
-                    if (xhr.status == 200) {
-                        if (xhr.responseText < {{ awoken }}) location.reload();
-                        else document.querySelector('#awake').innerHTML = 'Uptime: ' + xhr.responseText;
-                    }
-                };
-                xhr.send();
-            }, {{ refresh }});
-        </script>
-    
+        
     ''', **locals())
 
 
 # Render the right side of the index page with the request form.
 @bottle.route('/console')
-def api_request():
+def facade_console():
+    refresh = random.randint(500, 2000)
+    loaded = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+    awoken =  awake_time()
+
     return bottle.template('''
         
         <span id="awake"> Awake: {{ awoken }} </span> |
