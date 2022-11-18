@@ -21,6 +21,7 @@ def sleep_unpredictably(a, b=None):
 
 # Log a message to the console and to the log file.
 def log(text):
+    global LOG
     ts = time.strftime('%Y-%m-%d %H:%M:%S')
     print(ts + ' - ' + text)
     LOG.append((ts, text))
@@ -71,7 +72,6 @@ def get_latest_text(table):
 def get_text(table, reverse=False, limit=10):
     log(f'Get {table} from db.')
     c = db.cursor()
-    # Format fs as follows: Request #ID at TIMESTAMP
     try:
         c.execute(f'SELECT id, ts, text FROM {table} ORDER BY id {"DESC" if reverse else ""} LIMIT {limit}')
     except sqlite3.OperationalError:
