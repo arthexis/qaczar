@@ -37,19 +37,18 @@ def remember(topic, text, ref=None):
             us.execute(f'INSERT INTO {topic} (ts, text) VALUES (?, ?)', (awake_time(), text))
         except Exception as e:
             log.error(f'Could not remember {topic}: {e}')
-            return False
 
 
-def last(table):
+def last(table) -> tuple:
     with us:
         try:
             us.execute(f'SELECT id, ts, text, ref FROM {table} ORDER BY id DESC LIMIT 1')
-            ts, text = us.fetchone()
+            id, ts, text, ref = us.fetchone()
         except sqlite3.OperationalError:
             log.info(f'No last memory of {table}.')
-            return ''
+            return None
     ts = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(ts)))
-    log.info(f'Last {table} @ {ts} ({len(text)}b)')
+    
     return text
 
 
@@ -205,13 +204,13 @@ def view_index():
 
         <script>
             window.scrollTo(0, document.body.scrollHeight);
-            document.querySelector('textarea').focus();
             document.querySelector('textarea').addEventListener('keydown', function(e) {
                 if (e.keyCode == 13 && e.ctrlKey) {
                     e.preventDefault();
                     document.querySelector('form').submit();
                 }
             });
+            document.querySelector('textarea').focus();
             setInterval(function() {
                 var xhr = new XMLHttpRequest();
                 xhr.open('GET', '/api/uptime');
