@@ -62,14 +62,14 @@ def get_latest_text(table):
 def get_text(table, reverse=False, limit=10):
     with us:
         try:
-            us.execute(f'SELECT id, ts, text FROM {table} ORDER BY id {"DESC" if reverse else ""} LIMIT {limit}')
+            r = us.execute(f'SELECT id, ts, text FROM {table} ORDER BY id {"DESC" if reverse else ""} LIMIT {limit}')
         except sqlite3.OperationalError:
             log.info(f'No data in table {table}.')
             return []
-        for row in us.fetchall():
-            id, ts, text = row
-            ts = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(ts)))
-            yield f'{table} #{id} at {ts}', text
+    for row in r.fetchall():
+        id, ts, text = row
+        ts = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(ts)))
+        yield f'{table} #{id} at {ts}', text
 
 
 # Insert a backup of the running script into the database.
@@ -132,11 +132,6 @@ if __name__ == "__main__":
 
 # --- VIEW COMPONENTS ---
 
-# Convert an URL into an image tag.
-def url_to_img(url, alt=''):
-    return f'<img src="{url}" alt="{alt}">'
-
-
 # Initialize some application state on startup.
 def first_load():
     global RUNLEVEL
@@ -188,12 +183,17 @@ def get_css():
             r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
             if r + g + b > 128:
                 return color
-    
+    def get_link_color():
+        while True:
+            color = '#%06x' % random.randint(0, 0xFFFFFF)
+            r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
+            if r + g + b > 128:
+                return color
     return BASE_CSS + f'''
-        body {{ background-color: {get_color()}; color: {get_text_color()}; }}
+        body {{ background-color: {get_color()}; color: {get_text_color()} }}
+        a {{ color: {get_link_color()} }}
     '''
     
-
 
 # --- BOTTLE ROUTES ---
 
