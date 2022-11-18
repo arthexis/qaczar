@@ -22,7 +22,7 @@ def sleep_unpredictably(a, b=None):
     
 
 epoch = os.path.getmtime(__file__)
-def time_since_awake():
+def awake_time():
     return int(time.time() - epoch)
 
 
@@ -50,11 +50,11 @@ def last(table):
             us.execute(f'SELECT ts, text FROM {table} ORDER BY id DESC LIMIT 1')
             ts, text = us.fetchone()
         except sqlite3.OperationalError:
-            log.info(f'No data in table {table}.')
+            log.info(f'No last memory of {table}.')
             return ''
     # Format the timestamp.
     ts = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(ts)))
-    log.info(f'Last {table} from {ts} ({len(text)} bytes)')
+    log.info(f'Last {table} @ {ts} ({len(text)}b)')
     return text
 
 
@@ -64,7 +64,7 @@ def recollect(table, reverse=False, limit=10):
         try:
             r = us.execute(f'SELECT id, ts, text FROM {table} ORDER BY id {"DESC" if reverse else ""} LIMIT {limit}')
         except sqlite3.OperationalError:
-            log.info(f'No data in table {table}.')
+            log.info(f'No memory of {table}.')
             return []
     for row in r.fetchall():
         id, ts, text = row
@@ -76,7 +76,7 @@ def recollect(table, reverse=False, limit=10):
 def backup_self():
     with open(__file__, 'r') as f:
         remember('source', f.read())
-    log.info('Source backed to db.')
+    log.info('Self backed to mind palace.')
 
 
 # Get a list of all the tables in the database.
@@ -87,20 +87,20 @@ def topics():
 
 
 # Drop a table from the database.
-def drop_table(table):
+def forget(table):
     c = us.cursor()
     c.execute(f'DROP TABLE IF EXISTS {table}')
     us.commit()
-    log.info(f'Dropped table {table}.')
+    log.info(f'Forgot {table}.')
 
 
-# --- WATCHER FORK ---
+# --- SELF AWARENESS ---
 
 # General functions should be defined before this point if
 # they are need to be user by the watcher process.
 
 if __name__ == "__main__":
-    log.info('Connecting to sqlite database.')
+    log.info('Accessing mind palace.')
     RUNLEVEL = 1
     if len(sys.argv) == 1:
         log.info("Preparing watch fork.")
@@ -189,7 +189,7 @@ import bottle
 # Return the server uptime (since the script was last modified).
 @bottle.route('/api/uptime')
 def view_uptime():
-    return str(time_since_awake())
+    return str(awake_time())
 
 
 # Process a request as text and redirect to the main page.
@@ -216,7 +216,7 @@ def view_index():
     main_content = list(recollect(active_table, reverse=True))
     refresh = random.randint(500, 2000)
     tables = topics()
-    uptime =  time_since_awake()
+    uptime =  awake_time()
     git = get_git_status()
     css = get_css()
 
