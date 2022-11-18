@@ -30,7 +30,7 @@ def get_uptime():
 
 
 # Sleep for a random amount of time between a and b seconds.
-def sleep(a, b=None):
+def random_sleep(a, b=None):
     time.sleep(random.uniform(a, b or a))
 
 
@@ -308,7 +308,7 @@ def view_index():
 def upkeep_thread():
     log('Starting upkeep thread.')
     while True:
-        sleep(10, 20)
+        random_sleep(60, 120)
         git_commit("Upkeep commit")
         log('Upkeep cycle complete.')
 
