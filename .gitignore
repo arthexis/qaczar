@@ -1,1 +1,5 @@
-__pycache__
+*
+!.gitignore
+!bottle.py
+!qaczar.py
+!u.sqlite

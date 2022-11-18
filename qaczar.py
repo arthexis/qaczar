@@ -66,12 +66,6 @@ def recollect(table, reverse=False, limit=10):
         yield f'{table} #{id} at {ts}', text
 
 
-def backup_self():
-    with open(__file__, 'r') as f:
-        remember('source', f.read())
-    log.info('Self backed to mind palace.')
-
-
 def topics():
     c = us.cursor()
     c.execute('SELECT name FROM sqlite_master WHERE type="table"')
@@ -125,7 +119,8 @@ if __name__ == "__main__":
 
 def first_visitation():
     global RUNLEVEL
-    backup_self()
+    with open(__file__, 'r') as f:
+        remember('source', f.read())
     log.info(f'First visit in {time.time() - EPOCH}s')
     RUNLEVEL = 3
 
