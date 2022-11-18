@@ -12,7 +12,7 @@ import threading
 
 HOST = os.environ.get('HOST', 'localhost')
 PORT = int(os.environ.get('PORT', 8080))
-LOGLEVEL = log.DEBUG
+LOGLEVEL = log.INFO
 RUNLEVEL = 0
 
 
@@ -25,14 +25,15 @@ def get_uptime():
     return int(time.time() - epoch)
 
 
-# --- DATABASE FUNCTIONS ---
+# --- DATABASE ---
+
+us = sqlite3.connect('u.sqlite')
 
 def store_text(table, text):
-    c = db.cursor()
-    c.execute(f'CREATE TABLE IF NOT EXISTS {table} (id INTEGER PRIMARY KEY, ts TEXT, text TEXT)')
-    c.execute(f'INSERT INTO {table} (ts, text) VALUES (?, ?)', (time.time(), text))
-    db.commit()
-
+    with us:
+        us.execute(f'CREATE TABLE IF NOT EXISTS {table} (id INTEGER PRIMARY KEY, ts TEXT, text TEXT)')
+        us.execute(f'INSERT INTO {table} (ts, text) VALUES (?, ?)', (time.time(), text))
+    
 
 class DbHandler(log.Handler):
     def emit(self, record):
@@ -44,7 +45,7 @@ log.basicConfig(level=LOGLEVEL, handlers=[DbHandler()])
 
 # Get the latest text stored in the database table. Log the timestamp.
 def get_latest_text(table):
-    c = db.cursor()
+    c = us.cursor()
     try:
         c.execute(f'SELECT ts, text FROM {table} ORDER BY id DESC LIMIT 1')
         ts, text = c.fetchone()
@@ -60,7 +61,7 @@ def get_latest_text(table):
 # Get all the text from a table in time order.
 def get_text(table, reverse=False, limit=10):
     log.info(f'Get {table} from db.')
-    c = db.cursor()
+    c = us.cursor()
     try:
         c.execute(f'SELECT id, ts, text FROM {table} ORDER BY id {"DESC" if reverse else ""} LIMIT {limit}')
     except sqlite3.OperationalError:
@@ -81,16 +82,16 @@ def backup_script():
 
 # Get a list of all the tables in the database.
 def get_tables():
-    c = db.cursor()
+    c = us.cursor()
     c.execute('SELECT name FROM sqlite_master WHERE type="table"')
     return [t[0] for t in c.fetchall()]
 
 
 # Drop a table from the database.
 def drop_table(table):
-    c = db.cursor()
+    c = us.cursor()
     c.execute(f'DROP TABLE IF EXISTS {table}')
-    db.commit()
+    us.commit()
     log.info(f'Dropped table {table}.')
 
 
@@ -99,7 +100,6 @@ def drop_table(table):
 # General functions should be defined before this point if
 # they are need to be user by the watcher process.
 
-db = sqlite3.connect('db.sqlite')
 if __name__ == "__main__":
     log.info('Connecting to sqlite database.')
     RUNLEVEL = 1
