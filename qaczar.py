@@ -62,7 +62,7 @@ def recollect(table, reverse=False, limit=10):
     for row in r.fetchall():
         id, ts, text = row
         ts = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(ts)))
-        yield f'{table} #{id} at {ts}', text
+        yield id, ts, text, table
 
 
 def enlist_topics():
@@ -158,12 +158,12 @@ def view_index():
     if RUNLEVEL == 2:
         first_visitation()
     
-    load_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+    loaded = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
     active_topic = bottle.request.query.get('topic', 'request')
     main_content = list(recollect(active_topic, reverse=True))
     refresh = random.randint(500, 2000)
     topics = enlist_topics()
-    awake_time =  awake_time()
+    awoken =  awake_time()
     css = modulate_facade()
 
     return bottle.template('''
@@ -187,8 +187,8 @@ def view_index():
         </div>
         
         <div class="right">
-            <span id="awake"> Awake: {{ awake_time }} </span> |
-            <span> Loaded: {{ load_time }} </span>
+            <span id="awake"> Awake: {{ awoken }} </span> |
+            <span> Loaded: {{ loaded }} </span>
             
             <form action="/api/request" method="post">
                 <textarea name="request" rows="10" cols="50"></textarea><br />
@@ -210,7 +210,7 @@ def view_index():
                 xhr.open('GET', '/api/uptime');
                 xhr.onload = function() {
                     if (xhr.status == 200) {
-                        if (xhr.responseText < {{ uptime }}) location.reload();
+                        if (xhr.responseText < {{ awoken }}) location.reload();
                         else document.querySelector('#awake').innerHTML = 'Uptime: ' + xhr.responseText;
                     }
                 };
