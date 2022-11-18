@@ -226,6 +226,44 @@ def view_index():
     ''', **locals())
 
 
+# Render the right side of the index page with the request form.
+@bottle.route('/console')
+def api_request():
+    return bottle.template('''
+        
+        <span id="awake"> Awake: {{ awoken }} </span> |
+        <span> Loaded: {{ loaded }} </span>
+        
+        <form action="/api/request" method="post">
+            <textarea name="request" rows="10" cols="50"></textarea><br />
+            <input type="submit" value="Submit (Ctrl+Enter)" />
+        </form>
+
+        <script>
+            window.scrollTo(0, document.body.scrollHeight);
+            document.querySelector('textarea').addEventListener('keydown', function(e) {
+                if (e.keyCode == 13 && e.ctrlKey) {
+                    e.preventDefault();
+                    document.querySelector('form').submit();
+                }
+            });
+            document.querySelector('textarea').focus();
+            setInterval(function() {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', '/api/uptime');
+                xhr.onload = function() {
+                    if (xhr.status == 200) {
+                        if (xhr.responseText < {{ awoken }}) location.reload();
+                        else document.querySelector('#awake').innerHTML = 'Uptime: ' + xhr.responseText;
+                    }
+                };
+                xhr.send();
+            }, {{ refresh }});
+        </script>
+    
+    ''', **locals())
+
+
 # Return the server uptime (since the script was last modified).
 @bottle.route('/api/uptime')
 def api_uptime():
