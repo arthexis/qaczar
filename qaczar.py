@@ -281,6 +281,8 @@ def view_index():
 
 # Upkeep tasks performed periodically.
 def upkeep_thread():
+    # Create a separate database connection for this thread.
+    db = sqlite3.connect('db.sqlite3')
     while True:
         sleep_unpredictably(60, 120)
         os.system(f'git add . && git commit -m "Upkeep" && git push')
