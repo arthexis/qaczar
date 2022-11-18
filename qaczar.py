@@ -45,13 +45,13 @@ log.basicConfig(level=LOGLEVEL, handlers=[DbHandler()])
 
 # Get the latest text stored in the database table. Log the timestamp.
 def get_latest_text(table):
-    c = us.cursor()
-    try:
-        c.execute(f'SELECT ts, text FROM {table} ORDER BY id DESC LIMIT 1')
-        ts, text = c.fetchone()
-    except sqlite3.OperationalError:
-        log.info(f'No data in table {table}.')
-        return ''
+    with us:
+        try:
+            us.execute(f'SELECT ts, text FROM {table} ORDER BY id DESC LIMIT 1')
+            ts, text = us.fetchone()
+        except sqlite3.OperationalError:
+            log.info(f'No data in table {table}.')
+            return ''
     # Format the timestamp.
     ts = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(ts)))
     log.info(f'Last {table} from {ts} ({len(text)} bytes)')
@@ -60,17 +60,16 @@ def get_latest_text(table):
 
 # Get all the text from a table in time order.
 def get_text(table, reverse=False, limit=10):
-    log.info(f'Get {table} from db.')
-    c = us.cursor()
-    try:
-        c.execute(f'SELECT id, ts, text FROM {table} ORDER BY id {"DESC" if reverse else ""} LIMIT {limit}')
-    except sqlite3.OperationalError:
-        log.info(f'No data in table {table}.')
-        return []
-    for row in c.fetchall():
-        id, ts, text = row
-        ts = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(ts)))
-        yield f'{table} #{id} at {ts}', text
+    with us:
+        try:
+            us.execute(f'SELECT id, ts, text FROM {table} ORDER BY id {"DESC" if reverse else ""} LIMIT {limit}')
+        except sqlite3.OperationalError:
+            log.info(f'No data in table {table}.')
+            return []
+        for row in us.fetchall():
+            id, ts, text = row
+            ts = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(ts)))
+            yield f'{table} #{id} at {ts}', text
 
 
 # Insert a backup of the running script into the database.
@@ -177,9 +176,23 @@ BASE_CSS = '''
 
 # Generate a random variation of the base CSS.
 def get_css():
+    def get_color():
+        while True:
+            color = '#%06x' % random.randint(0, 0xFFFFFF)
+            r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
+            if r + g + b < 128:
+                return color
+    def get_text_color():
+        while True:
+            color = '#%06x' % random.randint(0, 0xFFFFFF)
+            r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
+            if r + g + b > 128:
+                return color
+    
     return BASE_CSS + f'''
-        body {{ background-color: #{random.randint(0, 0xffffff):06x}; }}
+        body {{ background-color: {get_color()}; color: {get_text_color()}; }}
     '''
+    
 
 
 # --- BOTTLE ROUTES ---
