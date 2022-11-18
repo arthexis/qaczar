@@ -91,7 +91,7 @@ if __name__ == "__main__":
         import subprocess
         import atexit
         while True:
-            server = subprocess.Popen([sys.executable, __file__, "--server"])
+            server = subprocess.Popen([sys.executable, __file__, "--facade"])
             savepoint = time.time()
             atexit.register(server.terminate)
             mtime = os.path.getmtime(__file__) 
@@ -159,8 +159,8 @@ def view_index():
         first_visitation()
     
     load_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-    active_table = bottle.request.query.get('table', 'request')
-    main_content = list(recollect(active_table, reverse=True))
+    active_topic = bottle.request.query.get('topic', 'request')
+    main_content = list(recollect(active_topic, reverse=True))
     refresh = random.randint(500, 2000)
     topics = topics()
     awake_time =  awake_time()
@@ -171,8 +171,8 @@ def view_index():
 
         <div class="left">
             <table><tr>
-                % for table in tables:
-                    % if table == active_table:
+                % for topic in topics:
+                    % if topic == active_topic:
                         <th>{{topic}}</th>
                     % else:
                         <th><a href="/?t={{topic}}">{{topic}}</a></th>
@@ -180,14 +180,14 @@ def view_index():
                 % end
             </tr></table>
             <table>
-                % for context, line in main_content:
-                <tr title="{{context}}"><td>{{! line}}</td></tr>
+                % for id, ts, text, ref in main_content:
+                <tr title=""><td>{{! text}}</td></tr>
                 % end
             </table>
         </div>
         
         <div class="right">
-            <span id="uptime"> Uptime: {{ awake_time }} </span> |
+            <span id="awake"> Awake: {{ awake_time }} </span> |
             <span> Loaded: {{ load_time }} </span>
             
             <form action="/api/request" method="post">
@@ -211,7 +211,7 @@ def view_index():
                 xhr.onload = function() {
                     if (xhr.status == 200) {
                         if (xhr.responseText < {{ uptime }}) location.reload();
-                        else document.querySelector('#uptime').innerHTML = 'Uptime: ' + xhr.responseText;
+                        else document.querySelector('#awake').innerHTML = 'Uptime: ' + xhr.responseText;
                     }
                 };
                 xhr.send();
@@ -237,7 +237,7 @@ def api_request():
         if result:
             remember('result', result, )
             log.info(f'Result: {result}')
-    bottle.redirect('/?table=result')
+    bottle.redirect('/?t=result')
 
 
 # --- UPKEEP ---
@@ -246,7 +246,7 @@ def upkeep_cycle():
     while True:
         # Avoid calling the database, use HTTP API calls instead.
         sleep_unpredictably(60, 120)
-        os.system(f'git add . && git commit -m "Upkeep" && git push')
+        os.system(f'git add . && git commit -m "Upkeep commit" && git push')
 
 
 HOST = os.environ.get('HOST', 'localhost')
@@ -255,8 +255,8 @@ PORT = int(os.environ.get('PORT', 8080))
 
 if __name__ == '__main__':
     RUNLEVEL = 2
-    if len(sys.argv) == 2 and sys.argv[1] == '--server':
+    if len(sys.argv) == 2 and sys.argv[1] == '--facade':
         threading.Thread(target=upkeep_cycle).start()
-        log.info('Starting bottle server.')
+        log.info('Starting facade.')
         bottle.run(host=HOST, port=PORT)
         
