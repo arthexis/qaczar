@@ -36,12 +36,12 @@ def remember(table, text):
         us.execute(f'INSERT INTO {table} (ts, text) VALUES (?, ?)', (time.time(), text))
     
 
-class DbHandler(log.Handler):
+class USHandler(log.Handler):
     def emit(self, record):
         remember('log', self.format(record))
 
 
-log.basicConfig(level=LOGLEVEL, handlers=[DbHandler()])
+log.basicConfig(level=LOGLEVEL, handlers=[USHandler()])
 
 
 def last(table):
@@ -100,10 +100,10 @@ def forget(table):
 # they are need to be user by the watcher process.
 
 if __name__ == "__main__":
-    log.info('Accessing mind palace.')
+    log.info('Connecting mind palace.')
     RUNLEVEL = 1
     if len(sys.argv) == 1:
-        log.info("Preparing watch fork.")
+        log.info("Preparing for self awareness fork.")
         import subprocess
         import atexit
         while True:
@@ -114,42 +114,34 @@ if __name__ == "__main__":
             while True: 
                 time.sleep(1)
                 if os.path.getmtime(__file__) != mtime:
-                    log.info("Change detected. Restarting server.")
+                    log.info("Mutation detected. Restarting facade.")
                     break
                 if server.poll() is not None:  # Server has crashed.
-                    log.info("Server terminated unexpectedly. Reverting source.")
+                    log.info("Facade terminated unexpectedly. Reverting self.")
                     original = last('source')
                     if not original:
-                        log.info("No source backup found. Exiting.")
+                        log.info("No self backup found. Terminating.")
                         sys.exit(1)
                     with open(__file__, 'w') as f:
                         f.write(original)
                     break
-            log.info("Stopping server.")
+            log.info("Stopping facade.")
             server.terminate()
             server.wait()
 
 
-# --- VIEW COMPONENTS ---
+# --- FACADE COMPONENTS ---
 
-# Initialize some application state on startup.
-def first_load():
+def first_visitation():
     global RUNLEVEL
     backup_self()
-    log.info(f'First load in {time.time() - epoch}s')
+    log.info(f'First visit in {time.time() - epoch}s')
     RUNLEVEL = 3
 
 
-# Process an incoming request.
 def process_request(request):
     log.info(f'Processing request: {request}')
     return 'Success'
-
-
-# Generate a checklist of all the todos.
-def get_todos():
-    for title, text in recollect('todo'):
-        yield f'<li><input type="checkbox" id="{title}"><label for="{title}">{text}</label></li>'
 
 
 # Get the git status and commit hash.
@@ -209,7 +201,7 @@ def view_request_post():
 @bottle.route('/')
 def view_index():
     if RUNLEVEL == 2:
-        first_load()
+        first_visitation()
     
     current_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
     active_table = bottle.request.query.get('table', 'request')
