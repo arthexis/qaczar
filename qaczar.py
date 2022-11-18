@@ -13,6 +13,8 @@ import threading
 RUNLEVEL = 0
 EPOCH = os.path.getmtime(__file__)
 
+log.basicConfig(stream=sys.stdout)
+
 
 def sleep_unpredictably(a, b=None):
     time.sleep(random.uniform(a, b or a))
@@ -27,14 +29,14 @@ def awake_time():
 us = sqlite3.connect('u.sqlite')
 
 
-def remember(topic, text, ref=None):
-    with us:
-        us.execute(
+def remember(topic, text):
+    with us as c:
+        c.execute(
             f'CREATE TABLE IF NOT EXISTS {topic} '
-            f'(id INTEGER PRIMARY KEY, ts TEXT, text TEXT, ref INTEGER)'
+            f'(id INTEGER PRIMARY KEY, ts TEXT, text TEXT)'
         )
         try:
-            us.execute(f'INSERT INTO {topic} (ts, text) VALUES (?, ?)', (awake_time(), text))
+            c.execute(f'INSERT INTO {topic} (ts, text) VALUES (?, ?)', (awake_time(), text))
         except Exception as e:
             log.error(f'Could not remember {topic}: {e}')
 
@@ -42,40 +44,38 @@ def remember(topic, text, ref=None):
 def last(table) -> tuple:
     with us:
         try:
-            us.execute(f'SELECT id, ts, text, ref FROM {table} ORDER BY id DESC LIMIT 1')
-            id, ts, text, ref = us.fetchone()
+            c.execute(f'SELECT id, ts, text FROM {table} ORDER BY id DESC LIMIT 1')
+            id, ts, text = us.fetchone()
         except sqlite3.OperationalError:
             log.info(f'No last memory of {table}.')
             return None
-    ts = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(ts)))
-    
-    return text
+    return id, ts, text
 
 
 def recollect(table, reverse=False, limit=10):
-    with us:
+    log.info(f'Recollecting {table}')
+    with us as c:
         try:
-            r = us.execute(f'SELECT id, ts, text FROM {table} ORDER BY id {"DESC" if reverse else ""} LIMIT {limit}')
+            r = c.execute(f'SELECT id, ts, text FROM {table} ORDER BY id {"DESC" if reverse else ""} LIMIT {limit}')
         except sqlite3.OperationalError:
             log.info(f'No memory of {table}.')
             return []
-    for row in r.fetchall():
-        id, ts, text = row
-        ts = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(ts)))
-        yield id, ts, text, table
+        for row in r.fetchall():
+            id, ts, text = row
+            ts = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(ts)))
+            yield id, ts, text
 
 
 def enlist_topics():
-    c = us.cursor()
-    c.execute('SELECT name FROM sqlite_master WHERE type="table"')
-    return [t[0] for t in c.fetchall()]
+    with us as c:
+        r = c.execute('SELECT name FROM sqlite_master WHERE type="table"')
+        return [t[0] for t in r.fetchall()]
 
 
 def forget(table):
-    c = us.cursor()
-    c.execute(f'DROP TABLE IF EXISTS {table}')
-    us.commit()
-    log.info(f'Forgot {table}.')
+    with us as c:
+        c.execute(f'DROP TABLE IF EXISTS {table}')
+        log.info(f'Forgot {table}.')
 
 
 # --- SELF AWARENESS ---
@@ -159,7 +159,7 @@ def view_index():
         first_visitation()
     
     loaded = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-    active_topic = bottle.request.query.get('topic', 'request')
+    active_topic = bottle.request.query.get('t', 'request')
     main_content = list(recollect(active_topic, reverse=True))
     refresh = random.randint(500, 2000)
     topics = enlist_topics()
@@ -178,9 +178,9 @@ def view_index():
                         <th><a href="/?t={{topic}}">{{topic}}</a></th>
                     % end
                 % end
-            </tr></table>
+            </tr></table><br>
             <table>
-                % for id, ts, text, ref in main_content:
+                % for id, ts, text in main_content:
                 <tr title=""><td>{{! text}}</td></tr>
                 % end
             </table>
