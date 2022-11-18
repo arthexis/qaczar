@@ -27,9 +27,6 @@ def get_uptime():
 
 # --- DATABASE FUNCTIONS ---
 
-# Insert a string of text a specified table.
-# If the table doesn't exist, create it.
-# Each row has a timestamp and a string of text.
 def store_text(table, text):
     c = db.cursor()
     c.execute(f'CREATE TABLE IF NOT EXISTS {table} (id INTEGER PRIMARY KEY, ts TEXT, text TEXT)')
@@ -282,7 +279,7 @@ def view_index():
 # Upkeep tasks performed periodically.
 def upkeep_thread():
     # Create a separate database connection for this thread.
-    db = sqlite3.connect('db.sqlite3')
+    db = sqlite3.connect('db.sqlite')
     while True:
         sleep_unpredictably(60, 120)
         os.system(f'git add . && git commit -m "Upkeep" && git push')
