@@ -65,7 +65,7 @@ def recollect(table, reverse=False, limit=10):
         yield f'{table} #{id} at {ts}', text
 
 
-def topics():
+def enlist_topics():
     c = us.cursor()
     c.execute('SELECT name FROM sqlite_master WHERE type="table"')
     return [t[0] for t in c.fetchall()]
@@ -162,7 +162,7 @@ def view_index():
     active_topic = bottle.request.query.get('topic', 'request')
     main_content = list(recollect(active_topic, reverse=True))
     refresh = random.randint(500, 2000)
-    topics = topics()
+    topics = enlist_topics()
     awake_time =  awake_time()
     css = modulate_facade()
 
