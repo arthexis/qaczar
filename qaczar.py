@@ -22,7 +22,7 @@ def sleep_unpredictably(a, b=None):
 
 epoch = os.path.getmtime(__file__)
 def get_uptime():
-    return time.time() - epoch
+    return int(time.time() - epoch)
 
 
 # --- DATABASE FUNCTIONS ---
@@ -199,7 +199,7 @@ def view_request_post():
         if result:
             store_text('result', result)
             log.info(f'Result: {result}')
-    bottle.redirect('/')
+    bottle.redirect('/?table=result')
 
 
 # Render the main view (index)
@@ -214,7 +214,7 @@ def view_index():
     log_history = list(get_text('log', reverse=True))
     todos = get_todos()
     tables = get_tables()
-    uptime = get_uptime()
+    uptime =  get_uptime()
     refresh = random.randint(500, 2000)
     return bottle.template('''
         <style>{{css}}</style>
@@ -233,23 +233,12 @@ def view_index():
         </div>
         
         <div class="right">
-            <p>Uptime: {{ uptime }} </p>
-            <p>Last refresh: {{ current_time }} </p>
+            <span>Uptime: {{ uptime }} </span>
+            <span>Refresh: {{ current_time }} </span>
             <form action="/api/request" method="post">
                 <textarea name="request" rows="10" cols="50"></textarea><br />
                 <input type="submit" value="Submit (Ctrl+Enter)" />
-                <ul class="todos">
-                    % for todo in todos:
-                        {{! todo}}
-                    % end
-                </ul>
             </form>
-            <table>
-                <thead><tr><th>Time</th><th>Message</th></tr></thead>
-                % for t, m in reversed(log_history):
-                    <tr><td>{{t}}</td><td>{{m}}</td></tr>
-                % end
-            </table>
         </div>    
 
         <script>
