@@ -4,9 +4,10 @@
 import os
 import sys
 import time
-import sqlite3
-import urllib.request
 import bottle
+import random
+import sqlite3
+import threading
 
 
 HOST = os.environ.get('HOST', 'localhost')
@@ -28,18 +29,12 @@ def get_uptime():
     return time.time() - epoch
 
 
-# --- EXTERNAL DATA ACCESS ---
+# Sleep for a random amount of time between a and b seconds.
+def sleep(a, b=None):
+    time.sleep(random.uniform(a, b or a))
 
-# Download a file by url and return the bytes.
-def fetch_file(url):
-    log('Downloading file: ' + url)
-    try:
-        with urllib.request.urlopen(url) as r:
-            return r.read()
-    except urllib.error.HTTPError as e:
-        log('Error downloading file: ' + url)
-        log(str(e))
 
+# --- VERSION CONTROL ---
 
 # Commit to git.
 def git_commit(message):
@@ -164,18 +159,30 @@ def first_load():
     runlevel = 3
 
 
+# Calculate levenstein distance between two strings.
+def levenshtein(s1, s2):
+    if len(s1) < len(s2):
+        return levenshtein(s2, s1)
+    if len(s2) == 0:
+        return len(s1)
+    previous_row = range(len(s2) + 1)
+    for i, c1 in enumerate(s1):
+        current_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            insertions = previous_row[j + 1] + 1
+            deletions = current_row[j] + 1
+            substitutions = previous_row[j] + (c1 != c2)
+            current_row.append(min(insertions, deletions, substitutions))
+        previous_row = current_row
+    return previous_row[-1]
+
+
 # Process an incoming request.
 def process_request(request):
-    command, *params = request.split()
-    if command == 'todo':
-        store_text('todo', ' '.join(params))
-        return 'Todo stored.'
-    if command == 'drop':
-        if not params:
-            return 'No table specified.'
-        drop_table(params[0])
-        return 'Table dropped.'
-    log(f'Unknown command: {command}')
+    # Get the name of all the functions in the global namespace.
+    functions = [f for f in globals() if callable(globals()[f])]
+    # Calculate the levenshtein distance between the request and each function.
+    distances = [(f, levenshtein(request, f)) for f in functions]
 
 
 # Generate a checklist of all the todos.
@@ -235,6 +242,7 @@ def view_index():
     todos = get_todos()
     tables = get_tables()
     uptime = get_uptime()
+    refresh = random.randint(500, 2000)
     return bottle.template('''
         <style>{{css}}</style>
 
@@ -290,16 +298,26 @@ def view_index():
                     }
                 };
                 xhr.send();
-            }, 1000);
+            }, {{ refresh }});
         </script>
     
     ''', **locals(), log_history=log_history, css=CSS)
-    
+
+
+# Upkeep tasks performed periodically.
+def upkeep_thread():
+    log('Starting upkeep thread.')
+    while True:
+        sleep(10, 20)
+        git_commit("Upkeep commit")
+        log('Upkeep cycle complete.')
+
 
 # Start the bottle server for user requests.
 if __name__ == '__main__':
     runlevel = 2
     if len(sys.argv) == 2 and sys.argv[1] == '--server':
+        threading.Thread(target=upkeep_thread).start()
         log('Starting bottle server.')
         bottle.run(host=HOST, port=PORT)
-
+        
