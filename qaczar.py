@@ -190,7 +190,6 @@ def update_backups():
         emit(f'Git push complete <source> #{_id}.')
 
 
-
 # --- FACADE ---
 
 HOST = os.environ.get('HOST', 'localhost')
