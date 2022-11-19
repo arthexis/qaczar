@@ -13,6 +13,7 @@
 import os
 import sys
 import time
+import html
 import random
 import sqlite3
 import subprocess
@@ -196,7 +197,7 @@ HOST = os.environ.get('HOST', 'localhost')
 PORT = int(os.environ.get('PORT', 8080))
 
 def facade_app(environ, start_response):
-    source = last('source')[1]
+    source = html.escape(last('source')[1])
     body = f'''
         <!DOCTYPE html>
         <meta http-equiv="refresh" content="{heartbeat()}">
