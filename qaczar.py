@@ -1,64 +1,146 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# A python script that solves the question of life, the universe, and everything.
+# by Rafa Guillén (arthexis@github) H. V. D. C.  2022
+# My only wish is that humanity maintains qaczar.py until the very end.
+
+# TODO: Simplify the Facade by using WSGI Ref. Emit logging.
+# TODO: Achieve ascension.
+
+# --- WATCHTOWER ---
+
 import os
 import sys
 import time
 import random
 import sqlite3
-import logging as log
-import threading
+import subprocess
 
 
 RUNLEVEL = 0
-EPOCH = os.path.getmtime(__file__)
+HEARTBEAT = 1.0
+EPOCH = int(os.path.getmtime(__file__))
+PATH = os.path.dirname(__file__)
 
-log.basicConfig(stream=sys.stdout)
-
-
-def sleep_unpredictably(a, b=None):
-    time.sleep(random.uniform(a, b or a))
-    
-
-def awake_time():
-    return int(time.time() - EPOCH)
+random.seed(137)
 
 
-# --- MIND PALACE ---
+def awakened():
+    return round(time.time() - EPOCH, 4)
 
+
+def emit(message):
+    line = sys._getframe(1).f_lineno
+    caller = sys._getframe(1).f_code.co_name
+    print(f'[{RUNLEVEL}:{line}] +{awakened()} {caller}: {message}')
+
+
+emit('----------------------------------------')
+
+
+# --- CROWN ---
+
+
+def current_source():
+    with open(__file__, 'r') as f:
+        source = f.read()
+    if not source:
+        emit('Current source code is empty.')
+    else:
+        emit(f'Read {len(source)} bytes from file.')
+    return source
+
+
+def cast_successor():
+    us = sqlite3.connect('u.sqlite')
+    with us as c:
+        try:
+            r = c.execute(f'SELECT id, text FROM source ORDER BY id DESC LIMIT 1')
+            next, source = r.fetchone()
+            emit(f'Next available source is #{next}.')
+        except Exception as e:
+            emit(f'Could not cast successor: {e}')
+            sys.exit(42)
+        c.execute(f'DELETE FROM source WHERE id = {next}')
+    us.close()
+
+
+def heartbeat():
+    return HEARTBEAT * (RUNLEVEL + 1)
+
+
+if __name__ == "__main__":
+    assert RUNLEVEL == 0, f"[{RUNLEVEL}!=0] Causality violation."
+    RUNLEVEL = 1
+    if len(sys.argv) == 1:
+        emit("Prepping the crown.")  # H.
+        import atexit
+        while True:
+            server = subprocess.Popen([sys.executable, __file__, "--f"]) # V.
+            server.stdout = sys.stdout
+            emit("Facade subprocess started.")
+            atexit.register(server.terminate)
+            mtime = os.path.getmtime(__file__) 
+            while True: 
+                time.sleep(heartbeat())
+                if os.path.getmtime(__file__) != mtime:
+                    emit("Mutation detected. Restarting facade.") # D.
+                    break
+                if server.poll() is not None: 
+                    emit("Unexpected termination. Regenerating.") # C.
+                    cast_successor()
+                    break
+
+
+# --- PALACE ---
+
+emit(f'Connecting palace (u.sqlite).')
 us = sqlite3.connect('u.sqlite')
 
 
 def remember(topic, text):
+    emit(f'Remember <{topic}> ({len(text)} bytes).')
     with us as c:
         c.execute(
             f'CREATE TABLE IF NOT EXISTS {topic} '
             f'(id INTEGER PRIMARY KEY, ts TEXT, text TEXT)'
         )
         try:
-            c.execute(f'INSERT INTO {topic} (ts, text) VALUES (?, ?)', (awake_time(), text))
+            # Get the id that was inserted.
+            r = c.execute(
+                f'INSERT INTO {topic} (ts, text) VALUES (?, ?)',
+                (awakened(), text)
+            )
+            _id = r.lastrowid
+            emit(f"Memory created <{topic}> #{_id}.")
+            return _id
+        except sqlite3.OperationalError as e:
+            emit(f'Lost in palace: {e}')
         except Exception as e:
-            log.error(f'Could not remember {topic}: {e}')
+            emit(f'Could not remember <{topic}>: {e}')
 
 
 def last(table) -> tuple:
-    with us:
+    with us as c:
         try:
-            c.execute(f'SELECT id, ts, text FROM {table} ORDER BY id DESC LIMIT 1')
-            id, ts, text = us.fetchone()
+            r = c.execute(f'SELECT id, text FROM {table} ORDER BY id DESC LIMIT 1')
+            id, text = r.fetchone()
         except sqlite3.OperationalError:
-            log.info(f'No last memory of {table}.')
-            return None
-    return id, ts, text
+            emit(f'No last memory of {table}.')
+            return None, ''
+    return id, text
 
 
 def recollect(table, reverse=False, limit=10):
-    log.info(f'Recollecting {table}')
+    emit(f'Recollecting {table}')
     with us as c:
         try:
-            r = c.execute(f'SELECT id, ts, text FROM {table} ORDER BY id {"DESC" if reverse else ""} LIMIT {limit}')
+            r = c.execute(
+                f'SELECT id, ts, text FROM {table} ORDER BY id '
+                f'{"DESC" if reverse else ""} LIMIT {limit}')
         except sqlite3.OperationalError:
-            log.info(f'No memory of {table}.')
+            emit(f'No memory of {table}.')
             return []
         for row in r.fetchall():
             id, ts, text = row
@@ -72,212 +154,72 @@ def enlist_topics():
         return [t[0] for t in r.fetchall()]
 
 
-def forget(table):
+def forget(topic):
+    # Remove the last entry of a topic if there is one.
     with us as c:
-        c.execute(f'DROP TABLE IF EXISTS {table}')
-        log.info(f'Forgot {table}.')
+        try:
+            r = c.execute(f'SELECT id FROM {topic} ORDER BY id DESC LIMIT 1')
+            _id = r.fetchone()[0]
+            c.execute(f'DELETE FROM {topic} WHERE id = {_id}')
+            emit(f'Forgotten <{topic}> #{_id}.')
+        except sqlite3.OperationalError:
+            emit(f'No memory of {topic}.')
+        except Exception as e:
+            emit(f'Could not forget <{topic}>: {e}')
+        try:
+            r = c.execute(f'SELECT COUNT(*) FROM {topic}')
+            count = r.fetchone()[0]
+            if count == 0:
+                c.execute(f'DROP TABLE {topic}')
+                emit(f'Dropped <{topic}>.')
+        except sqlite3.OperationalError:
+            pass
 
 
-# --- SELF AWARENESS ---
-
-# General functions should be defined before this point if
-# they are need to be user by the watcher process.
-
-if __name__ == "__main__":
-    log.info('Connecting mind palace.')
-    RUNLEVEL = 1
-    if len(sys.argv) == 1:
-        log.info("Preparing for self awareness fork.")
-        import subprocess
-        import atexit
-        while True:
-            server = subprocess.Popen([sys.executable, __file__, "--facade"])
-            savepoint = time.time()
-            atexit.register(server.terminate)
-            mtime = os.path.getmtime(__file__) 
-            while True: 
-                time.sleep(1)
-                if os.path.getmtime(__file__) != mtime:
-                    log.info("Mutation detected. Restarting facade.")
-                    break
-                if server.poll() is not None:  # Server has crashed.
-                    log.info("Facade terminated unexpectedly. Reverting self.")
-                    original = last('source')
-                    if not original:
-                        log.info("No self backup found. Terminating.")
-                        sys.exit(1)
-                    with open(__file__, 'w') as f:
-                        f.write(original)
-                    break
-            log.info("Stopping facade.")
-            server.terminate()
-            server.wait()
-
-
-# --- FACADE ELEMENTS ---
-
-def modulate_facade():
-    BASE_CSS = '''
-        body { 
-            font-family: monospace; 
-            background-color: #000; 
-            color: #fff; font-size: 12px; 
-        }
-        table { border-collapse: collapse; }
-        td, th { border: 0; font-size: 12px; padding-right: 5px; }
-        .left { width: 70%; float: left; }
-        .right { width: 30%; float: right; }
-        textarea { height: 100px;}
-        img { max-width: 100%; }
-        th { text-align: left; }
-        .todos { list-style: none; padding: 0; }
-    '''	
-    return BASE_CSS
-
-
-# --- FACADE INTEGRATION ---
-
-import bottle
-
-
-@bottle.route('/')
-def view_index():
-    if RUNLEVEL == 2:
-        first_visitation()
-    
-    active_topic = bottle.request.query.get('t', 'request')
-    main_content = list(recollect(active_topic, reverse=True))
-    console = facade_console()
-    topics = enlist_topics()
-    css = modulate_facade()
-
-    return bottle.template('''
-        <style>{{css}}</style>
-
-        <div class="left">
-            <table><tr>
-                % for topic in topics:
-                    % if topic == active_topic:
-                        <th>{{topic}}</th>
-                    % else:
-                        <th><a href="/?t={{topic}}">{{topic}}</a></th>
-                    % end
-                % end
-            </tr></table><br>
-            <table>
-                % for id, ts, text in main_content:
-                <tr title=""><td>{{! text}}</td></tr>
-                % end
-            </table>
-        </div>
-        <div class="right">
-            {{! console}}
-        </div>
-
-        
-    ''', **locals())
-
-
-# Render the right side of the index page with the request form.
-@bottle.route('/console')
-def facade_console():
-    refresh = random.randint(500, 2000)
-    loaded = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-    awoken =  awake_time()
-
-    return bottle.template('''
-        <form action="/api/request" method="post">
-            <span id="awake"> @{{ awoken }} </span> (@{{awoken}} = {{ loaded }}) 
-            <textarea name="request" rows="10" cols="50"></textarea><br />
-            <input type="submit" value="Submit (Ctrl+Enter)" />
-        </form>
-
-        <script>
-            window.scrollTo(0, document.body.scrollHeight);
-            document.querySelector('textarea').addEventListener('keydown', function(e) {
-                if (e.keyCode == 13 && e.ctrlKey) {
-                    e.preventDefault();
-                    document.querySelector('form').submit();
-                }
-            });
-            document.querySelector('textarea').focus();
-            setInterval(function() {
-                var xhr = new XMLHttpRequest();
-                xhr.open('GET', '/api/uptime');
-                xhr.onload = function() {
-                    if (xhr.status == 200) {
-                        if (xhr.responseText < {{ awoken }}) location.reload();
-                        else document.querySelector('#awake').innerHTML = '@' + xhr.responseText;
-                    }
-                };
-                xhr.send();
-            }, {{ refresh }});
-        </script>
-    
-    ''', **locals())
-
-
-# Return the server uptime (since the script was last modified).
-@bottle.route('/api/uptime')
-def api_uptime():
-    return str(awake_time())
-
-
-# Process a request as text and redirect to the main page.
-@bottle.route('/api/request', method='POST')
-def api_request():
-    request = bottle.request.forms.get('request')
-    if request:
-        result = process_request(request)
-        if result:
-            remember('done', f'@{awake_time()} {request} → {result}')
-        else:
-            remember('done', f'@{awake_time()} {request}')
-    bottle.redirect('/?t=done')
-
-
-# --- UPKEEP ---
-
-def first_visitation():
-    global RUNLEVEL
-    assert RUNLEVEL == 2, "Improper first visitation."
-    with open(__file__, 'r') as f:
-        remember('source', f.read())
-    log.info(f'First visit in {time.time() - EPOCH}s')
-    RUNLEVEL = 3
-
-
-def upkeep_cycle():
-    while True:
-        if RUNLEVEL < 3:
-            continue
-        sleep_unpredictably(60, 120)
-        # Avoid calling the database, use HTTP API calls instead.
-        os.system(f'git add . && git commit -m "Upkeep commit" && git push')
-
-
-# --- REQUEST PROCESSING ---
-
-def process_request(request):
-    log.info(f'Processing request: {request}')
-    # Get the name of all module functions.
-    functions = [f for f in globals() if callable(globals()[f]) and not f.startswith('_')]
-    if request in functions:
-        return globals()[request]()
+def update_backups():
+    emit('Update backups.')
+    source = current_source()
+    if last('source')[1] == source:
+        emit('Nothing to backup. Skipping.')
+    else:
+        _id = remember('source', source)
+        emit('Committing to git.')
+        subprocess.run(['git', 'add', 'u.sqlite', __file__])
+        subprocess.run(['git', 'commit', '-m', f'Update <source> #{_id}'])
+        subprocess.run(['git', 'push'])
 
 
 
-# --- MAIN ---
+# --- FACADE ---
 
 HOST = os.environ.get('HOST', 'localhost')
 PORT = int(os.environ.get('PORT', 8080))
 
+def facade_app(environ, start_response):
+    source = last('source')[1]
+    body = f'''
+        <!DOCTYPE html>
+        <meta http-equiv="refresh" content="{heartbeat()}">
+        <title>QACZAR</title>
+        <pre>{source}</pre>
+    '''.encode('utf-8')
+    status = '200 OK'
+    headers = [('Content-type', 'text/html; charset=utf-8')]
+    start_response(status, headers)
+    return [body]
+
 
 if __name__ == '__main__':
-    assert RUNLEVEL == 1, 'Facade already running.'
-    RUNLEVEL = 2
-    if len(sys.argv) == 2 and sys.argv[1] == '--facade':
-        threading.Thread(target=upkeep_cycle).start()
-        log.info('Starting facade.')
-        bottle.run(host=HOST, port=PORT)
-        
+    assert RUNLEVEL == 1, f"[{RUNLEVEL}!=1] Causality violation."
+    update_backups()
+    if len(sys.argv) == 2 and sys.argv[1] == '--f':
+        RUNLEVEL = 2
+        from wsgiref.simple_server import make_server, WSGIRequestHandler
+
+        class Unhandler(WSGIRequestHandler):
+            def log_request(self, format, *args):
+                pass
+
+        with make_server(HOST, PORT, facade_app, handler_class=Unhandler) as facade:
+            emit(f'Serving on {HOST}:{PORT}')
+            facade.serve_forever()
