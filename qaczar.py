@@ -206,7 +206,7 @@ def facade_app(environ, start_response):
         <pre>{source}</pre>
     '''.encode('utf-8')
     status = '200 OK'
-    headers = [('Content-type', 'text/html; charset=utf-8')]
+    headers = [('Content-type', 'text/html')]
     start_response(status, headers)
     return [body]
 
