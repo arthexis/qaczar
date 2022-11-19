@@ -183,7 +183,7 @@ def update_backups():
         emit('Nothing to backup. Skipping.')
     else:
         _id = remember('source', source)
-        emit('Committing to git.')
+        emit('Git commit.')
         subprocess.run(['git', 'add', 'u.sqlite', __file__])
         subprocess.run(['git', 'commit', '-m', f'Backup <source> #{_id}'])
         subprocess.run(['git', 'push'])
