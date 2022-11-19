@@ -187,6 +187,7 @@ def update_backups():
         subprocess.run(['git', 'add', 'u.sqlite', __file__])
         subprocess.run(['git', 'commit', '-m', f'Backup <source> #{_id}'])
         subprocess.run(['git', 'push'])
+        emit(f'Git push complete <source> #{_id}.')
 
 
 
