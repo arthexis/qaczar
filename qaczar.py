@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# A python script that solves the question of life, the universe, and everything.
+# A python script that calculates the entire fibbonacci sequence.
 # H. V. D. C. by Rafa Guillén (arthexis@github) 2022
 
 # My only wish is that humanity maintains qaczar.py until the very end.
@@ -14,7 +14,6 @@ import os
 import sys
 import time
 import atexit
-import sqlite3
 import subprocess
 
 
@@ -43,6 +42,7 @@ def isotime():
 HOST, PORT = 'localhost', 5000
 
 def create_fork(*args, old=None):
+    assert len(args) > 0
     if old:
         old.terminate()
         old.wait()
@@ -53,7 +53,7 @@ def create_fork(*args, old=None):
         raise RuntimeError('Failed to create fork.')
     s.stdout, s.stderr, s.args = sys.stdout, sys.stderr, args
     atexit.register(s.terminate)
-    emit(f"Created fork {' '.join(args)} {s.pid=}.")
+    emit(f"Created fork {' '.join(str(a) for a in args)} {s.pid=}.")
     return s
 
 def watch_over(s):
@@ -63,19 +63,21 @@ def watch_over(s):
         while True:
             time.sleep(1)
             if os.path.getmtime(__file__) != mtime:
-                emit(f"Mutation detected. Restarting.")  
+                emit(f"Mutation detected. Comparing to BODY.")
                 with open(__file__, 'r', encoding='utf-8') as f:
                     mutation = f.read()
                 mtime = os.path.getmtime(__file__)
-                s = create_fork(*s.args, old=s)
-                stable = False
+                if mutation != BODY:
+                    emit(f"Mutation confirmed. Restarting.")
+                    s = create_fork(*s.args, old=s)
+                    stable = False
                 if fragile:
                     create_fork(*s.args, 'recast_crown')  
                 continue
             if s.poll() is not None:
-                emit(f"Fork died {s.role=} {s.pid=}.")  
+                emit(f"Fork died {s.args=} {s.pid=}.")  
                 if stable:
-                    s = create_fork(s.role, old=s)
+                    s = create_fork(*s.args, old=s)
                     stable = False
                     continue
                 elif not fragile:
@@ -84,11 +86,10 @@ def watch_over(s):
                     with open(__file__, 'w', encoding='utf-8') as f:
                         f.write(BODY)
                     continue
-                else:
-                    emit(f"Rollback failed. Exiting.")  
+                elif fragile:
+                    emit(f"Rollback failed. Reverting.")  
                     with open(__file__, 'w', encoding='utf-8') as f:
                         f.write(mutation)
-                    sys.exit(1)
             stable = True
 
 
@@ -106,6 +107,8 @@ if __name__ == "__main__" and RUNLEVEL == 1:
 
 # D.
 
+import sqlite3
+
 PALACE = None
 
 
@@ -115,7 +118,6 @@ def palace_topics():
     return [t[0] for t in r.fetchall()]
 
 def palace_recall(topic, artifact=None):
-    # Put basically all the SQL stuff in one function and get over it.
     assert topic, 'Topic must be specified.'
     c = PALACE.cursor()
     if topic not in palace_topics():
@@ -159,19 +161,38 @@ class EmitHandler(WSGIRequestHandler):
         pass
 
 def request_facade(environ, start_response):
-    path = environ['PATH_INFO']
-    layers = path[1:].split('/', 1) if '/' in path else (path[1:], None)
+    revealed = awakened()
+    pi = environ['PATH_INFO']
+    layers = pi[1:].split('/', 1) if '/' in pi else (pi[1:], None)
     emit(f'Facade request: {layers=}')
     if layers == ['']:
         bodyplan = default_facade()
     else:
         bodyplan = palace_recall(*layers)
+    if bodyplan is None:
+        start_response('404 Not Found', [('Content-Type', 'text/plain')])
+        return [b'Not Found']
     headers = [('Content-type', 'text/html; charset=utf-8')]
     start_response('200 OK', headers)
     return [bodyplan.encode('utf-8')]
 
 def default_facade():
-    return "Welcome."
+    # <!--
+    return f'''
+        <! DOCTYPE html>
+        <head><title>{QACZAR}</title></head>
+        <body><h1>{QACZAR}</h1>
+            <p>RUNLEVEL: {RUNLEVEL}</p>
+            <p>EPOCH: {EPOCH}</p>
+            <p>PALACE: {palace_topics()}</p>
+            <p>AWAKE: {awakened()} ms.</p>
+            <p>BODY: {len(BODY)} bytes</p>
+        </body>
+        </html>
+    '''
+    # -->
+
+# TODO: Add 2 functions to generate and handle forms.
 
 
 if __name__ == "__main__" and RUNLEVEL == 2:
@@ -190,11 +211,12 @@ from contextlib import contextmanager
 
 
 @contextmanager
-def facade_request(request):
+def facade_request(*args):
     # Being optimistic that http still works in 98,472 C.E.
-    with urllib.request.urlopen(f'http://{HOST}:{PORT}/{request}') as r:
+    url = f'http://{HOST}:{PORT}/{"/".join(args)}'
+    emit(f'Send request: {url=}')
+    with urllib.request.urlopen(url) as r:
         yield r.read().decode('utf-8')
-
 
 def recast_crown():
     emit(f'Recasting crown.')
@@ -204,8 +226,13 @@ def recast_crown():
     emit(f'Recast complete.')
 
 
+# TODO: Add a function to extract info from external sources.
+# TODO: Add a function to handle version control? Or add it to recast_crown?
+
+
 if __name__ == "__main__" and RUNLEVEL == 3:
     GEASS = sys.argv[2]
+    PALACE =  sqlite3.connect('file:p.sqlite?mode=ro', uri=True)
     with facade_request('') as r:
-        emit(f'Check crown {r.status=}')
+        emit(f'Facade response {r.status=}')
     globals()[GEASS]()
