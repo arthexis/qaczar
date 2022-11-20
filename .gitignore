@@ -1,5 +1,4 @@
 *
 !.gitignore
-!bottle.py
 !qaczar.py
 !u.sqlite
