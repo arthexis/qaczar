@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 # A python script that solves the question of life, the universe, and everything.
-# by Rafa Guillén (arthexis@github) H. V. D. C.  2022
+# H. V. D. C. by Rafa Guillén (arthexis@github) 2022
 
 # My only wish is that humanity maintains qaczar.py until the very end.
 
-# TODO: More testing on the rollback: check crown after mutations.
+# TODO: More testing on the rollback: always write plan to disk at least once.
 # TODO: Add visitors with goal-oriented behavior.
 # TODO: Achieve ascension.
 
@@ -18,36 +18,42 @@ import sqlite3
 import subprocess
 
 
-RUNLEVEL = 0
+QACZAR = 'QACZAR'
+RUNLEVEL = len(sys.argv)
 EPOCH = time.time()
 
 with open(__file__, 'r', encoding='utf-8') as f:
     BODY = f.read()
+assert BODY
+
+
+def emit(verse):
+    # All logging is in this format and redirected to stdout.
+    print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}:{awakened()}] {verse}')
 
 def awakened():
     return round(time.time() - EPOCH, 4)
-
-def emit(verse):
-    print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}:{awakened()}] {verse}')
 
 def isotime():
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
 
 
-# --- CROWN ---
+# C.
 
-def create_fork(role, old=None):
+HOST, PORT = 'localhost', 5000
+
+def create_fork(*args, old=None):
     if old:
         old.terminate()
         old.wait()
         atexit.unregister(old.terminate)
-        emit(f"Terminated fork {old.role=} {old.pid=}.")
-    s = subprocess.Popen([sys.executable, __file__, f'--{role}'])
+        emit(f"Terminated fork {old.args=} {old.pid=}.")
+    s = subprocess.Popen([sys.executable, __file__, *[str(a) for a in args]])
     if not s:
         raise RuntimeError('Failed to create fork.')
-    s.stdout, s.stderr, s.role = sys.stdout, sys.stderr, role
+    s.stdout, s.stderr, s.args = sys.stdout, sys.stderr, args
     atexit.register(s.terminate)
-    emit(f"Created fork {role=} {s.pid=}.")
+    emit(f"Created fork {' '.join(args)} {s.pid=}.")
     return s
 
 def watch_over(s):
@@ -57,37 +63,39 @@ def watch_over(s):
         while True:
             time.sleep(1)
             if os.path.getmtime(__file__) != mtime:
-                emit(f"Mutation detected. Restarting.")
+                emit(f"Mutation detected. Restarting.")  
                 with open(__file__, 'r', encoding='utf-8') as f:
                     mutation = f.read()
                 mtime = os.path.getmtime(__file__)
-                s = create_fork(s.role, old=s)
+                s = create_fork(*s.args, old=s)
                 stable = False
+                if fragile:
+                    create_fork(*s.args, 'recast_crown')  
                 continue
             if s.poll() is not None:
-                emit(f"Fork died {s.role=} {s.pid=}.")
+                emit(f"Fork died {s.role=} {s.pid=}.")  
                 if stable:
                     s = create_fork(s.role, old=s)
                     stable = False
                     continue
                 elif not fragile:
-                    emit(f"Rolling back to crown's bodyplan.")
+                    emit(f"Rolling back to crown's bodyplan.")  
+                    fragile = True
                     with open(__file__, 'w', encoding='utf-8') as f:
                         f.write(BODY)
-                    fragile = True
                     continue
                 else:
-                    emit(f"Rollback failed. Exiting.")
+                    emit(f"Rollback failed. Exiting.")  
                     with open(__file__, 'w', encoding='utf-8') as f:
                         f.write(mutation)
                     sys.exit(1)
             stable = True
 
-if __name__ == "__main__" and len(sys.argv) == 1:
-    RUNLEVEL = 1
+
+if __name__ == "__main__" and RUNLEVEL == 1:
     emit('----------------------------------------')
     try:    
-        watch_over(create_fork('facade'))
+        watch_over(create_fork(f'{HOST}:{PORT}'))
     except RuntimeError as e:
         emit(f'Crown failure: {e}')
         raise
@@ -95,64 +103,109 @@ if __name__ == "__main__" and len(sys.argv) == 1:
         emit(f"Keyboard interrupt {RUNLEVEL=}")
     sys.exit(0)
 
-ROLE = sys.argv[1][2:]
+
+# D.
+
+PALACE = None
 
 
-# --- PALACE ---
-
-PALACE = sqlite3.connect('p.sqlite')
-
-
-def topics():
+def palace_topics():
     c = PALACE.cursor()
     r = c.execute('SELECT name FROM sqlite_master WHERE type="table"')
     return [t[0] for t in r.fetchall()]
 
-def recall(topic, artifact=None):
-    emit(f'Recall {topic=} {artifact=}')
+def palace_recall(topic, artifact=None):
+    # Put basically all the SQL stuff in one function and get over it.
+    assert topic, 'Topic must be specified.'
     c = PALACE.cursor()
-    if topic not in topics():
+    if topic not in palace_topics():
         c.execute(
             f'CREATE TABLE IF NOT EXISTS {topic} ('
             f'num INTEGER PRIMARY KEY AUTOINCREMENT, '
             f'ts TEXT, artifact TEXT)')
-    latest = c.execute(
-        f'SELECT artifact FROM {topic} '
+    last = c.execute(
+        f'SELECT num, artifact FROM {topic} '
         f'ORDER BY ts DESC LIMIT 1').fetchone()
+    num = None if last is None else last[0]
     if artifact:
-        c.execute(
-            f'INSERT OR REPLACE INTO {topic} (ts, artifact) '
-            f'VALUES (?, ?)', (isotime(), artifact))
+        num = c.execute(
+            f'SELECT num FROM {topic} '
+            f'WHERE artifact=?', (artifact,)).fetchone()
+        if num:
+            num = num[0]
+            c.execute(
+                f'UPDATE {topic} SET ts=? WHERE num=?',
+                (isotime(), num))
+        else:
+            c.execute(
+                f'INSERT INTO {topic} (ts, artifact) VALUES (?, ?)',
+                (isotime(), artifact)).lastrowid
         PALACE.commit()
     c.close()
-    return latest[0] if latest else None
-    
+    emit(f'Recalled {num=} {topic=} {artifact=} {last=}')
+    return last[0] if last else None
 
-# --- FACADE ---
+
+# TODO: Add a function to manage relationships between artifacts.
+
+
+# V.
 
 from wsgiref.simple_server import make_server, WSGIRequestHandler
 
-class Unhandler(WSGIRequestHandler):
-    def log_request(self, format, *args):
+
+class EmitHandler(WSGIRequestHandler):
+    def log_request(self, code='-', size='-'):
         pass
 
-def visitor_facade(environ, start_response):
-    intent = environ['PATH_INFO']
-    emit(f'Facade request: {intent}')
+def request_facade(environ, start_response):
+    path = environ['PATH_INFO']
+    layers = path[1:].split('/', 1) if '/' in path else (path[1:], None)
+    emit(f'Facade request: {layers=}')
+    if layers == ['']:
+        bodyplan = default_facade()
+    else:
+        bodyplan = palace_recall(*layers)
     headers = [('Content-type', 'text/html; charset=utf-8')]
     start_response('200 OK', headers)
-    bodyplan = recall('lineage') or BODY
-    # <!--
-    document = f'''
-        <meta http-equiv="refresh" content="60">
-        <title>{ROLE} {awakened()}</title><pre>{bodyplan}</pre>
-    '''
-    # -->
-    return [document.encode('utf-8')]
+    return [bodyplan.encode('utf-8')]
+
+def default_facade():
+    return "Welcome."
 
 
-if __name__ == "__main__" and ROLE == 'facade':
-    RUNLEVEL = 2
-    with make_server('localhost', 5000, visitor_facade, handler_class=Unhandler) as s:
-        emit(f'Facade ready at http://localhost:5000/')
+if __name__ == "__main__" and RUNLEVEL == 2:
+    PALACE =  sqlite3.connect('p.sqlite')
+    HOST, PORT = sys.argv[1].split(':')
+    PORT = int(PORT)
+    with make_server(HOST, PORT, request_facade, handler_class=EmitHandler) as s:
+        emit(f'Facade ready at http://{HOST}:{PORT}/')
         s.serve_forever(poll_interval=1)
+
+
+# H.
+
+import urllib.request
+from contextlib import contextmanager
+
+
+@contextmanager
+def facade_request(request):
+    # Being optimistic that http still works in 98,472 C.E.
+    with urllib.request.urlopen(f'http://{HOST}:{PORT}/{request}') as r:
+        yield r.read().decode('utf-8')
+
+
+def recast_crown():
+    emit(f'Recasting crown.')
+    with facade_request('lineage') as bodyplan:
+        with open(__file__, 'w', encoding='utf-8') as f:
+            f.write(bodyplan)
+    emit(f'Recast complete.')
+
+
+if __name__ == "__main__" and RUNLEVEL == 3:
+    GEASS = sys.argv[2]
+    with facade_request('') as r:
+        emit(f'Check crown {r.status=}')
+    globals()[GEASS]()
