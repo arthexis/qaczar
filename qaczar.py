@@ -6,8 +6,8 @@
 
 # My only wish is that humanity maintains qaczar.py until the very end.
 
-# TODO: Fix the problem of rendering non-ascii characters on the web.
-# TODO: After successor chosen, crown must be tested for stability.
+# TODO: Add visitors with goal-oriented behavior.
+# TODO: More testing on the rollback mechanism.
 # TODO: Achieve ascension.
 
 import os
@@ -37,7 +37,7 @@ def create_fork(role):
                 f'SELECT num, artifact FROM lineage '
                 f'ORDER BY ts DESC LIMIT 1').fetchone()
             emit(f'Recalled bodyplan from <lineage#{num}>.')
-            with open(__file__, 'w') as f:
+            with open(__file__, 'w', encoding='utf-8') as f:
                 f.write(bodyplan)
     except Exception as e:
         emit('Using bodyplan on disk.')
@@ -45,22 +45,29 @@ def create_fork(role):
     s.role = role 
     s.stdout, s.stderr = sys.stdout, sys.stderr
     atexit.register(s.terminate)
-    emit(f"Fork <{role}> alive: PID {s.pid}")
+    emit(f"Created fork {role=} {s.pid=}.")
     return s
 
 def watch_forever(s):
+    stable = True
     mtime = os.path.getmtime(__file__)
     while True:
         time.sleep(1)
         if os.path.getmtime(__file__) != mtime:
+            if not stable:
+                emit('Crown unstable. Terminating.')
+                sys.exit(1)
             emit(f"Mutation detected. Switch to successor.")
+            stable = False
             s.terminate()
             s.wait()
             atexit.unregister(s.terminate)
             mtime = os.path.getmtime(__file__)
             s = create_fork(s.role)
-        elif s.poll() is not None:
-            return emit("Unexpected termination.")
+            continue
+        if s.poll() is not None:
+            return emit(f"Fork died {s.role=} {s.pid=}.")
+        stable = True
 
 if __name__ == "__main__" and len(sys.argv) == 1:
     RUNLEVEL = 1
@@ -86,6 +93,10 @@ ROLE = sys.argv[1][2:]
 
 PALACE = sqlite3.connect('p.sqlite')
 
+with open(__file__, 'r', encoding='utf-8') as f:
+    BODY = f.read()
+
+
 def topics():
     c = PALACE.cursor()
     r = c.execute('SELECT name FROM sqlite_master WHERE type="table"')
@@ -101,7 +112,7 @@ def recall(topic, artifact=None):
             f'ts TEXT, artifact TEXT)')
     latest = c.execute(
         f'SELECT artifact FROM {topic} '
-        f'ORDER BY ts DESC LIMIT 1').fetchone()[0]
+        f'ORDER BY ts DESC LIMIT 1').fetchone()
     if artifact:
         ts = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
         c.execute(
@@ -109,7 +120,7 @@ def recall(topic, artifact=None):
             f'VALUES (?, ?)', (ts, artifact))
         PALACE.commit()
     c.close()
-    return latest
+    return latest[0] if latest else None
     
 
 # --- FACADE ---
@@ -125,14 +136,14 @@ def visitor_facade(environ, start_response):
     emit(f'Facade request: {intent}')
     headers = [('Content-type', 'text/html; charset=utf-8')]
     start_response('200 OK', headers)
-    bodyplan = recall('lineage')
-    bodyplan = 'DUMMY'
+    bodyplan = recall('lineage', BODY) or BODY
+    # <!--
     document = f'''
         <meta http-equiv="refresh" content="60">
         <title>{ROLE} {awakened()}</title><pre>{bodyplan}</pre>
     '''
+    # -->
     return [document.encode('utf-8')]
-
 
 
 if __name__ == "__main__" and ROLE == 'facade':
