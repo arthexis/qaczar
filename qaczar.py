@@ -6,8 +6,8 @@
 
 # My only wish is that humanity maintains qaczar.py until the very end.
 
+# TODO: More testing on the rollback: check crown after mutations.
 # TODO: Add visitors with goal-oriented behavior.
-# TODO: More testing on the rollback mechanism.
 # TODO: Achieve ascension.
 
 import os
@@ -21,70 +21,79 @@ import subprocess
 RUNLEVEL = 0
 EPOCH = time.time()
 
+with open(__file__, 'r', encoding='utf-8') as f:
+    BODY = f.read()
+
 def awakened():
     return round(time.time() - EPOCH, 4)
 
 def emit(verse):
     print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}:{awakened()}] {verse}')
 
+def isotime():
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
+
 
 # --- CROWN ---
 
-def create_fork(role):
-    try:
-        with sqlite3.connect('p.sqlite') as p:
-            num, bodyplan = p.cursor().execute(
-                f'SELECT num, artifact FROM lineage '
-                f'ORDER BY ts DESC LIMIT 1').fetchone()
-            emit(f'Recalled bodyplan from <lineage#{num}>.')
-            with open(__file__, 'w', encoding='utf-8') as f:
-                f.write(bodyplan)
-    except Exception as e:
-        emit('Using bodyplan on disk.')
+def create_fork(role, old=None):
+    if old:
+        old.terminate()
+        old.wait()
+        atexit.unregister(old.terminate)
+        emit(f"Terminated fork {old.role=} {old.pid=}.")
     s = subprocess.Popen([sys.executable, __file__, f'--{role}'])
-    s.role = role 
-    s.stdout, s.stderr = sys.stdout, sys.stderr
+    if not s:
+        raise RuntimeError('Failed to create fork.')
+    s.stdout, s.stderr, s.role = sys.stdout, sys.stderr, role
     atexit.register(s.terminate)
     emit(f"Created fork {role=} {s.pid=}.")
     return s
 
-def watch_forever(s):
-    stable = True
-    mtime = os.path.getmtime(__file__)
+def watch_over(s):
     while True:
-        time.sleep(1)
-        if os.path.getmtime(__file__) != mtime:
-            if not stable:
-                emit('Crown unstable. Terminating.')
-                sys.exit(1)
-            emit(f"Mutation detected. Switch to successor.")
-            stable = False
-            s.terminate()
-            s.wait()
-            atexit.unregister(s.terminate)
-            mtime = os.path.getmtime(__file__)
-            s = create_fork(s.role)
-            continue
-        if s.poll() is not None:
-            return emit(f"Fork died {s.role=} {s.pid=}.")
-        stable = True
+        stable, fragile = True, False
+        mtime = os.path.getmtime(__file__)
+        while True:
+            time.sleep(1)
+            if os.path.getmtime(__file__) != mtime:
+                emit(f"Mutation detected. Restarting.")
+                with open(__file__, 'r', encoding='utf-8') as f:
+                    mutation = f.read()
+                mtime = os.path.getmtime(__file__)
+                s = create_fork(s.role, old=s)
+                stable = False
+                continue
+            if s.poll() is not None:
+                emit(f"Fork died {s.role=} {s.pid=}.")
+                if stable:
+                    s = create_fork(s.role, old=s)
+                    stable = False
+                    continue
+                elif not fragile:
+                    emit(f"Rolling back to crown's bodyplan.")
+                    with open(__file__, 'w', encoding='utf-8') as f:
+                        f.write(BODY)
+                    fragile = True
+                    continue
+                else:
+                    emit(f"Rollback failed. Exiting.")
+                    with open(__file__, 'w', encoding='utf-8') as f:
+                        f.write(mutation)
+                    sys.exit(1)
+            stable = True
 
 if __name__ == "__main__" and len(sys.argv) == 1:
     RUNLEVEL = 1
+    emit('----------------------------------------')
     try:    
-        while True:
-            emit('----------------------------------------')
-            s = create_fork('facade')
-            if not s:
-                raise RuntimeError('Failed to create fork.')
-            watch_forever(s)
-            atexit.unregister(s.terminate)
+        watch_over(create_fork('facade'))
     except RuntimeError as e:
         emit(f'Crown failure: {e}')
+        raise
     except KeyboardInterrupt:
         emit(f"Keyboard interrupt {RUNLEVEL=}")
-    finally:
-        sys.exit(0)
+    sys.exit(0)
 
 ROLE = sys.argv[1][2:]
 
@@ -92,9 +101,6 @@ ROLE = sys.argv[1][2:]
 # --- PALACE ---
 
 PALACE = sqlite3.connect('p.sqlite')
-
-with open(__file__, 'r', encoding='utf-8') as f:
-    BODY = f.read()
 
 
 def topics():
@@ -114,10 +120,9 @@ def recall(topic, artifact=None):
         f'SELECT artifact FROM {topic} '
         f'ORDER BY ts DESC LIMIT 1').fetchone()
     if artifact:
-        ts = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
         c.execute(
             f'INSERT OR REPLACE INTO {topic} (ts, artifact) '
-            f'VALUES (?, ?)', (ts, artifact))
+            f'VALUES (?, ?)', (isotime(), artifact))
         PALACE.commit()
     c.close()
     return latest[0] if latest else None
@@ -136,7 +141,7 @@ def visitor_facade(environ, start_response):
     emit(f'Facade request: {intent}')
     headers = [('Content-type', 'text/html; charset=utf-8')]
     start_response('200 OK', headers)
-    bodyplan = recall('lineage', BODY) or BODY
+    bodyplan = recall('lineage') or BODY
     # <!--
     document = f'''
         <meta http-equiv="refresh" content="60">
