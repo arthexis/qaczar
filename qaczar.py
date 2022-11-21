@@ -30,8 +30,10 @@ def emit(verse):
     # All logging is in this format and redirected to stdout.
     print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}:{awakened()}] {verse}')
 
+
 def awakened():
     return round(time.time() - EPOCH, 4)
+
 
 def isotime():
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
@@ -63,7 +65,7 @@ def watch_over(s):
         while True:
             time.sleep(1)
             if os.path.getmtime(__file__) != mtime:
-                emit(f"Mutation detected. Comparing to BODY.")
+                emit(f"Mutation detected. Compare to BODY.")
                 with open(__file__, 'r', encoding='utf-8') as f:
                     mutation = f.read()
                 mtime = os.path.getmtime(__file__)
@@ -111,13 +113,12 @@ import sqlite3
 
 PALACE = None
 
-
 def palace_topics():
     c = PALACE.cursor()
     r = c.execute('SELECT name FROM sqlite_master WHERE type="table"')
     return [t[0] for t in r.fetchall()]
 
-def palace_recall(topic, artifact=None):
+def palace_recall(topic, artifact=None, forget=False):
     assert topic, 'Topic must be specified.'
     c = PALACE.cursor()
     if topic not in palace_topics():
@@ -142,10 +143,14 @@ def palace_recall(topic, artifact=None):
             c.execute(
                 f'INSERT INTO {topic} (ts, artifact) VALUES (?, ?)',
                 (isotime(), artifact)).lastrowid
-        PALACE.commit()
+        if forget:
+            c.execute(f'DELETE FROM {topic} WHERE num=?', (num,))
+    elif forget:
+        c.execute(f'DROP TABLE {topic}')
+    PALACE.commit()
     c.close()
-    emit(f'Recalled {num=} {topic=} {artifact=} {last=}')
-    return last[0] if last else None
+    emit(f'Recalled {num=} {topic=}')
+    return last[1] if last else None
 
 
 # TODO: Add a function to manage relationships between artifacts.
@@ -160,36 +165,41 @@ class EmitHandler(WSGIRequestHandler):
     def log_request(self, code='-', size='-'):
         pass
 
+
 def request_facade(environ, start_response):
-    revealed = awakened()
     pi = environ['PATH_INFO']
     layers = pi[1:].split('/', 1) if '/' in pi else (pi[1:], None)
     emit(f'Facade request: {layers=}')
+    headers = [('Content-type', 'text/html; charset=utf-8')]
+    bodyplan = None
     if layers == ['']:
         bodyplan = default_facade()
+    elif len(layers) == 1:
+        bodyplan = palace_recall(layers[0])
     else:
-        bodyplan = palace_recall(*layers)
+        emit(f'Invalid request: {layers=}')
     if bodyplan is None:
-        start_response('404 Not Found', [('Content-Type', 'text/plain')])
-        return [b'Not Found']
-    headers = [('Content-type', 'text/html; charset=utf-8')]
+        emit(f'No bodyplan found for {layers=}')
+        start_response('404 Not Found', headers)
+        return [f'Not Found: {layers=}'.encode('utf-8')]
     start_response('200 OK', headers)
-    return [bodyplan.encode('utf-8')]
+    return [format_html(bodyplan)]
+
+
+def format_html(soup):
+    soup = soup.replace('\r\n', '<br>').replace('\n', '<br>')
+    return f'''<!DOCTYPE html>
+        <html><head>
+        <meta charset="utf-8">
+        <title>{soup[:20]}</title>
+        </head><body>
+        <pre>{soup}</pre>
+        </body></html>'''.encode('utf-8')
+
 
 def default_facade():
     # <!--
-    return f'''
-        <! DOCTYPE html>
-        <head><title>{QACZAR}</title></head>
-        <body><h1>{QACZAR}</h1>
-            <p>RUNLEVEL: {RUNLEVEL}</p>
-            <p>EPOCH: {EPOCH}</p>
-            <p>PALACE: {palace_topics()}</p>
-            <p>AWAKE: {awakened()} ms.</p>
-            <p>BODY: {len(BODY)} bytes</p>
-        </body>
-        </html>
-    '''
+    return str(palace_topics())
     # -->
 
 # TODO: Add 2 functions to generate and handle forms.
@@ -199,6 +209,7 @@ if __name__ == "__main__" and RUNLEVEL == 2:
     PALACE =  sqlite3.connect('p.sqlite')
     HOST, PORT = sys.argv[1].split(':')
     PORT = int(PORT)
+    palace_recall('lineage', BODY)
     with make_server(HOST, PORT, request_facade, handler_class=EmitHandler) as s:
         emit(f'Facade ready at http://{HOST}:{PORT}/')
         s.serve_forever(poll_interval=1)
@@ -212,11 +223,11 @@ from contextlib import contextmanager
 
 @contextmanager
 def facade_request(*args):
-    # Being optimistic that http still works in 98,472 C.E.
     url = f'http://{HOST}:{PORT}/{"/".join(args)}'
     emit(f'Send request: {url=}')
     with urllib.request.urlopen(url) as r:
         yield r.read().decode('utf-8')
+
 
 def recast_crown():
     emit(f'Recasting crown.')
@@ -234,5 +245,5 @@ if __name__ == "__main__" and RUNLEVEL == 3:
     GEASS = sys.argv[2]
     PALACE =  sqlite3.connect('file:p.sqlite?mode=ro', uri=True)
     with facade_request('') as r:
-        emit(f'Facade response {r.status=}')
+        emit(f'Facade response: {r}')
     globals()[GEASS]()
