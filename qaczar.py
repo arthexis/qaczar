@@ -49,7 +49,6 @@ def create_fork(*args, old=None):
         old.terminate()
         old.wait()
         atexit.unregister(old.terminate)
-        emit(f"Terminated fork {old.args=} {old.pid=}.")
     s = subprocess.Popen([sys.executable, __file__, *[str(a) for a in args]])
     if not s:
         raise RuntimeError('Failed to create fork.')
@@ -57,6 +56,7 @@ def create_fork(*args, old=None):
     atexit.register(s.terminate)
     emit(f"Created fork {' '.join(str(a) for a in args)} {s.pid=}.")
     return s
+
 
 def watch_over(s):
     while True:
@@ -78,16 +78,17 @@ def watch_over(s):
                 continue
             if s.poll() is not None:
                 emit(f"Fork died {s.args=} {s.pid=}.")  
-                if stable:
-                    s = create_fork(*s.args, old=s)
-                    stable = False
-                    continue
-                elif not fragile:
-                    emit(f"Rolling back to crown's bodyplan.")  
-                    fragile = True
-                    with open(__file__, 'w', encoding='utf-8') as f:
-                        f.write(BODY)
-                    continue
+                if not fragile:
+                    if stable:
+                        s = create_fork(*s.args, old=s)
+                        stable = False
+                        continue
+                    else:
+                        emit(f"Rolling back to crown's bodyplan.")  
+                        fragile = True
+                        with open(__file__, 'w', encoding='utf-8') as f:
+                            f.write(BODY)
+                        continue
                 elif fragile:
                     emit(f"Rollback failed. Reverting.")  
                     with open(__file__, 'w', encoding='utf-8') as f:
@@ -120,6 +121,8 @@ def palace_topics():
 
 def palace_recall(topic, artifact=None, forget=False):
     assert topic, 'Topic must be specified.'
+    if topic == '-':
+        return None
     c = PALACE.cursor()
     if topic not in palace_topics():
         c.execute(
@@ -153,12 +156,17 @@ def palace_recall(topic, artifact=None, forget=False):
     return last[1] if last else None
 
 
+# TODO: Hook-up emit to persist to the database.
 # TODO: Add a function to manage relationships between artifacts.
+
 
 
 # V.
 
+import secrets
 from wsgiref.simple_server import make_server, WSGIRequestHandler
+
+SECRET = secrets.token_hex()
 
 
 class EmitHandler(WSGIRequestHandler):
@@ -167,40 +175,52 @@ class EmitHandler(WSGIRequestHandler):
 
 
 def request_facade(environ, start_response):
+    emit(f'Facade request: {environ=}')
     pi = environ['PATH_INFO']
     layers = pi[1:].split('/', 1) if '/' in pi else (pi[1:], None)
-    emit(f'Facade request: {layers=}')
-    headers = [('Content-type', 'text/html; charset=utf-8')]
+    headers = [('Content-type', 'text/plain; charset=utf-8')]
     bodyplan = None
     if layers == ['']:
-        bodyplan = default_facade()
-    elif len(layers) == 1:
-        bodyplan = palace_recall(layers[0])
+        bodyplan = visitor_facade(environ)
+    elif len(layers) in(1, 2):
+        if layers[0] == '-':
+            bodyplan = delegation_facade(environ, layers[1])
+        bodyplan = palace_recall(*layers)
     else:
         emit(f'Invalid request: {layers=}')
     if bodyplan is None:
         emit(f'No bodyplan found for {layers=}')
         start_response('404 Not Found', headers)
+        palace_recall('failure', pi)  # TODO: Minimize.
         return [f'Not Found: {layers=}'.encode('utf-8')]
-    start_response('200 OK', headers)
-    return [format_html(bodyplan)]
+    palace_recall('success', f'{layers=}')
+    start_response('200 OK', headers)  # TODO: Maximize.
+    return [bodyplan.encode('utf-8')]
 
 
-def format_html(soup):
-    soup = soup.replace('\r\n', '<br>').replace('\n', '<br>')
-    return f'''<!DOCTYPE html>
-        <html><head>
-        <meta charset="utf-8">
-        <title>{soup[:20]}</title>
-        </head><body>
-        <pre>{soup}</pre>
-        </body></html>'''.encode('utf-8')
-
-
-def default_facade():
+def visitor_facade(environ):
+    visitor = environ['REMOTE_ADDR']
     # <!--
-    return str(palace_topics())
+    return f"""
+        Hello {visitor}!
+        Facade: Default.
+        Topics: {palace_topics()}
+    """
     # -->
+
+
+def delegation_facade(environ, artifact):
+    # TODO: Spawn a new fork to handle the request.
+    visitor = environ['REMOTE_ADDR']
+    # <!--
+    return f"""
+        Hello {visitor}!
+        Facade: Default.
+        Topics: {palace_topics()}
+    """
+    # -->
+
+
 
 # TODO: Add 2 functions to generate and handle forms.
 
@@ -225,13 +245,14 @@ from contextlib import contextmanager
 def facade_request(*args):
     url = f'http://{HOST}:{PORT}/{"/".join(args)}'
     emit(f'Send request: {url=}')
-    with urllib.request.urlopen(url) as r:
+    with urllib.request.urlopen(url, timeout=6) as r:
         yield r.read().decode('utf-8')
 
 
 def recast_crown():
     emit(f'Recasting crown.')
-    with facade_request('lineage') as bodyplan:
+    bodyplan = facade_request('lineage')
+    if bodyplan:
         with open(__file__, 'w', encoding='utf-8') as f:
             f.write(bodyplan)
     emit(f'Recast complete.')
