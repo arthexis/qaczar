@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# A python script that calculates the entire fibbonacci sequence.
+# A python script that implements observable goal-oriented self-sufficiency.
 # H. V. D. C. by Rafa Guillén (arthexis@github) 2022
 
-# My only wish is that humanity maintains qaczar.py until the very end.
 
 # TODO: More testing on the rollback: always write plan to disk at least once.
 # TODO: Add visitors with goal-oriented behavior.
 # TODO: Achieve ascension.
 
+import re
 import os
 import sys
 import time
@@ -45,7 +45,7 @@ HOST, PORT = 'localhost', 5000
 
 def create_fork(*args, old=None):
     assert len(args) > 0
-    if old:
+    if old is not None:
         old.terminate()
         old.wait()
         atexit.unregister(old.terminate)
@@ -60,39 +60,27 @@ def create_fork(*args, old=None):
 
 def watch_over(s):
     while True:
-        stable, fragile = True, False
-        mtime = os.path.getmtime(__file__)
+        stable, mtime = True, os.path.getmtime(__file__)
         while True:
             time.sleep(1)
             if os.path.getmtime(__file__) != mtime:
-                emit(f"Mutation detected. Compare to BODY.")
                 with open(__file__, 'r', encoding='utf-8') as f:
                     mutation = f.read()
                 mtime = os.path.getmtime(__file__)
                 if mutation != BODY:
-                    emit(f"Mutation confirmed. Restarting.")
-                    s = create_fork(*s.args, old=s)
+                    emit(f"Mutation {len(mutation)=} {len(BODY)=}. Restarting.")
                     stable = False
-                if fragile:
-                    create_fork(*s.args, 'recast_crown')  
+                    s = create_fork(*s.args, old=s)
                 continue
             if s.poll() is not None:
                 emit(f"Fork died {s.args=} {s.pid=}.")  
-                if not fragile:
-                    if stable:
-                        s = create_fork(*s.args, old=s)
-                        stable = False
-                        continue
-                    else:
-                        emit(f"Rolling back to crown's bodyplan.")  
-                        fragile = True
-                        with open(__file__, 'w', encoding='utf-8') as f:
-                            f.write(BODY)
-                        continue
-                elif fragile:
-                    emit(f"Rollback failed. Reverting.")  
-                    with open(__file__, 'w', encoding='utf-8') as f:
-                        f.write(mutation)
+                if stable:
+                    s = create_fork(*s.args, old=s)
+                    stable = False
+                    continue
+                else:
+                    emit("Crown unstable. Aborting.")
+                    sys.exit(1)
             stable = True
 
 
@@ -113,52 +101,51 @@ if __name__ == "__main__" and RUNLEVEL == 1:
 import sqlite3
 
 PALACE = None
+TOPICS = []
 
-def palace_topics():
-    c = PALACE.cursor()
-    r = c.execute('SELECT name FROM sqlite_master WHERE type="table"')
-    return [t[0] for t in r.fetchall()]
 
-def palace_recall(topic, artifact=None, forget=False):
-    assert topic, 'Topic must be specified.'
-    if topic == '-':
-        return None
+def summarized(text):
+    return re.sub(r'\s+', ' ', text)[:40] if text else 'N/A'
+
+
+def palace_recall(topic, /, fetch='last', store=None):
+    assert store in (None, True) or isinstance(store, str), f'Invalid recall {store=}'
+    assert (topic and re.match(r'^[a-zA-Z0-9_\-]+$', topic) 
+        and len(topic) < 40 and not topic.startswith('sqlite_')), f'Invalid recall {topic=}'
+    emit(f'Recall {topic=} {fetch=} {summarized(store)=}.')
     c = PALACE.cursor()
-    if topic not in palace_topics():
+    if not TOPICS:
+        c.execute('SELECT name FROM sqlite_master WHERE type="table" AND name not LIKE "sqlite_%"')
+        TOPICS.extend(t[0] for t in c.fetchall())
+    if topic not in TOPICS:
         c.execute(
             f'CREATE TABLE IF NOT EXISTS {topic} ('
             f'num INTEGER PRIMARY KEY AUTOINCREMENT, '
             f'ts TEXT, artifact TEXT)')
-    last = c.execute(
-        f'SELECT num, artifact FROM {topic} '
-        f'ORDER BY ts DESC LIMIT 1').fetchone()
-    num = None if last is None else last[0]
-    if artifact:
-        num = c.execute(
-            f'SELECT num FROM {topic} '
-            f'WHERE artifact=?', (artifact,)).fetchone()
-        if num:
-            num = num[0]
-            c.execute(
-                f'UPDATE {topic} SET ts=? WHERE num=?',
-                (isotime(), num))
-        else:
-            c.execute(
-                f'INSERT INTO {topic} (ts, artifact) VALUES (?, ?)',
-                (isotime(), artifact)).lastrowid
-        if forget:
-            c.execute(f'DELETE FROM {topic} WHERE num=?', (num,))
-    elif forget:
-        c.execute(f'DROP TABLE {topic}')
-    PALACE.commit()
-    c.close()
-    emit(f'Recalled {num=} {topic=}')
-    return last[1] if last else None
+        emit(f'Created {topic=}.')
+        TOPICS.append(topic)
+    if fetch in ('last', 'first'):
+        r = c.execute(f'SELECT * FROM {topic} ORDER BY ts {"DESC" if fetch == "last" else "ASC"} LIMIT 1')
+    elif fetch == 'random':
+        r = c.execute(f'SELECT * FROM {topic} ORDER BY RANDOM() LIMIT 1')
+    elif fetch == 'new':
+        pass
+    else:
+        r = dynamic_fetch(c, topic, fetch)
+    if store is True:
+        store = r.fetchone()[2]
+    if store is not None: 
+        rowid = c.execute(f'INSERT INTO {topic} (ts, artifact) VALUES (?, ?)',
+                  (isotime(), store)).lastrowid
+        if fetch == 'new':
+            r = c.execute(f'SELECT * FROM {topic} WHERE num = ?', (rowid,))
+        emit(f'Stored {topic=} {rowid=} {len(store)=}.')
+        PALACE.commit()
+    return r.fetchall()
 
 
-# TODO: Hook-up emit to persist to the database.
-# TODO: Add a function to manage relationships between artifacts.
-
+def dynamic_fetch(c, topic, fetch):
+    raise NotImplementedError(f'Invalid fetch {fetch=}')
 
 
 # V.
@@ -168,58 +155,71 @@ from wsgiref.simple_server import make_server, WSGIRequestHandler
 
 SECRET = secrets.token_hex()
 
+with open('etome.css', 'r', encoding='utf-8') as f:
+    STYLE = re.sub(r'\s+', ' ', f.read())
+
 
 class EmitHandler(WSGIRequestHandler):
     def log_request(self, code='-', size='-'):
-        pass
+        emit(f'Request from {self.address_string()} {self.requestline} {code} {size} bytes.')
 
 
-def request_facade(environ, start_response):
-    emit(f'Facade request: {environ=}')
-    pi = environ['PATH_INFO']
-    layers = pi[1:].split('/', 1) if '/' in pi else (pi[1:], None)
-    headers = [('Content-type', 'text/plain; charset=utf-8')]
-    bodyplan = None
-    if layers == ['']:
-        bodyplan = visitor_facade(environ)
-    elif len(layers) in(1, 2):
-        if layers[0] == '-':
-            bodyplan = delegation_facade(environ, layers[1])
-        bodyplan = palace_recall(*layers)
-    else:
-        emit(f'Invalid request: {layers=}')
+def request_facade(environ, respond):
+    layers = [p for p in re.split(r'[/]+', environ['PATH_INFO']) if p]
+    depth, status, bodyplan = len(layers), '200 OK', None
+    prelude = visitor_prelude(environ)
+    if depth >= 1:
+        topic = layers[0]
+        artifact = palace_recall(topic)
+        bodyplan = artifact[0][2] if artifact else None
     if bodyplan is None:
-        emit(f'No bodyplan found for {layers=}')
-        start_response('404 Not Found', headers)
-        palace_recall('failure', pi)  # TODO: Minimize.
-        return [f'Not Found: {layers=}'.encode('utf-8')]
-    palace_recall('success', f'{layers=}')
-    start_response('200 OK', headers)  # TODO: Maximize.
-    return [bodyplan.encode('utf-8')]
+        status = '404 Not Found'
+        bodyplan = f'Not found: {layers=}'
+    hypertext = hyperlink_text(prelude, bodyplan)
+    headers = [('Content-type', f'text/html; charset=utf-8')]
+    respond(status, headers)
+    return [hypertext.encode('utf-8')]
 
 
-def visitor_facade(environ):
+def visitor_prelude(environ):
     visitor = environ['REMOTE_ADDR']
-    # <!--
+    palace_recall('visitors', store=visitor)
+    topics = " ".join(f'[{t}]' for t in TOPICS)
+    top = f"Hi {visitor}, welcome to QACZAR.\n\tTopics: {topics}"
+    return top
+
+
+def delegation_facade(environ, delegate):
+    s = create_fork(f'{HOST}:{PORT}', delegate)
+    emit(f"Delegate {s.pid=} {delegate=}")
+    watch_over(s)
+
+
+def hyperlink_text(*artifacts):
+    parts = []
+    for artifact in artifacts:
+        for topic in TOPICS:
+            artifact = re.sub(
+                rf'\b{topic}\b', f'<a href="/{topic}">{topic}</a>', artifact)
+        indented = re.sub('    ', '&nbsp;&nbsp;&nbsp;&nbsp;', artifact)
+        verses = indented.split('\n')
+        for i, verse in enumerate(verses):
+            if verse.startswith('#'):
+                verses[i] = f'<span class="notes"># {verse[1:]}</span>'
+        part = '\n'.join(f'<li>{verse}\n</li>' for verse in verses)
+        parts.append(part)
+    style = adapted_style()
+    body = parts[0] if len(parts) == 1 else '<hr>\n'.join(parts)
+    hypertext = f'<!DOCTYPE html>{style}<body><ol>{body}</ol></body></html>'
+    return hypertext
+
+
+def adapted_style():
     return f"""
-        Hello {visitor}!
-        Facade: Default.
-        Topics: {palace_topics()}
+        <link rel="stylesheet" media="screen" 
+            href="https://fontlibrary.org//face/press-start-2p" type="text/css"/> 
+        <style>{STYLE}</style>
     """
-    # -->
-
-
-def delegation_facade(environ, artifact):
-    # TODO: Spawn a new fork to handle the request.
-    visitor = environ['REMOTE_ADDR']
-    # <!--
-    return f"""
-        Hello {visitor}!
-        Facade: Default.
-        Topics: {palace_topics()}
-    """
-    # -->
-
 
 
 # TODO: Add 2 functions to generate and handle forms.
@@ -229,7 +229,7 @@ if __name__ == "__main__" and RUNLEVEL == 2:
     PALACE =  sqlite3.connect('p.sqlite')
     HOST, PORT = sys.argv[1].split(':')
     PORT = int(PORT)
-    palace_recall('lineage', BODY)
+    palace_recall('bodyplan', store=BODY)
     with make_server(HOST, PORT, request_facade, handler_class=EmitHandler) as s:
         emit(f'Facade ready at http://{HOST}:{PORT}/')
         s.serve_forever(poll_interval=1)
@@ -245,17 +245,11 @@ from contextlib import contextmanager
 def facade_request(*args):
     url = f'http://{HOST}:{PORT}/{"/".join(args)}'
     emit(f'Send request: {url=}')
-    with urllib.request.urlopen(url, timeout=6) as r:
-        yield r.read().decode('utf-8')
-
-
-def recast_crown():
-    emit(f'Recasting crown.')
-    bodyplan = facade_request('lineage')
-    if bodyplan:
-        with open(__file__, 'w', encoding='utf-8') as f:
-            f.write(bodyplan)
-    emit(f'Recast complete.')
+    try:
+        with urllib.request.urlopen(url, timeout=6) as r:
+            yield r.read().decode('utf-8')
+    except urllib.error.HTTPError as e:
+        emit(f'HTTPError: {e.code}')
 
 
 # TODO: Add a function to extract info from external sources.
@@ -263,8 +257,9 @@ def recast_crown():
 
 
 if __name__ == "__main__" and RUNLEVEL == 3:
-    GEASS = sys.argv[2]
+    DELEGATE = sys.argv[2]
     PALACE =  sqlite3.connect('file:p.sqlite?mode=ro', uri=True)
     with facade_request('') as r:
         emit(f'Facade response: {r}')
-    globals()[GEASS]()
+    found = palace_recall('delegate', store=DELEGATE)
+    globals()[DELEGATE]()
