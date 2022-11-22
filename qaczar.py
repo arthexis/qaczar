@@ -134,6 +134,8 @@ def palace_recall(topic, /, fetch='last', store=None):
         r = c.execute(f'SELECT * FROM {topic} ORDER BY RANDOM() LIMIT 1')
     elif fetch == 'new':
         pass
+    elif str.isdigit(fetch):
+        r = c.execute(f'SELECT * FROM {topic} WHERE num = {fetch}')
     else:
         r = dynamic_fetch(c, topic, fetch)
     if store is True:
@@ -174,25 +176,30 @@ class EmitHandler(WSGIRequestHandler):
 
 
 def request_facade(environ, respond):
-    layers = [p for p in re.split(r'[/]+', environ['PATH_INFO']) if p]
-    method = environ['REQUEST_METHOD']
-    depth, status, bodyplan, title = len(layers), '200 OK', None, None
-    prelude = visitor_prelude(environ)
-    if depth == 0:
-        bodyplan = index_facade(environ)
-    if depth == 1:
-        topic = layers[0]
-        artifact = palace_recall(topic, fetch='last')	
-        title = f'<h3>Latest {topic}</h3>'
-        bodyplan = html.escape(artifact[0][2]) if artifact else None
-    elif depth == 2:
-        topic, aspect = layers
-        if aspect == '--':
-            title = f'<h3>Create {topic}</h3>'
-            bodyplan = artifact_form(topic)
-    if bodyplan is None:
-        status = '404 Not Found'
-        bodyplan = f'Not found: {layers=}'
+    try:
+        layers = [p for p in re.split(r'[/]+', environ['PATH_INFO']) if p]
+        depth, status, bodyplan, title = len(layers), '200 OK', None, None
+        prelude = visitor_prelude(environ)
+        if depth == 0:
+            bodyplan = index_facade(environ)
+        if depth == 1:
+            topic = layers[0]
+            artifact = palace_recall(topic, fetch='last')
+            title = f'<h3>Latest {topic}</h3>'
+            bodyplan = html.escape(artifact[0][2]) if artifact else None
+        if depth == 2:
+            topic, adapter = layers
+            if adapter == '--':
+                title = f'<h3>Create {topic}</h3>'
+                bodyplan = artifact_form(environ, topic)
+                emit(f'Form {topic=} {bodyplan=}.')
+        if bodyplan is None:
+            status = '404 Not Found'
+            bodyplan = f'Not found: {layers=}'
+    except Exception as e:
+        emit(f'Exceptional request {e}')
+        status = '500 Paradox'
+        bodyplan = f'<strong><h1>500!</h1> {str(e).title()}</strong>'
     hypertext = hyperlink_text(prelude, title, bodyplan)
     headers = [('Content-type', f'text/html; charset=utf-8')]
     respond(status, headers)
@@ -217,6 +224,9 @@ def hyperlink_text(*artifacts):
     parts = []
     for artifact in artifacts:
         if artifact is None:
+            continue      
+        if (artifact.startswith('<') and artifact.endswith('>')):
+            parts.append(artifact)
             continue
         for topic in TOPICS:
             artifact = re.sub(
@@ -265,13 +275,21 @@ def watch_elements():
         time.sleep(2)
 
 
-def artifact_form(topic):
-    return f"""
-        <form action="/{topic}/--" method="post">
-            <textarea name="artifact" rows="10" cols="80"></textarea>
-            <input type="submit" value="Submit">
-        </form>
-    """.strip()
+def artifact_form(environ, topic):
+    method = environ['REQUEST_METHOD']
+    if method == 'GET':
+        return f"""
+            <form action="/{topic}/--" method="post">
+                <textarea name="artifact" rows="10" cols="80"></textarea>
+                <br><button type="submit">Submit {topic}</button>
+            </form>
+        """.strip()
+    if method == 'POST':
+        emit(f'POST {environ=} {topic=}')
+        return f"""
+            <p>Thanks for submitting {topic}.</p>
+            <p><a href="/{topic}">Back to {topic}</a></p>
+        """.strip()
 
 
 # TODO: Add 2 functions to generate and handle forms.
