@@ -10,7 +10,6 @@
 # TODO: Figure out how to recast the crown from a delegate.
 # TODO: Figure out a cool way to do data-entry.
 # TODO: Check permissions automatically based on user (consider SSL).
-# TODO: Achieve ascension.
 
 import re
 import os
@@ -124,21 +123,22 @@ def palace_recall(topic, /, fetch='last', store=None):
     if topic not in TOPICS and store:
         c.execute(
             f'CREATE TABLE IF NOT EXISTS {topic} ('
-            f'num INTEGER PRIMARY KEY AUTOINCREMENT, '
-            f'ts TEXT, artifact TEXT)')
+            f'num INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, artifact TEXT)')
         emit(f'Created {topic=}.')
         TOPICS.append(topic)
-    if fetch in ('last', 'first'):
-        r = c.execute(f'SELECT * FROM {topic} ORDER BY ts {"DESC" if fetch == "last" else "ASC"} LIMIT 1')
-    elif fetch == 'random':
-        r = c.execute(f'SELECT * FROM {topic} ORDER BY RANDOM() LIMIT 1')
-    elif fetch == 'new':
-        pass
-    elif str.isdigit(fetch):
-        r = c.execute(f'SELECT * FROM {topic} WHERE num = {fetch}')
-    else:
-        r = dynamic_fetch(c, topic, fetch)
-    if store is True:
+    if fetch:
+        if fetch == 'last':
+            r = c.execute(f'SELECT * FROM {topic} ORDER BY ts DESC LIMIT 1')
+        elif fetch == 'new': pass
+        elif fetch == 'random':
+            r = c.execute(f'SELECT * FROM {topic} ORDER BY RANDOM() LIMIT 1')
+        elif str.isdigit(fetch):
+            r = c.execute(f'SELECT * FROM {topic} WHERE num = {fetch}')
+        elif '%' in fetch:
+            r = c.execute(f'SELECT * FROM {topic} WHERE artifact LIKE "{fetch}"')
+        else:
+            r = dynamic_fetch(c, topic, fetch)
+    if store is True:  # We check for True because store can be a string.
         store = r.fetchone()[2]
     if store is not None: 
         rowid = c.execute(f'INSERT INTO {topic} (ts, artifact) VALUES (?, ?)',
@@ -147,11 +147,11 @@ def palace_recall(topic, /, fetch='last', store=None):
             r = c.execute(f'SELECT * FROM {topic} WHERE num = ?', (rowid,))
         emit(f'Stored {topic=} {rowid=} {len(store)=}.')
         PALACE.commit()
-    return r.fetchall()
+    return r.fetchall() if fetch else None
         
 
-
 def dynamic_fetch(c, topic, fetch):
+    # TODO: Figure out how to do fetches that call functions, joins or views.
     raise NotImplementedError(f'Invalid fetch {fetch=}')
 
 
@@ -260,6 +260,7 @@ def adapted_styles():
         <style>{ELEMENTS['etome.css']}</style>
     """
 
+
 def adapted_scripts():
     return f"""
         <script>{ELEMENTS['etome.js']}</script>
@@ -289,6 +290,7 @@ def artifact_form(environ, topic):
             </form>
         """.strip()
     if method == 'POST':
+        # TODO: Ensure the form is valid and process it.
         emit(f'POST {environ=} {topic=}')
         return f"""
             <p>Thanks for submitting {topic}.</p>
@@ -296,14 +298,25 @@ def artifact_form(environ, topic):
         """.strip()
 
 
-# TODO: Add 2 functions to generate and handle forms.
+def preserve_bodyplan():
+    palace_recall('bodyplan', fetch=None, store=BODY)
+    todos = []
+    for ln, todo in enumerate(BODY.splitlines()):
+        if todo.startswith('# TODO:'):
+            todo = todo.replace('# TODO:', f'@{ln+1} # TODO:')
+            todos.append(todo)
+    if todos:
+        roadmap = '\n'.join(todo for todo in todos)
+        palace_recall('roadmap', store=roadmap)
+        emit(f'Preserved {len(todos)} TODOs in roadmap.')
+
 
 
 if __name__ == "__main__" and RUNLEVEL == 2:
     PALACE =  sqlite3.connect('p.sqlite')
     HOST, PORT = sys.argv[1].split(':')
     PORT = int(PORT)
-    palace_recall('bodyplan', store=BODY)
+    preserve_bodyplan()
     threading.Thread(target=watch_elements).start()
     with make_server(HOST, PORT, request_facade, handler_class=EmitHandler) as s:
         emit(f'Facade ready at http://{HOST}:{PORT}/')
@@ -328,7 +341,7 @@ def facade_request(*args):
 
 
 # TODO: Add a function to extract info from external sources.
-# TODO: Add a function to handle version control? Or add it to recast_crown?
+# TODO: Add a facade to handle version control (manual reverts).
 
 
 if __name__ == "__main__" and RUNLEVEL == 3:
@@ -338,3 +351,6 @@ if __name__ == "__main__" and RUNLEVEL == 3:
         emit(f'Facade response: {r}')
     found = palace_recall('delegate', store=DELEGATE)
     globals()[DELEGATE]()
+
+
+# TODO: Use a delegate to publish the site.
