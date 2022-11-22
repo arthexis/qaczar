@@ -39,7 +39,7 @@ strong {
 li:hover {
     background-color: #e6ffe6;
 }
-.notes { color: #1E8FD5; }
+q { color: #1E8FD5; }
 
 h1 { display: inline; }
 h2 { display: inline; }
@@ -47,6 +47,11 @@ h3 { display: inline; }
 h4 { display: inline; }
 h5 { display: inline; }
 p { display: inline; }
+
+mark {
+    background-color: transparent;
+    color: #DD571C;
+}
 
 main {
     margin: 0 auto;
@@ -74,7 +79,6 @@ textarea {
     box-sizing: border-box;
     resize: vertical;
 }
-/* Style large buttons with similar color scheme */
 button {
     background-color: #4CAF50;
     color: white;
@@ -86,6 +90,11 @@ button {
     width: 20%;
     font-size: 16px;
     font-family: 'PressStart2PRegular';
+}
+/* Tone down the font color on the footer */
+footer {
+    color: #999;
+    font-size: 12px;
 }
 
   

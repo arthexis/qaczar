@@ -200,7 +200,8 @@ def request_facade(environ, respond):
         emit(f'Exceptional request {e}')
         status = '500 Paradox'
         bodyplan = f'<strong><h1>500!</h1> {str(e).title()}</strong>'
-    hypertext = hyperlink_text(prelude, title, bodyplan)
+    nightcap = visitor_nightcap(environ)
+    hypertext = hyperlink_text(prelude, title, bodyplan, nightcap)
     headers = [('Content-type', f'text/html; charset=utf-8')]
     respond(status, headers)
     return [hypertext.encode('utf-8')]
@@ -211,10 +212,13 @@ def visitor_prelude(environ):
     palace_recall('visitors', store=visitor)
     topics = " ".join(f'[{t}]' for t in TOPICS)
     top = (
-        f"Hi <mark>{visitor}</mark>, welcome to "
-        f"<h1><a href='/'>{SITE}</a>!</h1> {topics}")
+        f"<header>Hi <mark>{visitor}</mark>, welcome to "
+        f"<h1><a href='/'>{SITE}</a>!</h1> {topics}</header>")
     return top
 
+
+def visitor_nightcap(environ):
+    return f"<footer>Created by Rafa Guillén (arthexis).</footer>"
 
 def index_facade(environ):
     return f"""<p>{SITE} is a <a href="https://en.wikipedia.org/wiki/Quine_(computing)">Quine</a>"""
@@ -225,7 +229,7 @@ def hyperlink_text(*artifacts):
     for artifact in artifacts:
         if artifact is None:
             continue      
-        if (artifact.startswith('<') and artifact.endswith('>')):
+        if (artifact.startswith('<form') and artifact.endswith('>')):
             parts.append(artifact)
             continue
         for topic in TOPICS:
