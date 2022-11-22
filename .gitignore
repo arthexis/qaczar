@@ -1,4 +1,6 @@
 *
 !.gitignore
 !qaczar.py
-!u.sqlite
+!p.sqlite
+!etome.css
+!etome.js
