@@ -1,17 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# A Python script that implements observable goal-oriented self-sufficiency.
-# It runs every aspect of the web site you are currently visiting.
-# The code you are reading is the code that is running at all times.
-# If your computer has Python, you can copy and paste this code into a file
-# and have your own 100% self-managed site running in seconds.
-
-# H. V. D. C. by Rafa Guillén (arthexis@github) 2022
-
-# TODO:  HTML Template.
-# TODO:  Load all the "element files" into the database. 
-
+# A Python script that does everything.
+# H. V. D. C. by Rafa Guillén (arthexis@github) 2022-2023
 
 
 import os
@@ -37,12 +28,13 @@ def fread(fn):
         with open(fn, 'r', encoding='utf-8') as f: return f.read()
     except FileNotFoundError: return None 
 
-assert (BODY := fread(__file__)), 'Bodyplan not found.'
+BODY = fread(__file__)
+assert BODY, 'Bodyplan not found.'
 
 
 # C.
 
-HOST, PORT = os.environ.get('HOSTNAME', 'localhost'), 8080
+HOST, PORT = os.environ.get('HOSTNAME', 'localhost'), 8080 
 
 def create_fork(*args, old=None):
     assert len(args) > 0
@@ -90,6 +82,7 @@ if __name__ == "__main__" and RUNLEVEL == 1:
 # D.
 
 import re
+import hashlib
 import sqlite3
 
 PALACE = None
@@ -98,37 +91,47 @@ TOPICS = []
 def summary(text):
     return re.sub(r'\s+', ' ', text)[:30] if text else 'N/A'
 
+def md5(article):
+    article = article.encode('utf-8') if isinstance(article, str) else article
+    return hashlib.md5(article).hexdigest()
+
 def palace_recall(topic, /, fetch=True, store=None):  
     global PALACE, TOPICS
-    topic = topic.lower().replace('.', '__')
-    assert store in (None, True) or isinstance(store, str), f'Invalid recall {store=}'
-    assert (topic and re.match(r'^[a-zA-Z0-9_\-]+$', topic)  # Don't allow underscore
-        and len(topic) < 40 and not topic.startswith('sqlite_')), f'Invalid recall {topic=}'
-    short = f'"{summary(store)}" ({len(store)})' if store else 'N/A'
+    assert topic and re.match(r'^[a-zA-Z0-9_.\-]+$', topic), f'Invalid recall {topic=}'
+    topic = topic.lower().replace('.', '__').replace('-', '_')
+    short = f'"{summary(store)}..." ({len(store)} bytes)' if store else 'N/A'
     emit(f'Recall {topic=} {fetch=} {short=}.')
     c = PALACE.cursor()
     if not TOPICS:
         c.execute('SELECT name FROM sqlite_master WHERE type="table" AND name not LIKE "sqlite_%"')
         TOPICS.extend(t[0] for t in c.fetchall())
-    if topic not in TOPICS:
+    if topic not in TOPICS:            
+        atype = 'TEXT' if isinstance(store, str) else 'BLOB' if isinstance(store, bytes) else 'NULL'
         c.execute(f'CREATE TABLE IF NOT EXISTS {topic} ('
-            f'num INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, article TEXT)')
+            f'num INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, article {atype}, md5 TEXT)')
         if seed := fread(f'{DIR}/seeds/{topic.replace("__", ".")}'):
-            c.execute(f'INSERT INTO {topic} (ts, article) VALUES (?, ?)', (isotime(), seed))
+            c.execute(f'INSERT INTO {topic} (ts, article, md5) VALUES (?, ?, ?)', 
+                (isotime(), seed, md5(seed)))
             PALACE.commit()
+        emit(f"Created topic {topic} {summary(seed)=}.")
         TOPICS.append(topic)
-    if fetch:
-        found = c.execute(f'SELECT num, ts, article FROM {topic} ORDER BY ts DESC LIMIT 1') 
-    if store is True:  # Check for True because store can be a string.
-        store = r.fetchone()[2]
-    if store is not None: 
-        rowid = c.execute(
-            f'INSERT INTO {topic} (ts, article) VALUES (?, ?)', (isotime(), store)).lastrowid
-        PALACE.commit()
-        emit(f'Committed {topic=} {rowid=} {short=}.')
-    if (found := found.fetchone() if fetch and found else None):
-        return topic, found[0], found[1], found[2]
+    found = c.execute(f'SELECT num, ts, article, md5 FROM {topic} '
+        f'ORDER BY ts DESC LIMIT 1').fetchone() if fetch else None
+    if store:      
+        next_md5 = md5(store)
+        if not found or found[3] != next_md5:
+            rowid = c.execute(f'INSERT INTO {topic} (ts, article, md5) VALUES (?, ?, ?)', 
+                (isotime(), store, next_md5)).lastrowid
+            PALACE.commit()
+            emit(f'Committed insert {topic=} {rowid=}')
+            if not fetch: return rowid  # Return num of new articles if not fetching.
+    if found:
+        return topic, found[0], found[1], found[2]  # topic, num, ts, article
 
+
+# TODO: Function that creates relationships between two articles.
+# TODO: Process that prunes old articles with no relationships.
+    
 
 # V.
 
@@ -138,36 +141,48 @@ IGNORE = ('favicon.ico', )
 
 # Main entrypoint for the WSGI server.
 def main_facade(env, respond):
+    start = time.time()
     try:
         layers = [p for p in re.split(r'[/]+', env['PATH_INFO']) if p]
-        status = '404 Not Found' if layers and layers[0] in IGNORE else '200 OK'
-        respond(status, [('Content-type', f'text/html; charset=utf-8')])
+        # We could return other statuses, but the standard doesn't force us to.
+        respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
+        yield f'<!DOCTYPE html><meta charset="utf-8"><title>{SITE}</title>'.encode('utf-8')
         if css := hypertext(palace_recall('qaczar.css')): yield css
+        yield f'<body><head><h1><a href="/">{SITE.upper()}</a>!</h1>'.encode('utf-8')
         for layer in layers:
             if article := palace_recall(layer):
                 yield hypertext(article)
         if js := hypertext(palace_recall('qaczar.js')): yield js
     except Exception as e:
         emit(f'Facade error: {e} {env=}')
+    finally:
+        emit(f"Request completed in {int((time.time() - start)*1000)} ms.")
 
 def hypertext(article):
     if not article: return b' '
     topic, num, ts, article = article
     if topic.endswith('__css'):
         return f'<style>{article}</style>'.encode('utf-8')
-    return f'<article id="{topic}__{num}" data-ts="{ts}">{article}</article>'.encode('utf-8')
+    elif topic.endswith('__js'):
+        return f'<script>{article}</script>'.encode('utf-8')
+    elif topic.endswith('__py'):
+        article = article.replace("\n", "</li><li>")
+        article = f'<ol><li>{article}</li></ol>'
+    return (f'<article id="{topic}__{num}" data-ts="{ts}">' 
+        f'{article}</article>').encode('utf-8')
 
 class EmitHandler(WSGIRequestHandler):
     def log_request(self, code='-', size='-'):
-        emit(f'Request from {self.address_string()} {self.requestline} {code} {size} bytes.')
+        emit(f'Last request from {self.address_string()} {self.requestline} {code} {size} bytes.')
 
 if __name__ == "__main__" and RUNLEVEL == 2:
-    # TODO: Test with IMMEDIATE isolation_level (default is DEFERRED).
-    PALACE =  sqlite3.connect('p.sqlite')
+    PALACE =  sqlite3.connect('p.sqlite', isolation_level='IMMEDIATE')
     HOST, PORT = sys.argv[1].split(':')
     PORT = int(PORT)
+    palace_recall('qaczar.py', store=BODY)
     with make_server(HOST, PORT, main_facade, handler_class=EmitHandler) as s:
         emit(f'Facade ready at http://{HOST}:{PORT}/')
+        # TODO: Kickstart the first visitor delegate using a crown.
         s.serve_forever(poll_interval=1)
 
 
