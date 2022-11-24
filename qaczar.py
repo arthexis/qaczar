@@ -25,10 +25,9 @@ def isotime(t=None):
 def emit(verse): 
      print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{isotime()}] {verse}')
 
-def fread(fn, encoding='utf-8'):
+def fread(fn, e='utf-8'):
     try: 
-        with open(fn, 'r' if encoding else 'rb', encoding=encoding) as f: 
-            return f.read()
+        with open(fn, 'r' if e else 'rb', encoding=e) as f:  return f.read()
     except FileNotFoundError: return None 
 
 BODY = fread(__file__)
@@ -42,8 +41,7 @@ HOST, PORT = os.environ.get('HOSTNAME', 'localhost'), 8080
 def create_fork(*args, old=None):
     assert len(args) > 0
     if old is not None:
-        old.terminate()
-        old.wait()
+        old.terminate(); old.wait()
         atexit.unregister(old.terminate)
     if not (s := subprocess.Popen([sys.executable, __file__, *[str(a) for a in args]])):
         raise RuntimeError('Failed to create fork.')
@@ -105,7 +103,7 @@ def seed_mtime(topic, src='seeds'):
     except FileNotFoundError: return 0
 
 def plant_seed(c, fname, topic, mtime, encoding):
-    if seed := fread(f'{DIR}/seeds/{fname}', encoding=encoding):     
+    if seed := fread(f'{DIR}/seeds/{fname}', e=encoding):     
         ts, new_md5, mtime = isotime(), md5(seed), mtime or seed_mtime(fname)
         num = c.execute(f'INSERT INTO {topic} (ts, article, md5, mtime) VALUES (?, ?, ?, ?)', 
             (ts, seed, new_md5, mtime)).lastrowid
@@ -150,37 +148,38 @@ def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
 
 # V.
 
+import urllib.parse
 from wsgiref.simple_server import make_server, WSGIRequestHandler
 
 IGNORE = ('favicon.ico', )
 
 # Main entrypoint for the WSGI server.
-def main_facade(env, respond):
+def main_facade(environ, respond):
     global SITE
     start = time.time()
-    emit(f'--*-- Incoming request {env["REQUEST_METHOD"]} {env["PATH_INFO"]} from {env["REMOTE_ADDR"]} --*--')
+    emit(f'--*-- Incoming request {environ["REQUEST_METHOD"]} {environ["PATH_INFO"]} from {environ["REMOTE_ADDR"]} --*--')
     try:
-        layers = [p for p in re.split(r'[/]+', env['PATH_INFO']) if p]
+        layers = [p for p in re.split(r'[/]+', environ['PATH_INFO']) if p]
         if len(layers) == 1 and '.' in (fname := layers[0]):
             yield from standalone_file(fname, respond)
         else:
             respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
             yield f'<!DOCTYPE html><meta charset="utf-8"><head><title>{SITE}</title>'.encode('utf-8')
             if css := hypertext(palace_recall('qaczar.css')): yield css
+            if js := hypertext(palace_recall('qaczar.js')): yield js
             yield (f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>'.encode('utf-8'))
-            yield command_form(env, layers)
+            yield command_form(environ, layers) 
             yield b'</nav><main>'
             for layer in layers:
                 if article := palace_recall(layer): yield hypertext(article)
             yield f'</main><footer>by Rafa Guill&eacute;n (arthexis@gmail.com)</footer></body>'.encode('utf-8')
-            if js := hypertext(palace_recall('qaczar.js')): yield js
     finally:
         emit(f"Request completed in {int((time.time() - start)*1000)} ms.")
 
 def standalone_file(fname, respond):
     if not (blob := palace_recall(fname, encoding=None)):
         respond('404 Not Found', [('Content-type', 'text/plain')])
-        yield iter([f'File not found: {fname}'])
+        yield iter([b''])
     blob = blob[3]
     mimetype = mimetypes.guess_type(fname, strict=False)[0] or 'application/octet-stream'
     respond('200 OK', [('Content-Type', mimetype), ('Content-Length', str(len(blob)))])
@@ -188,13 +187,22 @@ def standalone_file(fname, respond):
     for i in range(0, len(blob), 1024):
         yield blob[i:i+1024]
 
-def command_form(env, layers):
-    method = env['REQUEST_METHOD']
-    if method == 'POST':
-        emit(f'POST {env["CONTENT_LENGTH"]} bytes.')
-        pass
-    return (f'<form id="cmd-form" method="post">' 
-            f'<input type="text" id="cmd" size=72></form>').encode('utf-8')
+def command_form(environ, layers):
+    method = environ['REQUEST_METHOD']
+    try:
+        if method == 'POST':
+            try:
+                request_body_size = int(environ.get('CONTENT_LENGTH', 0))
+            except (ValueError):
+                request_body_size = 0
+            emit(f'POST {request_body_size=}')
+            command = environ['wsgi.input'].read(request_body_size)
+            emit(f'Command received: {command=}')
+        return (f'<form id="cmd-form" method="post">' 
+                f'<input type="text" id="cmd" size=70></form>').encode('utf-8')
+    except Exception as e:
+        emit(f'Error processing command form {e=}.')
+        return b'<strong>Command form error.</strong>'
         
 # Create a function that generates arbitrary HTML tables for formatting.
 def table_layout(rows, cols, data):
@@ -215,8 +223,10 @@ def hypertext(article):
     return (f'<article id="{topic}__{num}" data-ts="{ts}">' 
         f'{article}</article>').encode('utf-8')
 
+# TODO: Figure out what else we need to override.
+# TODO: Consider using 
 class Unhandler(WSGIRequestHandler):
-    def log_request(self, code='-', size='-'):
+    def log_request(self, code=None, size=None):
         pass
 
 if __name__ == "__main__" and RUNLEVEL == 2:
