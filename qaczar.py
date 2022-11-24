@@ -4,6 +4,8 @@
 # A Python script that does everything.
 # H. V. D. C. by Rafa Guillén (arthexis@github) 2022-2023
 
+# TODO: Error - CSS not being reloaded properly on change.
+
 
 import os
 import sys
@@ -17,8 +19,8 @@ RUNLEVEL = len(sys.argv)
 DIR = os.path.dirname(__file__)
 
 
-def isotime(): 
-    return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
+def isotime(t=None): 
+    return time.strftime('%Y-%m-%d %H:%M:%S', t or time.gmtime())
 
 def emit(verse): 
      print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{isotime()}] {verse}')
@@ -50,7 +52,7 @@ def create_fork(*args, old=None):
     emit(f"Created fork {' '.join(str(a) for a in args)} {s.pid=}.")
     return s
 
-def watch_over(s):  # aka. the crown
+def watch_over(s):  # aka. The Crown
     global BODY
     while True:
         stable, mtime = True, os.path.getmtime(__file__)
@@ -67,9 +69,8 @@ def watch_over(s):  # aka. the crown
                     emit(f"Fork died {s.args=} {s.pid=}. Restarting.")
                     s, stable = create_fork(*s.args, old=s), False
                     continue
-                else:
-                    emit("Crown unstable, aborting. Check qaczar.py for errors.")
-                    sys.exit(1)
+                emit("Crown unstable, aborting. Check qaczar.py for errors.")
+                sys.exit(1)
             stable = True
 
 if __name__ == "__main__" and RUNLEVEL == 1:
@@ -88,7 +89,7 @@ import hashlib
 import sqlite3
 import mimetypes
 
-PALACE, TOPICS, SEEDED = None, [], {}
+PALACE, TOPICS = None, []
 
 def summary(text):
     return re.sub(r'\s+', ' ', text)[:30] if text else 'N/A'
@@ -97,49 +98,51 @@ def md5(blob):
     if blob := blob.encode('utf-8') if isinstance(blob, str) else blob:
         return hashlib.md5(blob).hexdigest()
 
-def seed_mtime(topic):
+def seed_mtime(topic, src='seeds'):
     global DIR
-    return os.path.getmtime(f'{DIR}/seeds/{topic}')
+    try:
+        return int(os.path.getmtime(f'{DIR}/{src}/{topic}'))
+    except FileNotFoundError: return 0
+
+
+def plant_seed(c, fname, topic, mtime, encoding):
+    if seed := fread(f'{DIR}/seeds/{fname}', encoding=encoding):          
+        c.execute(f'INSERT INTO {topic} (ts, article, md5, mtime) VALUES (?, ?, ?, ?)', 
+            (isotime(), seed, md5(seed), mtime or seed_mtime(fname)))
+        emit(f"Seed {fname} uploaded ({len(seed)} bytes).")
+        PALACE.commit()
 
 
 def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
-    # TODO: Handle requests for binary files.
-    global PALACE, TOPICS, SEEDED, DIR
+    # TODO: Handle seeded file refreshes correctly
+    global PALACE, TOPICS, DIR
     assert topic and re.match(r'^[a-zA-Z0-9_.]+$', topic), f'Invalid recall {topic=}'
-    fn, topic = topic, topic.lower().replace('.', '__')
+    fname, topic = topic, topic.lower().replace('.', '__')
     short = f'"{summary(store)}..." ({len(store)} bytes)' if store else 'N/A'
     emit(f'Recall {topic=} {fetch=} {short=}.')
     c = PALACE.cursor()
     if not TOPICS:
         c.execute('SELECT name FROM sqlite_master WHERE type="table" AND name not LIKE "sqlite_%"')
         TOPICS.extend(t[0] for t in c.fetchall())
-    if topic in SEEDED and (mtime := seed_mtime(fn)) != SEEDED[topic]:
-        seed = fread(f'{DIR}/seeds/{fn}', encoding=encoding)
-        c.execute(f'INSERT INTO {topic} (ts, article, md5) VALUES (?, ?, ?)',
-            (isotime(), seed, md5(seed)))
-        PALACE.commit()
-        SEEDED[topic] = mtime
-        emit(f'Seed reloaded {topic=} {mtime=}.')
     if topic not in TOPICS:            
         atype = 'TEXT' if isinstance(store, str) else 'BLOB' if isinstance(store, bytes) else 'NULL'
         c.execute(f'CREATE TABLE IF NOT EXISTS {topic} ('
-            f'num INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, article {atype}, md5 TEXT)')
-        if seed := fread(f'{DIR}/seeds/{fn}', encoding=encoding):  # ERROR
-            c.execute(f'INSERT INTO {topic} (ts, article, md5) VALUES (?, ?, ?)', 
-                (isotime(), seed, md5(seed)))
-            SEEDED[topic] = os.path.getmtime(f'{DIR}/seeds/{fn}')
-            emit(f'Seeded {topic=} {SEEDED[topic]=} {md5(seed)}.')
-            PALACE.commit()
+                f'num INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, article {atype}, md5 TEXT, mtime INTEGER)')
+        plant_seed(c, fname, topic, None, encoding)
         emit(f"Created table {topic}.")
         TOPICS.append(topic)
-    found = c.execute(f'SELECT num, ts, article, md5 FROM {topic} '
+    found = c.execute(f'SELECT num, ts, article, md5, mtime FROM {topic} '
         f'ORDER BY ts DESC LIMIT 1').fetchone() if fetch else None
+    if found and found[4] and (mtime := seed_mtime(fname)) > found[4]:
+        plant_seed(c, fname, topic, mtime, encoding)
+    else:
+        emit(f"Seed {fname} not modified.")
     next_md5 = md5(store)
     if store and (not found or found[3] != next_md5):
-        rowid = c.execute(f'INSERT INTO {topic} (ts, article, md5) VALUES (?, ?, ?)', 
-            (isotime(), store, next_md5)).lastrowid
-        PALACE.commit()
-        emit(f'Insert comitted {topic=} {rowid=}')
+        if rowid := c.execute(f'INSERT INTO {topic} (ts, article, md5) VALUES (?, ?, ?)', 
+                (isotime(), store, next_md5)).lastrowid:
+            PALACE.commit()
+            emit(f'Insert comitted {topic=} {rowid=}.')
         if not fetch: return rowid  # Return num of new articles if not fetching.
     if found: return topic, found[0], found[1], found[2]  # topic, num, ts, article
 
@@ -160,23 +163,14 @@ def main_facade(env, respond):
     start = time.time()
     emit(f'Incoming request {env["PATH_INFO"]}')
     try:
-        # TODO: Send binary files (images, fonts, etc.) as is.
         layers = [p for p in re.split(r'[/]+', env['PATH_INFO']) if p]
-        if len(layers) == 1 and '.' in (fn := layers[0]):
-            if blob := palace_recall(fn, encoding=None):
-                blob = blob[3]
-                mimetype = mimetypes.guess_type(fn, strict=False)[0] or 'application/octet-stream'
-                respond('200 OK', [('Content-Type', mimetype), ('Content-Length', str(len(blob)))])
-                emit(f'Served file {fn=} {mimetype=} {len(blob)=} bytes.')
-                # Yield blob in blocks of 1024 bytes.
-                for i in range(0, len(blob), 1024):
-                    yield blob[i:i+1024]
-            emit(f'404 Not found {fn=}')
-        # We could return other statuses, but the standard doesn't force us to.
+        if len(layers) == 1 and '.' in (fname := layers[0]):
+            yield from send_file(fname, respond)
+            return
         respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
-        yield f'<!DOCTYPE html><meta charset="utf-8"><title>{SITE}</title>'.encode('utf-8')
+        yield f'<!DOCTYPE html><meta charset="utf-8"><head><title>{SITE}</title>'.encode('utf-8')
         if css := hypertext(palace_recall('qaczar.css')): yield css
-        yield f'<body><head><h1><a href="/">{SITE.upper()}</a>!</h1><main>'.encode('utf-8')
+        yield f'</head><body><header><h1><a href="/">{SITE.upper()}</a>!</h1></header><main>'.encode('utf-8')
         for layer in layers:
             if article := palace_recall(layer):
                 yield hypertext(article)
@@ -185,6 +179,17 @@ def main_facade(env, respond):
         yield f'</html>'.encode('utf-8')
     finally:
         emit(f"Request completed in {int((time.time() - start)*1000)} ms.")
+
+def send_file(fname, respond):
+    if not (blob := palace_recall(fname, encoding=None)):
+        respond('404 Not Found', [('Content-type', 'text/plain')])
+        yield iter([f'File not found: {fname}'])
+    blob = blob[3]
+    mimetype = mimetypes.guess_type(fname, strict=False)[0] or 'application/octet-stream'
+    respond('200 OK', [('Content-Type', mimetype), ('Content-Length', str(len(blob)))])
+    emit(f'Served file {fname=} {mimetype=} {len(blob)=} bytes.')
+    for i in range(0, len(blob), 1024):
+        yield blob[i:i+1024]
 
 def hypertext(article):
     # TODO: Figure a way to encapsulate binary content in html.
