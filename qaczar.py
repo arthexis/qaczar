@@ -57,7 +57,7 @@ def watch_over(s):  # aka. The Crown
     while True:
         stable, mtime = True, os.path.getmtime(__file__)
         while True:
-            time.sleep(2.6)  
+            time.sleep(2.6)  # A reasonable time for take backs.
             if os.path.getmtime(__file__) != mtime:
                 mutation, mtime = fread(__file__), os.path.getmtime(__file__)
                 if mutation != BODY:
@@ -104,7 +104,6 @@ def seed_mtime(topic, src='seeds'):
         return int(os.path.getmtime(f'{DIR}/{src}/{topic}'))
     except FileNotFoundError: return 0
 
-
 def plant_seed(c, fname, topic, mtime, encoding):
     if seed := fread(f'{DIR}/seeds/{fname}', encoding=encoding):     
         ts, new_md5, mtime = isotime(), md5(seed), mtime or seed_mtime(fname)
@@ -114,14 +113,12 @@ def plant_seed(c, fname, topic, mtime, encoding):
         PALACE.commit()
         return num, ts, seed, new_md5, mtime
 
-
 def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
-    # TODO: Seems like seed reloading only works on the second request.
     global PALACE, TOPICS, DIR
     assert topic and re.match(r'^[a-zA-Z0-9_.]+$', topic), f'Invalid recall {topic=}.'
     fname, topic = topic, topic.lower().replace('.', '__')
     short = f'"{summary(store)}..." ({len(store)} bytes)' if store else 'N/A'
-    emit(f'Recall {topic=} {fetch=} {short=}.')  # Operations out of order
+    emit(f'Palace recall {topic=} {fetch=} {type(store)=} {encoding=}.') 
     c = PALACE.cursor()
     if not TOPICS:
         c.execute('SELECT name FROM sqlite_master WHERE type="table" AND name not LIKE "sqlite_%"')
@@ -147,8 +144,8 @@ def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
     if found: return topic, found[0], found[1], found[2]  # topic, num, ts, article
 
 
-# TODO: Function that creates relationships between two articles.
-# TODO: Process that prunes old articles with no relationships.
+# TODO: Function that creates relationships between 2 articles.
+# TODO: Then, it prunes old articles with no relationships.
     
 
 # V.
@@ -161,27 +158,26 @@ IGNORE = ('favicon.ico', )
 def main_facade(env, respond):
     global SITE
     start = time.time()
-    emit(f'Incoming request {env["PATH_INFO"]}')
+    emit(f'--*-- Incoming request {env["REQUEST_METHOD"]} {env["PATH_INFO"]} from {env["REMOTE_ADDR"]} --*--')
     try:
         layers = [p for p in re.split(r'[/]+', env['PATH_INFO']) if p]
         if len(layers) == 1 and '.' in (fname := layers[0]):
-            yield from send_file(fname, respond)
-            return
-        respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
-        yield f'<!DOCTYPE html><meta charset="utf-8"><head><title>{SITE}</title>'.encode('utf-8')
-        if css := hypertext(palace_recall('qaczar.css')): yield css
-        yield (f'</head><body><header><nav class="title"><a href="/">{SITE}</a>!</nav>'.encode('utf-8'))
-        yield control_form(env, layers)
-        yield b'</header><main>'
-        for layer in layers:
-            if article := palace_recall(layer): yield hypertext(article)
-        yield f'</main></body>'.encode('utf-8')
-        if js := hypertext(palace_recall('qaczar.js')): yield js
-        yield f'</html>'.encode('utf-8')
+            yield from standalone_file(fname, respond)
+        else:
+            respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
+            yield f'<!DOCTYPE html><meta charset="utf-8"><head><title>{SITE}</title>'.encode('utf-8')
+            if css := hypertext(palace_recall('qaczar.css')): yield css
+            yield (f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>'.encode('utf-8'))
+            yield command_form(env, layers)
+            yield b'</nav><main>'
+            for layer in layers:
+                if article := palace_recall(layer): yield hypertext(article)
+            yield f'</main><footer>by Rafa Guill&eacute;n (arthexis@gmail.com)</footer></body>'.encode('utf-8')
+            if js := hypertext(palace_recall('qaczar.js')): yield js
     finally:
         emit(f"Request completed in {int((time.time() - start)*1000)} ms.")
 
-def send_file(fname, respond):
+def standalone_file(fname, respond):
     if not (blob := palace_recall(fname, encoding=None)):
         respond('404 Not Found', [('Content-type', 'text/plain')])
         yield iter([f'File not found: {fname}'])
@@ -192,16 +188,18 @@ def send_file(fname, respond):
     for i in range(0, len(blob), 1024):
         yield blob[i:i+1024]
 
-def control_form(env, layers):
+def command_form(env, layers):
     method = env['REQUEST_METHOD']
-    if method == 'GET':
-        return (f'<br><br><nav class="command"><form method="post" class="cmd">' 
-            f'<input type="text" name="cmd" size=40>' 
-            f'<button type="submit">&#8594;</button></form></nav>').encode('utf-8')
     if method == 'POST':
-        if command := env['wsgi.input'].readline().decode('utf-8').split('=')[1]:
-            emit(f'Command {command=}')
-            return b'<p>Command received.</p>'
+        emit(f'POST {env["CONTENT_LENGTH"]} bytes.')
+        pass
+    return (f'<form id="cmd-form" method="post">' 
+            f'<input type="text" id="cmd" size=72></form>').encode('utf-8')
+        
+# Create a function that generates arbitrary HTML tables for formatting.
+def table_layout(rows, cols, data):
+    return (f'<table><tr><th>{f"</th><th>".join(cols)}</th></tr>'
+        f'<tr><td>{f"</td><td>".join(data)}</td></tr></table>').encode('utf-8')
 
 def hypertext(article):
     # TODO: Figure a way to encapsulate binary content in html.
@@ -217,16 +215,16 @@ def hypertext(article):
     return (f'<article id="{topic}__{num}" data-ts="{ts}">' 
         f'{article}</article>').encode('utf-8')
 
-class EmitHandler(WSGIRequestHandler):
+class Unhandler(WSGIRequestHandler):
     def log_request(self, code='-', size='-'):
-        emit(f'Last request from {self.address_string()} {self.requestline} {code} {size} bytes.')
+        pass
 
 if __name__ == "__main__" and RUNLEVEL == 2:
     PALACE =  sqlite3.connect('p.sqlite', isolation_level='IMMEDIATE')
     HOST, PORT = sys.argv[1].split(':')
     PORT = int(PORT)
     palace_recall('qaczar.py', store=BODY)
-    with make_server(HOST, PORT, main_facade, handler_class=EmitHandler) as s:
+    with make_server(HOST, PORT, main_facade, handler_class=Unhandler) as s:
         emit(f'Facade ready at http://{HOST}:{PORT}/')
         # TODO: Kickstart the first visitor delegate using a crown.
         s.serve_forever(poll_interval=1)
