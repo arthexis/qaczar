@@ -172,7 +172,7 @@ def main_facade(environ, respond):
             yield b'</nav><main>'
             for layer in layers:
                 if article := palace_recall(layer): yield hypertext(article)
-            yield f'</main><footer>by Rafa Guill&eacute;n (arthexis@gmail.com)</footer></body>'.encode('utf-8')
+            yield f'</main><footer>by Rafa Guill&eacute;n (arthexis)</footer></body></html>'.encode('utf-8')
     finally:
         emit(f"Request completed in {int((time.time() - start)*1000)} ms.")
 
@@ -189,17 +189,15 @@ def standalone_file(fname, respond):
 
 def command_form(environ, layers):
     method = environ['REQUEST_METHOD']
-    try:
+    try:    
         if method == 'POST':
-            try:
-                request_body_size = int(environ.get('CONTENT_LENGTH', 0))
-            except (ValueError):
-                request_body_size = 0
+            request_body_size = int(environ.get('CONTENT_LENGTH', 0))
             emit(f'POST {request_body_size=}')
             command = environ['wsgi.input'].read(request_body_size)
             emit(f'Command received: {command=}')
+        # TODO: Is there something wrong with the form itself?
         return (f'<form id="cmd-form" method="post">' 
-                f'<input type="text" id="cmd" size=70></form>').encode('utf-8')
+                f'<input type="text" id="cmd" name="cmd" size=70></form>').encode('utf-8')
     except Exception as e:
         emit(f'Error processing command form {e=}.')
         return b'<strong>Command form error.</strong>'
