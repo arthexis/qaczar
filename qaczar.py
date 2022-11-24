@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 # A Python script that does everything.
-# H. V. D. C. by Rafa Guillén (arthexis@github) 2022-2023
+# H. V. D. C. by Rafa Guillén (arthexis@gmail.com) 2022-2023
 
-# TODO: Error - CSS not being reloaded properly on change.
+# TODO: Work on the control form and general styling.
 
 
 import os
@@ -106,20 +106,22 @@ def seed_mtime(topic, src='seeds'):
 
 
 def plant_seed(c, fname, topic, mtime, encoding):
-    if seed := fread(f'{DIR}/seeds/{fname}', encoding=encoding):          
-        c.execute(f'INSERT INTO {topic} (ts, article, md5, mtime) VALUES (?, ?, ?, ?)', 
-            (isotime(), seed, md5(seed), mtime or seed_mtime(fname)))
+    if seed := fread(f'{DIR}/seeds/{fname}', encoding=encoding):     
+        ts, new_md5, mtime = isotime(), md5(seed), mtime or seed_mtime(fname)
+        num = c.execute(f'INSERT INTO {topic} (ts, article, md5, mtime) VALUES (?, ?, ?, ?)', 
+            (ts, seed, new_md5, mtime)).lastrowid
         emit(f"Seed {fname} uploaded ({len(seed)} bytes).")
         PALACE.commit()
+        return num, ts, seed, new_md5, mtime
 
 
 def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
-    # TODO: Handle seeded file refreshes correctly
+    # TODO: Seems like seed reloading only works on the second request.
     global PALACE, TOPICS, DIR
-    assert topic and re.match(r'^[a-zA-Z0-9_.]+$', topic), f'Invalid recall {topic=}'
+    assert topic and re.match(r'^[a-zA-Z0-9_.]+$', topic), f'Invalid recall {topic=}.'
     fname, topic = topic, topic.lower().replace('.', '__')
     short = f'"{summary(store)}..." ({len(store)} bytes)' if store else 'N/A'
-    emit(f'Recall {topic=} {fetch=} {short=}.')
+    emit(f'Recall {topic=} {fetch=} {short=}.')  # Operations out of order
     c = PALACE.cursor()
     if not TOPICS:
         c.execute('SELECT name FROM sqlite_master WHERE type="table" AND name not LIKE "sqlite_%"')
@@ -128,15 +130,13 @@ def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
         atype = 'TEXT' if isinstance(store, str) else 'BLOB' if isinstance(store, bytes) else 'NULL'
         c.execute(f'CREATE TABLE IF NOT EXISTS {topic} ('
                 f'num INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, article {atype}, md5 TEXT, mtime INTEGER)')
-        plant_seed(c, fname, topic, None, encoding)
         emit(f"Created table {topic}.")
+        plant_seed(c, fname, topic, None, encoding)
         TOPICS.append(topic)
     found = c.execute(f'SELECT num, ts, article, md5, mtime FROM {topic} '
         f'ORDER BY ts DESC LIMIT 1').fetchone() if fetch else None
     if found and found[4] and (mtime := seed_mtime(fname)) > found[4]:
-        plant_seed(c, fname, topic, mtime, encoding)
-    else:
-        emit(f"Seed {fname} not modified.")
+        found = plant_seed(c, fname, topic, mtime, encoding)
     next_md5 = md5(store)
     if store and (not found or found[3] != next_md5):
         if rowid := c.execute(f'INSERT INTO {topic} (ts, article, md5) VALUES (?, ?, ?)', 
@@ -170,10 +170,11 @@ def main_facade(env, respond):
         respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
         yield f'<!DOCTYPE html><meta charset="utf-8"><head><title>{SITE}</title>'.encode('utf-8')
         if css := hypertext(palace_recall('qaczar.css')): yield css
-        yield f'</head><body><header><h1><a href="/">{SITE.upper()}</a>!</h1></header><main>'.encode('utf-8')
+        yield (f'</head><body><header><nav class="title"><a href="/">{SITE}</a>!</nav>'.encode('utf-8'))
+        yield control_form(env, layers)
+        yield b'</header><main>'
         for layer in layers:
-            if article := palace_recall(layer):
-                yield hypertext(article)
+            if article := palace_recall(layer): yield hypertext(article)
         yield f'</main></body>'.encode('utf-8')
         if js := hypertext(palace_recall('qaczar.js')): yield js
         yield f'</html>'.encode('utf-8')
@@ -190,6 +191,17 @@ def send_file(fname, respond):
     emit(f'Served file {fname=} {mimetype=} {len(blob)=} bytes.')
     for i in range(0, len(blob), 1024):
         yield blob[i:i+1024]
+
+def control_form(env, layers):
+    method = env['REQUEST_METHOD']
+    if method == 'GET':
+        return (f'<br><br><nav class="command"><form method="post" class="cmd">' 
+            f'<input type="text" name="cmd" size=40>' 
+            f'<button type="submit">&#8594;</button></form></nav>').encode('utf-8')
+    if method == 'POST':
+        if command := env['wsgi.input'].readline().decode('utf-8').split('=')[1]:
+            emit(f'Command {command=}')
+            return b'<p>Command received.</p>'
 
 def hypertext(article):
     # TODO: Figure a way to encapsulate binary content in html.
