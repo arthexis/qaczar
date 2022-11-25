@@ -157,13 +157,13 @@ import urllib.parse
 from wsgiref.simple_server import make_server, WSGIRequestHandler
 
 def hyper(text):
-    if isinstance(text, bytes): yield text
-    if isinstance(text, str): yield text.encode('utf-8')
-    if isinstance(text, Article): yield text.article.encode('utf-8')
-    if isinstance(text, (list, tuple)): 
-        yield from (hyper(c) for c in text)
-    if isinstance(text, None): yield b''
-    emit(f'Unknown hypertext conversion {type(text)=}.')
+    if text:
+        if isinstance(text, bytes): yield text
+        if isinstance(text, str): yield text.encode('utf-8')
+        if isinstance(text, Article): yield text.article.encode('utf-8')
+        if isinstance(text, (list, tuple)): 
+            yield from (hyper(c) for c in text)
+        emit(f'Unknown hypertext conversion {type(text)=}.')
     yield b''
 
 # Main entrypoint for the user AND delegates. UI == API.
