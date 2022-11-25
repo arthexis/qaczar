@@ -225,8 +225,8 @@ def _facade_command_form(env, layers):
             found = palace_recall(topic, store=data)
             emit(f'Article stored from POST {found.num=}.')
             return None
-    return ('<form id="cmd-form" method="post">'
-        '<textarea id="cmd" name="cmd" cols=70 rows=1></form>')
+    return (f'<form id="cmd-form" method="post">'
+        f'<textarea id="cmd" name="cmd" cols=70 rows=1></textarea></form>')
 
 def _facade_wrap_article(found):
     if not found: return None
