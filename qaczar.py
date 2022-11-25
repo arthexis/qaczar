@@ -252,6 +252,7 @@ if __name__ == "__main__" and RUNLEVEL == 2:
     HOST, PORT = sys.argv[1].split(':')
     PORT = int(PORT)
     palace_recall('qaczar__py', store=BODY)
+    # TODO: Add another delegate to generate SSL certificates.
     with make_server(HOST, PORT, facade_main, handler_class=Unhandler) as s:
         emit(f'Facade ready. Serving on http://{HOST}:{PORT}/')
         create_fork(sys.argv[1], 'certify_build')
