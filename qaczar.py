@@ -60,7 +60,7 @@ def watch_over(s):  # aka. The Crown
             if os.path.getmtime(__file__) != mtime:
                 mutation, mtime = fread(__file__), os.path.getmtime(__file__)
                 if mutation != BODY:
-                    emit(f"Mutation {len(mutation)=} {len(BODY)=}. Restarting.")
+                    emit(f"Mutation detected {len(mutation)=} {len(BODY)=}. Restarting.")
                     s, stable = create_fork(*s.args, old=s), False
                 continue
             if s.poll() is not None:
