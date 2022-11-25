@@ -231,17 +231,6 @@ def _facade_overview(environ):
             except Exception as e:
                 yield (f'<li><a href="/{topic}">{topic}</a> : <strong>NO CONTENT</strong></li>').encode('utf-8')
     yield f'</ul>'.encode('utf-8')
-        
-def _facade_sendfile(fname, respond):
-    if not (blob := palace_recall(fname, encoding=None)):
-        respond('404 Not Found', [('Content-type', 'text/plain')])
-        yield iter([b''])
-    blob = blob[3]
-    mimetype = mimetypes.guess_type(fname, strict=False)[0] or 'application/octet-stream'
-    respond('200 OK', [('Content-Type', mimetype), ('Content-Length', str(len(blob)))])
-    emit(f'Served file {fname=} {mimetype=} {len(blob)=} bytes.')
-    for i in range(0, len(blob), 1024):
-        yield blob[i:i+1024]
 
 class Unhandler(WSGIRequestHandler):
     def log_request(self, code=None, size=None): pass
