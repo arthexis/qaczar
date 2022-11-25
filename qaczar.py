@@ -195,6 +195,7 @@ def facade_main(environ, respond):
             if cmd := _facade_command_form(environ, layers): 
                 yield from hyper(cmd)
             yield b'</nav><main>'
+            emit('Ready to start with palace overview.')
             if not layers and (overview := _facade_palace_overview(environ)): 
                 yield from hyper(overview)
             for layer in layers:
