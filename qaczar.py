@@ -192,8 +192,8 @@ def facade_main(env, resp):
                 if not cmd: yield b'200 Ok.' 
                 else:
                     yield from hyper(f'<!DOCTYPE html><head><title>{SITE}</title>')
-                    if css := palace_recall('qaczar.css'): 
-                        yield from hyper(css.article, 'style')
+                    if js := palace_recall('qaczar.css'): 
+                        yield from hyper(js.article, 'style')
                     # TODO: Add quick links to the navigation bar next to the title.
                     # TODO: Show a summary of palace status and contents on the overview.
                     links = [f'<a href="/{t}">{t}</a>' for t in TOPICS]
@@ -209,6 +209,8 @@ def facade_main(env, resp):
                     yield from hyper(
                         f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n ' 
                         f'(arthexis) </footer></body></html>')
+                    if js := palace_recall('qaczar.js'): 
+                        yield from hyper(js.article, 'script')
     # Don't catch exceptions here, or they will be hidden in the logs.
     finally:
         emit(f"Request completed in {int((time.time() - start)*1000)} ms.")
