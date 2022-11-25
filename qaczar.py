@@ -118,8 +118,7 @@ Article = collections.namedtuple('Article', 'topic num ts article')
 def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
     global PALACE, TOPICS, DIR
     assert topic and re.match(r'^[a-zA-Z0-9_.]+$', topic), f'Invalid recall {topic=}.'
-    fname, topic = topic, topic.lower().replace('.', '__')
-    short = f'"{summary(store)}..." ({len(store)} bytes)' if store else 'N/A'
+    fname, topic = topic.lower().replace('__', '.'), topic.lower().replace('.', '__')
     emit(f'Palace recall {topic=} {fetch=} {type(store)=} {encoding=}.') 
     c = PALACE.cursor()
     if not TOPICS:
@@ -142,10 +141,11 @@ def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
                 (isotime(), store, next_md5)).lastrowid:
             PALACE.commit()
             emit(f'Insert comitted {topic=} {rowid=}.')
-        if not fetch: return rowid  # Return num of new articles if not fetching.
+        if not fetch: return rowid
     if found: return Article(topic, found[0], found[1], found[2])  # topic, num, ts, article
 
 
+    
 
 # TODO: Function that creates relationships between 2 articles.
 # TODO: Then, it prunes old articles with no relationships.
@@ -164,6 +164,7 @@ def hyper(text, wrap=None):
         elif isinstance(text, Article): yield from hyper(text.article)
         elif isinstance(text, (list, tuple)): 
             yield from (hyper(c) for c in text)
+        else: emit(f'Unable to hyper text {type(text)=} {text=}.')
     yield b''
     if wrap: yield f'</{wrap}>'.encode('utf-8') 
 
@@ -174,16 +175,14 @@ def facade_main(environ, respond):
     emit(f'--*-- Incoming {environ["REQUEST_METHOD"]} {environ["PATH_INFO"]} from {environ["REMOTE_ADDR"]} --*--')
     try:
         layers = [p for p in re.split(r'[/]+', environ['PATH_INFO']) if p]
-        if len(layers) == 1 and '.' in (fname := layers[0].replace('.', '__')):  # ERROR: Doesn't work for only files.
+        # TODO: Test this is serving TTF files properly.
+        if len(layers) == 1 and '.' in (fname := layers[0]):  
             emit(f'File request {fname=}.')
             if (found := palace_recall(fname, encoding=None)) and (article := found.article):
-                emit(f'File found {fname=} {found.num=} {found.ts=}.')
-                mimetype = mimetypes.guess_type(fname, strict=False)[0] or 'application/octet-stream'
-                filesize = len(article)
-                respond('200 OK', [('Content-Type', mimetype), ('Content-Length', str(filesize))])
-                for i in range(0, len(article), 1024):
-                    yield article[i:i+1024]
-                emit(f'Served file {fname=} {mimetype=} {filesize=} bytes.')
+                emit(f'File {fname=} found.')
+                iwrapped, mimetype, = _facade_wrap_file(fname, article)
+                respond('200 OK', [('Content-Type', mimetype), ('Content-Length', str(len(article)))])
+                yield from iwrapped
             else:
                 emit(f'File not found {fname=}.')
                 respond('404 Not Found', [('Content-Type', 'text/plain')])
@@ -207,10 +206,15 @@ def facade_main(environ, respond):
                 yield from hyper(
                     f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n (arthexis)' 
                     f'</footer></body></html>')
-    except (Exception, AssertionError) as e:
-        emit(f'Unhandled facade error {e} in {environ["PATH_INFO"]}')
+    # Don't catch exceptions here, or they will be hidden in the logs.
     finally:
         emit(f"Request completed in {int((time.time() - start)*1000)} ms.")
+
+def _facade_wrap_file(fname, article):
+    article = article if isinstance(article, bytes) else article.encode('utf-8')
+    mimetype = mimetypes.guess_type(fname, strict=False)[0] or 'application/octet-stream'
+    assert isinstance(article, bytes), f'File {fname=} {type(article)=} {article=}.'
+    return (article[i:i+1024] for i in range(0, len(article), 1024)), mimetype
 
 def _facade_command_form(environ, layers):
     if environ['REQUEST_METHOD'] == 'POST':
@@ -267,9 +271,9 @@ def certify_build():
         if line.strip().startswith('# TODO:'):
             roadmap.append(f'{ln+1}: {line.strip()[7:]}')
     roadmap = '\n'.join(roadmap)
-    if r := request_facade('roadmap.txt', upload=roadmap):
+    if r := request_facade('roadmap__txt', upload=roadmap):
         emit(f'Facade response to roadmap.txt upload: {r}')
-        found = palace_recall('roadmap.txt')
+        found = palace_recall('roadmap__txt')
         if not found or found[3] != roadmap:
             emit('Roadmap not updated properly.'); sys.exit(1)
         else:
