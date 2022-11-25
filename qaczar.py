@@ -290,21 +290,21 @@ def certify_build():
         if line.strip().startswith('# TODO:'):
             roadmap.append(f'@{ln+1} # TODO: {line.strip()[7:]}')
     roadmap = '\n'.join(roadmap)
-    if r := request_facade('roadmap__txt', upload=roadmap):
-        emit(f'Facade response to roadmap.txt upload: {r}')
-        found = palace_recall('roadmap__txt')
-        if not found or found[3] != roadmap:
-            emit('Roadmap not updated properly.'); sys.exit(1)
-        else:
-            emit('Roadmap update validated.')
+    r = request_facade('roadmap__txt', upload=roadmap)
+    emit(f'Facade response to roadmap.txt upload: {r}')
+    found = palace_recall('roadmap__txt')
+    if not found or found[3] != roadmap:
+        emit('Roadmap not updated properly.'); sys.exit(1)
+    else:
+        emit('Roadmap update validated.')
     # TODO: Store platform information related to each build test.
-    # TODO: Check if other seeded files (ie. qaczar.css) are loaded properly.
-    result = chain_run(
+    # TODO: Check that qaczar.py is loading properly in the UI.
+    last_result = chain_run(
             ['git', 'add', '.'],
             ['git', 'commit', '-m', 'Automatic commit by certify_build.'],
             ['git', 'push', 'origin', BRANCH])
-    emit(f'Git sync complete ({result=}).')
-    return 'SUCCESS' if result == 0 else 'FAILURE'
+    emit(f'Git sync complete ({last_result=}).')
+    return 'SUCCESS' if last_result == 0 else 'FAILURE'
 
 if __name__ == "__main__" and RUNLEVEL == 3:
     GOAL = sys.argv[2]
