@@ -277,6 +277,11 @@ def run_silently(cmd):
 def certify_build():
     global BRANCH
     # TODO: Add a call to facade to update the roadmap topic with BODY TODOs.
+    # Loop over each line in BODY enumerating the TODOs and store them in a list.
+    for ln, line in enumerate(BODY.splitlines()):
+        if line.strip().startswith('# TODO:'):
+            emit(f'Found TODO: {line}')
+
     with request_facade('') as r:
         emit(f'Facade response: {len(r)=} bytes.')
         run_silently(['git', 'add', '.'])
