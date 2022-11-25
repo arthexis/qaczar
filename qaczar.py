@@ -282,7 +282,7 @@ def certify_build():
         run_silently(['git', 'add', '.'])
         run_silently(['git', 'commit', '-m', 'Automatic commit by certify_build.'])
         s = run_silently(['git', 'push', 'origin', BRANCH])
-        emit(f'Git push complete {s.returncode}.')
+        emit(f'Git sync complete {s.returncode}.')
     return 'SUCCESS'
 
 if __name__ == "__main__" and RUNLEVEL == 3:
