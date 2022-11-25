@@ -273,7 +273,6 @@ def _facade_wrap_article(found, mode='ol'):
         content = f'<div>{found.article}</div>'
     else:
         content = f'<pre>{found.article}</pre>'
-    # Remove the prefix after __ from the title.
     title = f'<h2>Latest {found.topic.rsplit("__")[0]}</h2>'
     return f'<article>{title}<div>{content}</div></article>'
 
