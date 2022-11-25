@@ -164,7 +164,7 @@ def hyper(text):
         elif isinstance(text, (list, tuple)): 
             yield from (hyper(c) for c in text)
         emit(f'Unknown hypertext conversion {type(text)=}.')
-    yield b''
+    yield b' '
 
 # Main entrypoint for the user AND delegates. UI == API.
 def facade_main(environ, respond):
