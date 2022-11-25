@@ -223,7 +223,7 @@ def _facade_command_form(environ, layers):
 def _facade_palace_overview(environ):
     global PALACE, TOPICS
     c = PALACE.cursor()
-    yield f'<h2>Palace overview</h2><ul>'.encode('utf-8')
+    yield f'<h2>Palace overview</h2><ul>'
     for topic in TOPICS:
         c.execute(f'SELECT num, ts, article, md5, mtime FROM {topic} ORDER BY ts DESC LIMIT 1')
         if found := c.fetchone():
