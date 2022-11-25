@@ -212,7 +212,7 @@ def facade_main(environ, respond):
 def _facade_command_form(environ, layers):
     if environ['REQUEST_METHOD'] == 'POST':
         data = environ['wsgi.input'].read(int(environ.get('CONTENT_LENGTH', 0))).decode('utf-8')
-        emit(f'Data received: {layers=} {data=}')
+        emit(f'Data received: {layers=} {summary(data)=}')
         if layers and (topic := layers[0]):
             found = palace_recall(topic, store=data)
             emit(f'Article stored from POST {found.num=}.')
