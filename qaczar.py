@@ -177,14 +177,11 @@ def facade_main(environ, respond):
         layers = [p for p in re.split(r'[/]+', environ['PATH_INFO']) if p]
         # TODO: Test this is serving TTF files properly.
         if len(layers) == 1 and '.' in (fname := layers[0]):  
-            emit(f'File request {fname=}.')
             if (found := palace_recall(fname, encoding=None)) and (article := found.article):
-                emit(f'File {fname=} found.')
                 iwrapped, mimetype, = _facade_wrap_file(fname, article)
                 respond('200 OK', [('Content-Type', mimetype), ('Content-Length', str(len(article)))])
                 yield from iwrapped
             else:
-                emit(f'File not found {fname=}.')
                 respond('404 Not Found', [('Content-Type', 'text/plain')])
                 yield b'Not found.'
         else:
@@ -198,7 +195,6 @@ def facade_main(environ, respond):
                 yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>{cmd}</nav><main>')
                 # --- Main HTML content starts here. ---
                 if not layers and (overview := palace_recall('roadmap.txt')): 
-                    emit(f'Overview {overview=}.')
                     yield from hyper(overview)
                 for layer in layers:
                     if (found := palace_recall(layer)) and (article := found.article):
