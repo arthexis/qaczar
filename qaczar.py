@@ -195,7 +195,7 @@ def facade_main(environ, respond):
                 if css := palace_recall('qaczar.css'): 
                     yield from hyper(f'<style>{css.article}</style>')
                 yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>{cmd}</nav><main>')
-                # Main content starts here.
+                # --- Main content starts here. ---
                 if not layers and (overview := _facade_palace_overview(environ)): 
                     emit(f'Overview {overview=}.')
                     yield from hyper(overview)
