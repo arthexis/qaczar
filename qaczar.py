@@ -275,7 +275,7 @@ def certify_build():
             emit('Roadmap not updated properly.'); sys.exit(1)
         else:
             emit('Roadmap update validated.')
-    # TODO: Check if other seeded files (such as qaczar.css) are loading properly.
+    # TODO: Check if other seeded files (such as qaczar.css) are loaded properly.
     run_silently(['git', 'add', '.'])
     run_silently(['git', 'commit', '-m', 'Automatic commit by certify_build.'])
     s = run_silently(['git', 'push', 'origin', BRANCH])
