@@ -164,7 +164,7 @@ def hyper(text, wrap=None):
         elif isinstance(text, Article): yield from hyper(text.article)
         elif isinstance(text, (list, tuple)): 
             yield from (hyper(c) for c in text)
-        emit(f'Unknown hypertext conversion {type(text)=}.')
+        emit(f'Unknown hypertext conversion {type(text)=} {isinstance(text, str)}.')
     yield b' '
     if wrap: yield f'</{wrap}>'.encode('utf-8') if wrap != 'br' else '<br>'
 
