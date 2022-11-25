@@ -159,8 +159,8 @@ from wsgiref.simple_server import make_server, WSGIRequestHandler
 
 IGNORE = ('favicon.ico', )
 
-# Main entrypoint for the WSGI server.
-def main_facade(environ, respond):
+# Main entrypoint for the user AND delegates. UI == API.
+def facade_main(environ, respond):
     global SITE
     start = time.time()
     emit(f'--*-- Incoming request {environ["REQUEST_METHOD"]} {environ["PATH_INFO"]} from {environ["REMOTE_ADDR"]} --*--')
@@ -175,24 +175,13 @@ def main_facade(environ, respond):
             yield (f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>'.encode('utf-8'))
             if cmd := facade_command_form(environ, layers): yield cmd
             yield b'</nav><main>'
-            if not layers: yield from palace_overview(environ)
+            if not layers: yield from facade_overview(environ)
             for layer in layers:
                 if found := palace_recall(layer): yield hypertext(found.article)
             yield (f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n (arthexis)' 
                 f'</footer></body></html>').encode('utf-8')
     finally:
         emit(f"Request completed in {int((time.time() - start)*1000)} ms.")
-
-def standalone_file(fname, respond):
-    if not (blob := palace_recall(fname, encoding=None)):
-        respond('404 Not Found', [('Content-type', 'text/plain')])
-        yield iter([b''])
-    blob = blob[3]
-    mimetype = mimetypes.guess_type(fname, strict=False)[0] or 'application/octet-stream'
-    respond('200 OK', [('Content-Type', mimetype), ('Content-Length', str(len(blob)))])
-    emit(f'Served file {fname=} {mimetype=} {len(blob)=} bytes.')
-    for i in range(0, len(blob), 1024):
-        yield blob[i:i+1024]
 
 def facade_command_form(environ, layers):
     try:    
@@ -205,7 +194,7 @@ def facade_command_form(environ, layers):
         emit(f'Error processing command form {e=}.')
         return b'<strong>Command form error.</strong>'
     
-def palace_overview(environ):
+def facade_overview(environ):
     global PALACE, TOPICS
     c = PALACE.cursor()
     yield f'<h2>Palace overview</h2><ul>'.encode('utf-8')
@@ -219,6 +208,17 @@ def palace_overview(environ):
                 yield (f'<li><a href="/{topic}">{topic}</a> : <strong>NO CONTENT</strong></li>').encode('utf-8')
     yield f'</ul>'.encode('utf-8')
         
+def standalone_file(fname, respond):
+    if not (blob := palace_recall(fname, encoding=None)):
+        respond('404 Not Found', [('Content-type', 'text/plain')])
+        yield iter([b''])
+    blob = blob[3]
+    mimetype = mimetypes.guess_type(fname, strict=False)[0] or 'application/octet-stream'
+    respond('200 OK', [('Content-Type', mimetype), ('Content-Length', str(len(blob)))])
+    emit(f'Served file {fname=} {mimetype=} {len(blob)=} bytes.')
+    for i in range(0, len(blob), 1024):
+        yield blob[i:i+1024]
+
 # TODO: Create a function that generates arbitrary HTML tables for formatting.
 def table_layout(rows, cols, data):
     return (f'<table><tr><th>{f"</th><th>".join(cols)}</th></tr>'
@@ -244,7 +244,7 @@ if __name__ == "__main__" and RUNLEVEL == 2:
     HOST, PORT = sys.argv[1].split(':')
     PORT = int(PORT)
     palace_recall('qaczar.py', store=BODY)
-    with make_server(HOST, PORT, main_facade, handler_class=Unhandler) as s:
+    with make_server(HOST, PORT, facade_main, handler_class=Unhandler) as s:
         emit(f'Facade ready at http://{HOST}:{PORT}/')
         create_fork(sys.argv[1], 'certify_build')
         s.serve_forever(poll_interval=1)
@@ -258,15 +258,17 @@ import urllib.request
 from contextlib import contextmanager
 
 @contextmanager
-def facade_request(*args):
+def request_facade(*args, data=None):
     url = f'http://{HOST}:{PORT}/{"/".join(args)}'
-    emit(f'Send request: {url=}')
+    emit(f'Send request: {url=} {data=}')
     try:
-        with urllib.request.urlopen(url, timeout=6) as r:
+        data = data.encode('utf-8') if data else None
+        with urllib.request.urlopen(url, data=data, timeout=6) as r:
             if r.status == 200:
                 yield r.read().decode('utf-8')
     except urllib.error.HTTPError as e:
         emit(f'HTTPError: {e.code}'); raise e
+
     
 def run_silently(cmd):
     try:
@@ -277,7 +279,7 @@ def run_silently(cmd):
 def certify_build():
     global BRANCH
     # TODO: Add a call to facade to update the roadmap topic with BODY TODOs.
-    with facade_request('') as r:
+    with request_facade('') as r:
         emit(f'Facade response: {len(r)=} bytes.')
         run_silently(['git', 'add', '.'])
         run_silently(['git', 'commit', '-m', 'Automatic commit by certify_build.'])
@@ -290,14 +292,16 @@ if __name__ == "__main__" and RUNLEVEL == 3:
     emit(f'Delegate of <{HOST}:{PORT}> preparing to <{GOAL}>.')
     assert PALACE is None, 'Palace already connected. Not good.'
     PALACE =  sqlite3.connect('file:p.sqlite?mode=ro', uri=True)
-    try: 
-        task = globals()[GOAL]
-    except KeyError as e:
-        emit(f'No such task <{GOAL=}>.'); sys.exit(1)
-    try:
-        if result := task():
-            emit(f'Task <{GOAL}> completed: {result=}'); sys.exit(0)
-        emit(f'Task <{GOAL}> executed with no result.'); sys.exit(1)
-    except Exception as e:
-        emit(f'Task error: {e=}'); sys.exit(1)
+    for task in GOAL.split(':'):
+        try: 
+            task = globals()[GOAL]
+        except KeyError as e:
+            emit(f'No such task <{GOAL=}>.'); sys.exit(1)
+        try:
+            if result := task():
+                emit(f'Task <{GOAL}> completed: {result=}')
+                continue
+            emit(f'Task <{GOAL}> executed with no result.'); sys.exit(1)
+        except Exception as e:
+            emit(f'Task error: {e=}'); sys.exit(1)
 
