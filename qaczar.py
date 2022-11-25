@@ -161,12 +161,12 @@ def hyper(text, wrap=None):
     if wrap: yield f'</{wrap}>'.encode('utf-8') 
 
 # Main entrypoint for the user AND delegates. UI == API.
-def facade_main(environ, respond):
+def facade_main(env, respond):
     global SITE
     start = time.time()
-    emit(f'--*-- Incoming {environ["REQUEST_METHOD"]} {environ["PATH_INFO"]} from {environ["REMOTE_ADDR"]} --*--')
+    emit(f'--*-- Incoming {env["REQUEST_METHOD"]} {env["PATH_INFO"]} from {env["REMOTE_ADDR"]} --*--')
     try:
-        layers = [p for p in re.split(r'[/]+', environ['PATH_INFO']) if p]
+        layers = [p for p in re.split(r'[/]+', env['PATH_INFO']) if p]
         if len(layers) == 1 and '.' in (fname := layers[0]):  
             if (found := palace_recall(fname, encoding=None)) and (article := found.article):
                 iwrapped, mimetype, = _facade_wrap_file(fname, article)
@@ -176,7 +176,7 @@ def facade_main(environ, respond):
                 respond('404 Not Found', [('Content-Type', 'text/plain')])
                 yield b'Not found.'
         else:
-            cmd = _facade_command_form(environ, layers)
+            cmd = _facade_command_form(env, layers)
             respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
             if not cmd: yield b'200 Ok.' 
             else:
@@ -203,9 +203,9 @@ def _facade_wrap_file(fname, article):
     assert isinstance(article, bytes), f'File {fname=} {type(article)=} {article=}.'
     return (article[i:i+1024] for i in range(0, len(article), 1024)), mimetype
 
-def _facade_command_form(environ, layers):
-    if environ['REQUEST_METHOD'] == 'POST':
-        data = environ['wsgi.input'].read(int(environ.get('CONTENT_LENGTH', 0))).decode('utf-8')
+def _facade_command_form(env, layers):
+    if env['REQUEST_METHOD'] == 'POST':
+        data = env['wsgi.input'].read(int(env.get('CONTENT_LENGTH', 0))).decode('utf-8')
         emit(f'Data received: {layers=} {summary(data)=}')
         if layers and (topic := layers[0]):
             assert RUNLEVEL == 2, f'Cannot write to palace in {RUNLEVEL=}.'
@@ -275,7 +275,7 @@ def certify_build():
             emit('Roadmap not updated properly.'); sys.exit(1)
         else:
             emit('Roadmap update validated.')
-    # TODO: Check if other seeded files (such as qaczar.css) are loaded properly.
+    # TODO: Check if other seeded files (ie. qaczar.css) are loaded properly.
     run_silently(['git', 'add', '.'])
     run_silently(['git', 'commit', '-m', 'Automatic commit by certify_build.'])
     s = run_silently(['git', 'push', 'origin', BRANCH])
