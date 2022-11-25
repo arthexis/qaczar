@@ -4,6 +4,10 @@
 # A Python script that does everything by itself.
 # H. V. D. C. by Rafa Guillén (arthexis@gmail.com) 2022-2023
 
+# Style considerations:
+# 1. Keep the width to less than 100 characters.
+# 2. Use functions to provide modularity and information hiding.
+
 
 import os
 import sys
@@ -235,9 +239,10 @@ def _facade_wrap_file(fname, article):
 
 def _facade_palace_summary():
     # TODO: Fetch the palace summary and render it as an html table.
-    summary = list(palace_summary())
-    return f'<table><tr><th>Topic</th><th>Count</th><th>Timestamp</th><th>Summary</th></tr>' \
-        f'{"".join(f"<tr><td>{s[0]}</td><td>{s[1]}</td><td>{s[2]}</td><td>{s[3]}</td></tr>" for s in summary)}</table>'
+    # Wrap everything in an article tag. 
+    data = "".join(f"<tr><td>{s[0]}</td><td>{s[1]}</td><td>{s[2]}</td><td>{s[3]}</td></tr>" 
+        for s in list(palace_summary()))
+    return f'<article><table><tr><th>Topic</th><th>Count</th><th>Timestamp</th><th>Summary</th></tr>{data}</table></article>'
 
 def _facade_quick_links(layers):
     # TODO: Make links shorter and more readable. Remove unnecessary ones.
