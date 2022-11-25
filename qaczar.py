@@ -292,10 +292,13 @@ def certify_build():
     roadmap = '\n'.join(roadmap)
     with request_facade('roadmap', upload=roadmap) as r:
         emit(f'Facade response: {len(r)=} bytes.')
-        run_silently(['git', 'add', '.'])
-        run_silently(['git', 'commit', '-m', 'Automatic commit by certify_build.'])
-        s = run_silently(['git', 'push', 'origin', BRANCH])
-        emit(f'Git sync complete ({s.returncode=}).')
+        found = palace_recall('roadmap')
+        if not found or found[3] != roadmap:
+            emit('Roadmap not updated properly.'); sys.exit(1)
+    run_silently(['git', 'add', '.'])
+    run_silently(['git', 'commit', '-m', 'Automatic commit by certify_build.'])
+    s = run_silently(['git', 'push', 'origin', BRANCH])
+    emit(f'Git sync complete ({s.returncode=}).')
     return 'SUCCESS'
 
 if __name__ == "__main__" and RUNLEVEL == 3:
