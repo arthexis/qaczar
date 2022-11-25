@@ -208,24 +208,24 @@ def _facade_command_form(env, layers):
         data = env['wsgi.input'].read(int(env.get('CONTENT_LENGTH', 0))).decode('utf-8')
         emit(f'Data received: {layers=} {summary(data)=}')
         if layers and (topic := layers[0]):
-            assert RUNLEVEL == 2, f'Cannot write to palace in {RUNLEVEL=}.'
+            # TODO: Some commands should be processes before the result is stored.
             found = palace_recall(topic, store=data)
             emit(f'Article stored from POST {found.num=}.')
             return None
     return '<form id="cmd-form" method="post"><input type="text" id="cmd" name="cmd" size=70></form>'
 
-def _facade_wrap_article(article):
-    if not article: return None
-    assert isinstance(article, Article), f'Invalid article {type(article)=} {article=}.'
-    prefix = article.topic.split('__')[-1]
+def _facade_wrap_article(found):
+    if not found: return None
+    assert isinstance(found, Article), f'Invalid article {type(found)=} {found=}.'
+    prefix = found.topic.split('__')[-1]
     if prefix in ('txt', 'css', 'py'):
         # TODO: Add a colorization and linkification function.
-        content = '<ol><li>' + re.sub(r'\n', r'</li><li>', article.article) + '</li></ol>'
+        content = '<ol><li>' + re.sub(r'\n', r'</li><li>', found.article) + '</li></ol>'
     elif prefix == 'html':
-        content = f'<div>{article.article}</div>'
+        content = f'<div>{found.article}</div>'
     else:
-        content = f'<pre>{article.article}</pre>'
-    return f'<article><h2>{article.topic}</h2><div>{content}</div></article>'
+        content = f'<pre>{found.article}</pre>'
+    return f'<article><h2>{found.topic}</h2><div>{content}</div></article>'
 
 class Unhandler(WSGIRequestHandler):
     def log_request(self, *args, **kwargs): pass
