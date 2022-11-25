@@ -232,7 +232,6 @@ def table_layout(rows, cols, data):
 def hypertext(article):
     # TODO: Figure a better way to encapsulate binary content in html.
     if not article: return b' '
-    topic, num, ts, article = article
     # Extract the prefix, the last part after __
     prefix = article.split('__')[-1]
     if prefix in ('css', 'py'):
