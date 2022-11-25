@@ -268,14 +268,20 @@ def facade_request(*args):
     except urllib.error.HTTPError as e:
         emit(f'HTTPError: {e.code}'); raise e
     
+def run_silently(cmd):
+    try:
+        return subprocess.run(cmd, shell=True, check=True, capture_output=True)
+    except subprocess.CalledProcessError as e:
+        emit(f'Command failed: {e=}')
+    
 def certify_build():
     global BRANCH
     # TODO: Add a call to facade to update the roadmap topic with BODY TODOs.
     with facade_request('') as r:
         emit(f'Facade response: {len(r)=} bytes.')
-        subprocess.run(['git', 'add', '.'])
-        subprocess.run(['git', 'commit', '-m', 'Automatic commit by certify_build.'])
-        subprocess.run(['git', 'push', 'origin', BRANCH])
+        run_silently(['git', 'add', '.'])
+        run_silently(['git', 'commit', '-m', 'Automatic commit by certify_build.'])
+        run_silently(['git', 'push', 'origin', BRANCH])
     return 'SUCCESS'
 
 if __name__ == "__main__" and RUNLEVEL == 3:
