@@ -187,13 +187,13 @@ def facade_main(environ, respond):
                 respond('404 Not Found', [('Content-Type', 'text/plain')])
                 yield b'Not found.'
         else:
+            cmd = _facade_command_form(environ, layers)
             respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
             yield from hyper(f'<!DOCTYPE html><head><title>{SITE}</title>')
             if css := palace_recall('qaczar.css'): 
                 yield from hyper(f'<style>{css.article}</style>')
             yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>')
-            if cmd := _facade_command_form(environ, layers): 
-                yield from hyper(cmd)
+            if cmd: yield from hyper(cmd)
             yield b'</nav><main>'  # Main content starts here.
             if not layers and (overview := _facade_palace_overview(environ)): 
                 emit(f'Overview {overview=}.')
