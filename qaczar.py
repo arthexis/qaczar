@@ -180,9 +180,8 @@ def facade_main(env, respond):
             layers = [p for p in re.split(r'[/]+', path) if p]
             if len(layers) == 1 and '.' in (fname := layers[0]):  
                 if (found := palace_recall(fname, encoding=None)) and (blob := found.article):
-                    iwrapped, mimetype, = _facade_wrap_file(fname, blob)
-                    respond('200 OK', [
-                            ('Content-Type', mimetype), ('Content-Length', str(len(blob)))])
+                    iwrapped, mt, = _facade_wrap_file(fname, blob)
+                    respond('200 OK', [('Content-Type', mt), ('Content-Length', str(len(blob)))])
                     yield from iwrapped
                 else:
                     respond('404 Not Found', [('Content-Type', 'text/plain')])
