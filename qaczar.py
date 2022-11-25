@@ -211,7 +211,6 @@ def facade_main(env, resp):
                     yield from hyper(f'<!DOCTYPE html><head><title>{SITE}</title>')
                     if js := palace_recall('qaczar.css'): 
                         yield from hyper(js.article, 'style')
-                    # TODO: Show a summary of palace status and contents on the overview.
                     links = _facade_quick_links(layers)
                     yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>' 
                         f'{"".join(links)}{cmd}</nav><main>')
@@ -238,8 +237,6 @@ def _facade_wrap_file(fname, article):
     return (article[i:i+1024] for i in range(0, len(article), 1024)), mimetype
 
 def _facade_palace_summary():
-    # TODO: Fetch the palace summary and render it as an html table.
-    # Wrap everything in an article tag. 
     data = "".join(f"<tr><td>{s[0]}</td><td>{s[1]}</td><td>{s[2]}</td><td><q>{s[3]}</q></td></tr>" 
         for s in list(palace_summary()))
     return (f'<article><table><tr><th>Topic</th><th>Count</th><th>Timestamp</th><th>Summary</th>' 
