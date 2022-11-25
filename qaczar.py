@@ -86,6 +86,7 @@ import re
 import hashlib
 import sqlite3
 import mimetypes
+import collections
 
 PALACE, TOPICS = None, []
 
@@ -102,7 +103,7 @@ def seed_mtime(topic, src='seeds'):
         return int(os.path.getmtime(f'{DIR}/{src}/{topic}'))
     except FileNotFoundError: return 0
 
-def plant_seed(c, fname, topic, mtime, encoding):
+def _plant_seed(c, fname, topic, mtime, encoding):
     if seed := fread(f'{DIR}/seeds/{fname}', e=encoding):     
         ts, new_md5, mtime = isotime(), md5(seed), mtime or seed_mtime(fname)
         num = c.execute(f'INSERT INTO {topic} (ts, article, md5, mtime) VALUES (?, ?, ?, ?)', 
@@ -110,7 +111,10 @@ def plant_seed(c, fname, topic, mtime, encoding):
         emit(f"Seed {fname} uploaded ({len(seed)} bytes).")
         PALACE.commit()
         return num, ts, seed, new_md5, mtime
+    
+Article = collections.namedtuple('Article', 'topic num ts article')
 
+# TODO: Consider using a named tuple to simplify using the palace_recall() results.
 def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
     global PALACE, TOPICS, DIR
     assert topic and re.match(r'^[a-zA-Z0-9_.]+$', topic), f'Invalid recall {topic=}.'
@@ -126,12 +130,12 @@ def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
         c.execute(f'CREATE TABLE IF NOT EXISTS {topic} ('
                 f'num INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, article {atype}, md5 TEXT, mtime INTEGER)')
         emit(f"Created table {topic}.")
-        plant_seed(c, fname, topic, None, encoding)
+        _plant_seed(c, fname, topic, None, encoding)
         TOPICS.append(topic)
     found = c.execute(f'SELECT num, ts, article, md5, mtime FROM {topic} '
         f'ORDER BY ts DESC LIMIT 1').fetchone() if fetch else None
     if found and found[4] and (mtime := seed_mtime(fname)) > found[4]:
-        found = plant_seed(c, fname, topic, mtime, encoding)
+        found = _plant_seed(c, fname, topic, mtime, encoding)
     next_md5 = md5(store)
     if store and (not found or found[3] != next_md5):
         if rowid := c.execute(f'INSERT INTO {topic} (ts, article, md5) VALUES (?, ?, ?)', 
@@ -139,7 +143,8 @@ def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
             PALACE.commit()
             emit(f'Insert comitted {topic=} {rowid=}.')
         if not fetch: return rowid  # Return num of new articles if not fetching.
-    if found: return topic, found[0], found[1], found[2]  # topic, num, ts, article
+    if found: return Article(topic, found[0], found[1], found[2])  # topic, num, ts, article
+
 
 
 # TODO: Function that creates relationships between 2 articles.
@@ -165,14 +170,15 @@ def main_facade(environ, respond):
         else:
             respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
             yield f'<!DOCTYPE html><meta charset="utf-8"><head><title>{SITE}</title>'.encode('utf-8')
-            if css := hypertext(palace_recall('qaczar.css')): yield css
-            if js := hypertext(palace_recall('qaczar.js')): yield js
+            if css := palace_recall('qaczar.css'): yield f'<style>{css.article}</style>'.encode('utf-8')
             yield (f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>'.encode('utf-8'))
-            yield command_form(environ, layers) 
+            if cmd := facade_command_form(environ, layers): yield cmd
             yield b'</nav><main>'
+            if not layers: yield from palace_overview(environ)
             for layer in layers:
-                if article := palace_recall(layer): yield hypertext(article)
-            yield f'</main><footer>by Rafa Guill&eacute;n (arthexis)</footer></body></html>'.encode('utf-8')
+                if found := palace_recall(layer): yield hypertext(found.article)
+            yield (f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n (arthexis)' 
+                f'</footer></body></html>').encode('utf-8')
     finally:
         emit(f"Request completed in {int((time.time() - start)*1000)} ms.")
 
@@ -187,20 +193,30 @@ def standalone_file(fname, respond):
     for i in range(0, len(blob), 1024):
         yield blob[i:i+1024]
 
-def command_form(environ, layers):
-    method = environ['REQUEST_METHOD']
+def facade_command_form(environ, layers):
     try:    
-        if method == 'POST':
-            request_body_size = int(environ.get('CONTENT_LENGTH', 0))
-            emit(f'POST {request_body_size=}')
-            command = environ['wsgi.input'].read(request_body_size)
-            emit(f'Command received: {command=}')
-        # TODO: Is there something wrong with the form itself?
+        if environ['REQUEST_METHOD'] == 'POST':
+            cmd = environ['wsgi.input'].read(int(environ.get('CONTENT_LENGTH', 0))).decode('utf-8')
+            emit(f'Command received: {cmd=}')
         return (f'<form id="cmd-form" method="post">' 
                 f'<input type="text" id="cmd" name="cmd" size=70></form>').encode('utf-8')
     except Exception as e:
         emit(f'Error processing command form {e=}.')
         return b'<strong>Command form error.</strong>'
+    
+def palace_overview(environ):
+    global PALACE, TOPICS
+    c = PALACE.cursor()
+    yield f'<h2>Palace overview</h2><ul>'.encode('utf-8')
+    for topic in TOPICS:
+        c.execute(f'SELECT num, ts, article, md5, mtime FROM {topic} ORDER BY ts DESC LIMIT 1')
+        if found := c.fetchone():
+            try:
+                stored, ts = len(found[2]), found[1]
+                yield f'<li><a href="/{topic}">{topic}</a> {ts} : {stored} bytes </li>'.encode('utf-8')
+            except Exception as e:
+                yield (f'<li><a href="/{topic}">{topic}</a> : <strong>NO CONTENT</strong></li>').encode('utf-8')
+    yield f'</ul>'.encode('utf-8')
         
 # Create a function that generates arbitrary HTML tables for formatting.
 def table_layout(rows, cols, data):
@@ -211,15 +227,22 @@ def hypertext(article):
     # TODO: Figure a way to encapsulate binary content in html.
     if not article: return b' '
     topic, num, ts, article = article
-    if topic.endswith('__css'):
-        return f'<style>{article}</style>'.encode('utf-8')
-    elif topic.endswith('__js'):
-        return f'<script>{article}</script>'.encode('utf-8')
-    elif topic.endswith('__py'):
+    # Extract the prefix, the last part after __
+    prefix = article.split('__')[-1]
+    if prefix in ('css', 'py'):
         article = article.replace("\n", "</li><li>")
-        article = f'<ol><li>{article}</li></ol>'
+        article = f'<ol><li><pre>{article}</pre></li></ol>'
     return (f'<article id="{topic}__{num}" data-ts="{ts}">' 
         f'{article}</article>').encode('utf-8')
+
+
+def update_roadmap():
+    # Get a list of all TODOs in the BODY.
+    roadmap = []
+    for ln, line in BODY.splitlines():
+        if "# TODO:" in line:
+            roadmap.append(line)
+
 
 # TODO: Figure out what else we need to override.
 # TODO: Consider using 
@@ -235,6 +258,7 @@ if __name__ == "__main__" and RUNLEVEL == 2:
     with make_server(HOST, PORT, main_facade, handler_class=Unhandler) as s:
         emit(f'Facade ready at http://{HOST}:{PORT}/')
         # TODO: Kickstart the first visitor delegate using a crown.
+        create_fork(sys.argv[1], 'benchmark')
         s.serve_forever(poll_interval=1)
 
 
@@ -258,13 +282,9 @@ def facade_request(*args):
         emit(f'HTTPError: {e.code}')
 
 if __name__ == "__main__" and RUNLEVEL == 3:
-    DELEGATE = sys.argv[2]
+    GOAL = sys.argv[2]
+    emit(f'Delegate of {HOST}:{PORT} preparing to <{GOAL}>.')
     assert PALACE is None, 'Palace already connected. Not good.'
     PALACE =  sqlite3.connect('file:p.sqlite?mode=ro', uri=True)
     with facade_request('') as r:
-        emit(f'Facade response: {r}')
-    found = palace_recall('delegate', store=DELEGATE)
-    globals()[DELEGATE]()
-
-
-
+        emit(f'Facade response: {len(r)=} bytes.')
