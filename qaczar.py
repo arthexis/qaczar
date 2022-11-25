@@ -303,7 +303,7 @@ def certify_build():
             ['git', 'add', '.'],
             ['git', 'commit', '-m', 'Automatic commit by certify_build.'],
             ['git', 'push', 'origin', BRANCH])
-    emit(f'Git sync complete ({result}).')
+    emit(f'Git sync complete ({result=}).')
     return 'SUCCESS' if result == 0 else 'FAILURE'
 
 if __name__ == "__main__" and RUNLEVEL == 3:
