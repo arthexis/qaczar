@@ -228,12 +228,12 @@ def _facade_wrap_article(article):
     assert isinstance(article, Article), f'Invalid article {type(article)=} {article=}.'
     prefix = article.topic.split('__')[-1]
     if prefix in ('txt', 'css', 'py'):
-        content = '<ol><li>' + re.sub('\n', '</li><li>', article.article) + '</li></ol>'
+        content = '<ol><li>' + re.sub(r'\n', r'</li><li>', article.article) + '</li></ol>'
     elif prefix == 'html':
         content = f'<div>{article.article}</div>'
     else:
         content = f'<pre>{article.article}</pre>'
-    return f'<article>{content}</article>'
+    return f'<article><h2>{article.topic}</h2><div>{content}</div></article>'
 
 class Unhandler(WSGIRequestHandler):
     def log_request(self, *args, **kwargs): pass
