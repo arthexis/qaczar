@@ -162,7 +162,11 @@ def hyper(text, wrap=None):
         if isinstance(text, bytes): yield text
         elif isinstance(text, str): 
             if '\n' in text:
-                yield from (hyper(f'<li>{line}</li>', 'ol') for line in text.splitlines())
+                # Wrap each line of text in <li> and return a <ol>.
+                yield '<ol>'.encode('utf-8')
+                for line in text.splitlines():
+                    yield f'<li>{line}</line'.encode('utf-8')
+                yield '</ol>'.encode('utf-8')
             else: yield text.encode('utf-8')
         elif isinstance(text, Article): yield from hyper(text.article)
         elif isinstance(text, (list, tuple)): 
