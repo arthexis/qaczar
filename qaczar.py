@@ -264,7 +264,7 @@ if __name__ == "__main__" and RUNLEVEL == 2:
 import urllib.request
 
 def request_facade(*args, upload=None):
-    assert all(urllib.parse.quote(arg) == arg for arg in args), f"Invalid facade request {args=}"
+    assert all(urllib.parse.quote(arg) == arg for arg in args), f"Invalid request {args=}"
     url = f'http://{HOST}:{PORT}/{"/".join(args)}'
     emit(f'Send request: {url=} {summary(upload)=}')
     try:
