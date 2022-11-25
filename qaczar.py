@@ -154,19 +154,17 @@ from wsgiref.simple_server import make_server, WSGIRequestHandler
 
 SECRET = secrets.token_bytes()
 
-def hyper(text, wrap=None, encode=True):
-    encode = lambda s: urllib.parse.quote(s, safe='').encode('utf-8') if encode else s
-    if wrap: yield encode(f'<{wrap}>')
+def hyper(text, wrap=None):
+    if wrap: yield f'<{wrap}>'.encode('utf-8') 
     if text:
         if isinstance(text, bytes): yield text
-        elif isinstance(text, str): yield encode(text)
-        elif isinstance(text, Article): 
-            yield from hyper(text.article, encode=encode)
+        elif isinstance(text, str): yield text.encode('utf-8')
+        elif isinstance(text, Article): yield from hyper(text.article)
         elif isinstance(text, (list, tuple)): 
-            yield from (hyper(c, encode=encode) for c in text)
+            yield from (hyper(c) for c in text)
         else: emit(f'Unable to hyper text {type(text)=} {text=}.')
     yield b''
-    if wrap: yield encode(f'</{wrap}>')
+    if wrap: yield f'</{wrap}>'.encode('utf-8') 
 
 # Main entrypoint for the user AND delegates. UI == API.
 def facade_main(env, resp):
