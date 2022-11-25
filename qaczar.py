@@ -159,9 +159,9 @@ from wsgiref.simple_server import make_server, WSGIRequestHandler
 def hyper(text):
     if text:
         if isinstance(text, bytes): yield text
-        if isinstance(text, str): yield text.encode('utf-8')
-        if isinstance(text, Article): yield text.article.encode('utf-8')
-        if isinstance(text, (list, tuple)): 
+        elif isinstance(text, str): yield text.encode('utf-8')
+        elif isinstance(text, Article): yield text.article.encode('utf-8')
+        elif isinstance(text, (list, tuple)): 
             yield from (hyper(c) for c in text)
         emit(f'Unknown hypertext conversion {type(text)=}.')
     yield b''
