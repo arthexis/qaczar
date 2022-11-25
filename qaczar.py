@@ -196,8 +196,10 @@ def facade_main(env, resp):
                         yield from hyper(css.article, 'style')
                     # TODO: Add quick links to the navigation bar next to the title.
                     # TODO: Show a summary of palace status and contents on the overview.
-                    yield from hyper(f'</head><body><nav><h1><a href="/">' 
-                            f'{SITE}</a>!</h1>{cmd}</nav><main>')
+                    links = [f'<a href="/{t}">{t}</a>' for t in TOPICS]
+
+                    yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>' 
+                        f'{"".join(links)}{cmd}</nav><main>')
                     # --- Main HTML content starts here. ---
                     if not layers and (overview := palace_recall('roadmap__txt')): 
                         yield from hyper(_facade_wrap_article(overview))
