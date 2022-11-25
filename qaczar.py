@@ -160,7 +160,10 @@ def hyper(text, wrap=None):
     if wrap: yield f'<{wrap}>'.encode('utf-8') 
     if text:
         if isinstance(text, bytes): yield text
-        elif isinstance(text, str): yield text.encode('utf-8')
+        elif isinstance(text, str): 
+            if '\n' in text:
+                yield from (hyper(f'<li>{line}</li', 'ol') for line in text.splitlines())
+            else: yield text.encode('utf-8')
         elif isinstance(text, Article): yield from hyper(text.article)
         elif isinstance(text, (list, tuple)): 
             yield from (hyper(c) for c in text)
