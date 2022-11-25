@@ -146,6 +146,17 @@ def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
     if found: return Article(topic, found[0], found[1], found[2]) 
 
 
+def palace_summary():
+    # The format of the output is [(topic, count, ts, summary)].
+    global PALACE
+    c = PALACE.cursor()
+    c.execute('SELECT name FROM sqlite_master WHERE '
+        'type="table" AND name not LIKE "sqlite_%"')
+    topics = [t[0] for t in c.fetchall()]
+    return [(t, *c.execute(f'SELECT COUNT(*), MAX(ts), article FROM {t}').fetchone())
+        for t in topics]
+
+
 # V.
 
 import secrets
@@ -201,6 +212,7 @@ def facade_main(env, resp):
                     # --- Main HTML content starts here. ---
                     if not layers and (overview := palace_recall('roadmap__txt')): 
                         yield from hyper(_facade_wrap_article(overview))
+                        yield from hyper(_facade_palace_summary())
                     for layer in layers:
                         if (found := palace_recall(layer)) and (article := found.article):
                             yield from hyper(_facade_wrap_article(article))
@@ -222,6 +234,14 @@ def _facade_wrap_file(fname, article):
 def _facade_quick_links(layers):
     # TODO: Make links shorter and more readable. Remove unnecessary ones.
     return f'[<a href="/">Example</a>]'
+
+def _facade_palace_summary():
+    # Fetch the palace summary and render it as an html table.
+    return f'<table><tr><th>Topic</th><th>Count</th><th>Latest</th><th>Summary</th></tr>' \
+        f'{"".join(f"<tr><td>{t}</td><td>{c}</td><td>{ts}</td><td>{s}</td></tr>" for t, c, ts, s in palace_summary())}' \
+        f'</table>'
+
+
 
 def _facade_command_form(env, layers):
     if env['REQUEST_METHOD'] == 'POST':
