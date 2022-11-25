@@ -115,7 +115,6 @@ def _plant_seed(c, fname, topic, mtime, encoding):
     
 Article = collections.namedtuple('Article', 'topic num ts article')
 
-# TODO: Consider using a named tuple to simplify using the palace_recall() results.
 def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
     global PALACE, TOPICS, DIR
     assert topic and re.match(r'^[a-zA-Z0-9_.]+$', topic), f'Invalid recall {topic=}.'
@@ -258,12 +257,13 @@ import urllib.request
 from contextlib import contextmanager
 
 @contextmanager
-def request_facade(*args, data=None):
+def request_facade(*args, upload=None):
+    assert all(urllib.parse.quote(arg) == arg for arg in args), f"Invalid facade request {args=}"
     url = f'http://{HOST}:{PORT}/{"/".join(args)}'
-    emit(f'Send request: {url=} {data=}')
+    emit(f'Send request: {url=} {upload=}')
     try:
-        data = data.encode('utf-8') if data else None
-        with urllib.request.urlopen(url, data=data, timeout=6) as r:
+        upload = upload.encode('utf-8') if upload else None
+        with urllib.request.urlopen(url, data=upload, timeout=6) as r:
             if r.status == 200: yield r.read().decode('utf-8')
     except urllib.error.HTTPError as e:
         emit(f'HTTPError: {e.code}'); raise e
@@ -276,13 +276,14 @@ def run_silently(cmd):
     
 def certify_build():
     global BRANCH
-    # TODO: Add a call to facade to update the roadmap topic with BODY TODOs.
-    # Loop over each line in BODY enumerating the TODOs and store them in a list.
+    # TODO: Add a call to facade to update the roadmap topic with BODY TODOs. 
+    # Loop over each line in BODY enumerating the TODOs and store them in a list. 
+    roadmap = []
     for ln, line in enumerate(BODY.splitlines()):
         if line.strip().startswith('# TODO:'):
-            emit(f'Found TODO: {line}')
-
-    with request_facade('') as r:
+            roadmap.append(f'{ln+1}: {line.strip()[7:]}')
+    roadmap = '\n'.join(roadmap)
+    with request_facade('roadmap', upload=roadmap) as r:
         emit(f'Facade response: {len(r)=} bytes.')
         run_silently(['git', 'add', '.'])
         run_silently(['git', 'commit', '-m', 'Automatic commit by certify_build.'])
