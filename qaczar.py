@@ -264,12 +264,10 @@ def request_facade(*args, data=None):
     try:
         data = data.encode('utf-8') if data else None
         with urllib.request.urlopen(url, data=data, timeout=6) as r:
-            if r.status == 200:
-                yield r.read().decode('utf-8')
+            if r.status == 200: yield r.read().decode('utf-8')
     except urllib.error.HTTPError as e:
         emit(f'HTTPError: {e.code}'); raise e
 
-    
 def run_silently(cmd):
     try:
         return subprocess.run(cmd, shell=True, check=True, capture_output=True)
