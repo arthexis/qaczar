@@ -236,13 +236,6 @@ def hypertext(article):
     return (f'<article id="{topic}__{num}" data-ts="{ts}">' 
         f'{article}</article>').encode('utf-8')
 
-def update_roadmap():
-    # TODO: Get a list of all TODOs in the BODY. Display in index.
-    roadmap = []
-    for ln, line in BODY.splitlines():
-        if "# TODO:" in line:
-            roadmap.append(line)
-
 class Unhandler(WSGIRequestHandler):
     def log_request(self, code=None, size=None): pass
 
@@ -277,6 +270,7 @@ def facade_request(*args):
     
 def certify_build():
     global BRANCH
+    # TODO: Add a call to facade to update the roadmap topic with BODY TODOs.
     with facade_request('') as r:
         emit(f'Facade response: {len(r)=} bytes.')
         subprocess.run(['git', 'add', '.'])
