@@ -262,9 +262,7 @@ if __name__ == "__main__" and RUNLEVEL == 2:
 # TODO: Add a function to extract info from external sources.
 
 import urllib.request
-from contextlib import contextmanager
 
-@contextmanager
 def request_facade(*args, upload=None):
     assert all(urllib.parse.quote(arg) == arg for arg in args), f"Invalid facade request {args=}"
     url = f'http://{HOST}:{PORT}/{"/".join(args)}'
@@ -272,7 +270,7 @@ def request_facade(*args, upload=None):
     try:
         upload = upload.encode('utf-8') if upload else None
         with urllib.request.urlopen(url, data=upload, timeout=6) as r:
-            if r.status == 200: yield r.read().decode('utf-8')
+            if r.status == 200: return r.read().decode('utf-8')
     except urllib.error.HTTPError as e:
         emit(f'HTTPError: {e.code}'); raise e
 
@@ -290,9 +288,9 @@ def certify_build():
         if line.strip().startswith('# TODO:'):
             roadmap.append(f'{ln+1}: {line.strip()[7:]}')
     roadmap = '\n'.join(roadmap)
-    with request_facade('roadmap__txt', upload=roadmap) as r:
+    if r := request_facade('roadmap__txt', upload=roadmap):
         emit(f'Facade response: {len(r)=} bytes.')
-        found = palace_recall('roadmap__txt')
+        found = palace_recall('roadmap.txt')
         if not found or found[3] != roadmap:
             emit('Roadmap not updated properly.'); sys.exit(1)
         else:
