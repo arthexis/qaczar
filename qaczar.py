@@ -279,11 +279,12 @@ def facade_request(*args):
         emit(f'HTTPError: {e.code}'); raise e
     
 def certify_build():
+    global BRANCH
     with facade_request('') as r:
         emit(f'Facade response: {len(r)=} bytes.')
         subprocess.run(['git', 'add', '.'])
         subprocess.run(['git', 'commit', '-m', 'Automatic commit by certify_build.'])
-        subprocess.run(['git', 'push', 'origin', 'main'])
+        subprocess.run(['git', 'push', 'origin', BRANCH])
     return 'SUCCESS'
 
 if __name__ == "__main__" and RUNLEVEL == 3:
