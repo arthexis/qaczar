@@ -232,13 +232,16 @@ def table_layout(rows, cols, data):
 def hypertext(article):
     # TODO: Figure a better way to encapsulate binary content in html.
     if not article: return b' '
+    if isinstance(article, bytes): return article
+    if isinstance(article, str): return article.encode('utf-8')
+    topic, num, ts, article = article
     # Extract the prefix, the last part after __
-    prefix = article.article.split('__')[-1]
+    prefix = article.split('__')[-1]
     if prefix in ('css', 'py'):
-        inner = article.article.replace("\n", "</li><li>")
-        inner = f'<ol><li>{inner}</li></ol>'
-    return (f'<article id="{article.topic}__{article.num}" data-ts="{article.ts}">' 
-        f'{inner}</article>').encode('utf-8')
+        article = article.replace("\n", "</li><li>")
+        article = f'<ol><li><pre>{article}</pre></li></ol>'
+    return (f'<article id="{topic}__{num}" data-ts="{ts}">' 
+        f'{article}</article>').encode('utf-8')
 
 class Unhandler(WSGIRequestHandler):
     def log_request(self, code=None, size=None): pass
