@@ -244,6 +244,7 @@ def _facade_palace_summary():
 
 def _facade_quick_links(layers):
     # TODO: Make links shorter and more readable. Remove unnecessary ones.
+    # We still need to figure out what makes a link usefull.
     return f'[<a href="/">Example</a>]'
 
 def _facade_command_form(env, layers):
@@ -255,6 +256,7 @@ def _facade_command_form(env, layers):
             emit(f'Article stored from POST {found.num=}.')
             return None
     # TODO: GET commands should be processed before the result is stored.
+    # TODO: Contextual buttons should be added after the textarea.
     return (f'<form id="cmd-form" method="post">'
         f'<textarea id="cmd" name="cmd" cols=70 rows=1></textarea></form>')
 
