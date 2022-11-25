@@ -90,6 +90,7 @@ import collections
 PALACE, TOPICS = None, []
 
 def summary(text):
+    if not text or not isinstance(text, str): return 'N/A'
     return re.sub(r'\s+', ' ', text)[:30] if text else 'N/A'
 
 def md5(blob):
