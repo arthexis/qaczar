@@ -218,13 +218,13 @@ def palace_overview(environ):
                 yield (f'<li><a href="/{topic}">{topic}</a> : <strong>NO CONTENT</strong></li>').encode('utf-8')
     yield f'</ul>'.encode('utf-8')
         
-# Create a function that generates arbitrary HTML tables for formatting.
+# TODO: Create a function that generates arbitrary HTML tables for formatting.
 def table_layout(rows, cols, data):
     return (f'<table><tr><th>{f"</th><th>".join(cols)}</th></tr>'
         f'<tr><td>{f"</td><td>".join(data)}</td></tr></table>').encode('utf-8')
 
 def hypertext(article):
-    # TODO: Figure a way to encapsulate binary content in html.
+    # TODO: Figure a better way to encapsulate binary content in html.
     if not article: return b' '
     topic, num, ts, article = article
     # Extract the prefix, the last part after __
@@ -235,17 +235,13 @@ def hypertext(article):
     return (f'<article id="{topic}__{num}" data-ts="{ts}">' 
         f'{article}</article>').encode('utf-8')
 
-
 def update_roadmap():
-    # Get a list of all TODOs in the BODY.
+    # TODO: Get a list of all TODOs in the BODY. Display in index.
     roadmap = []
     for ln, line in BODY.splitlines():
         if "# TODO:" in line:
             roadmap.append(line)
 
-
-# TODO: Figure out what else we need to override.
-# TODO: Consider using 
 class Unhandler(WSGIRequestHandler):
     def log_request(self, code=None, size=None):
         pass
@@ -257,8 +253,7 @@ if __name__ == "__main__" and RUNLEVEL == 2:
     palace_recall('qaczar.py', store=BODY)
     with make_server(HOST, PORT, main_facade, handler_class=Unhandler) as s:
         emit(f'Facade ready at http://{HOST}:{PORT}/')
-        # TODO: Kickstart the first visitor delegate using a crown.
-        create_fork(sys.argv[1], 'benchmark')
+        create_fork(sys.argv[1], 'certify_build')
         s.serve_forever(poll_interval=1)
 
 
@@ -277,14 +272,33 @@ def facade_request(*args):
     emit(f'Send request: {url=}')
     try:
         with urllib.request.urlopen(url, timeout=6) as r:
-            yield r.read().decode('utf-8')
+            if r.status == 200:
+                yield r.read().decode('utf-8')
     except urllib.error.HTTPError as e:
-        emit(f'HTTPError: {e.code}')
+        emit(f'HTTPError: {e.code}'); raise e
+    
+def certify_build():
+    with facade_request('') as r:
+        emit(f'Facade response: {len(r)=} bytes.')
+        # Commit all changed files to git and push.
+        subprocess.run(['git', 'add', '.'])
+        subprocess.run(['git', 'commit', '-m', 'Automatic commit by certify_build.'])
+        subprocess.run(['git', 'push', 'origin', 'master'])
+    return 'SUCCESS'
 
 if __name__ == "__main__" and RUNLEVEL == 3:
     GOAL = sys.argv[2]
-    emit(f'Delegate of {HOST}:{PORT} preparing to <{GOAL}>.')
+    emit(f'Delegate of <{HOST}:{PORT}> preparing to <{GOAL}>.')
     assert PALACE is None, 'Palace already connected. Not good.'
     PALACE =  sqlite3.connect('file:p.sqlite?mode=ro', uri=True)
-    with facade_request('') as r:
-        emit(f'Facade response: {len(r)=} bytes.')
+    try: 
+        task = globals()[GOAL]
+    except KeyError as e:
+        emit(f'No such task <{GOAL=}>.'); sys.exit(1)
+    try:
+        if result := task():
+            emit(f'Task <{GOAL}> completed: {result=}'); sys.exit(0)
+        emit(f'Task <{GOAL}> executed with no result.'); sys.exit(1)
+    except Exception as e:
+        emit(f'Task error: {e=}'); sys.exit(1)
+
