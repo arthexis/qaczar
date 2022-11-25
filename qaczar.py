@@ -299,11 +299,12 @@ def certify_build():
             emit('Roadmap update validated.')
     # TODO: Store platform information related to each build test.
     # TODO: Check if other seeded files (ie. qaczar.css) are loaded properly.
-    result = chain_run(['git', 'add', '.'],
+    result = chain_run(
+            ['git', 'add', '.'],
             ['git', 'commit', '-m', 'Automatic commit by certify_build.'],
             ['git', 'push', 'origin', BRANCH])
     emit(f'Git sync complete ({result}).')
-    return 'SUCCESS'
+    return 'SUCCESS' if result == 0 else 'FAILURE'
 
 if __name__ == "__main__" and RUNLEVEL == 3:
     GOAL = sys.argv[2]
