@@ -240,7 +240,7 @@ def _facade_wrap_file(fname, article):
 def _facade_palace_summary():
     # TODO: Fetch the palace summary and render it as an html table.
     # Wrap everything in an article tag. 
-    data = "".join(f"<tr><td>{s[0]}</td><td>{s[1]}</td><td>{s[2]}</td><td>{s[3]}</td></tr>" 
+    data = "".join(f"<tr><td>{s[0]}</td><td>{s[1]}</td><td>{s[2]}</td><td><q>{s[3]}</q></td></tr>" 
         for s in list(palace_summary()))
     return (f'<article><table><tr><th>Topic</th><th>Count</th><th>Timestamp</th><th>Summary</th>' 
         f'</tr>{data}</table></article>')
