@@ -232,17 +232,15 @@ def _facade_wrap_file(fname, article):
     assert isinstance(article, bytes), f'File {fname=} {type(article)=} {article=}.'
     return (article[i:i+1024] for i in range(0, len(article), 1024)), mimetype
 
+def _facade_palace_summary():
+    # TODO: Fetch the palace summary and render it as an html table.
+    summary = list(palace_summary())
+    return f'<table><tr><th>Topic</th><th>Count</th><th>Timestamp</th><th>Summary</th></tr>' \
+        f'{"".join(f"<tr><td>{s[0]}</td><td>{s[1]}</td><td>{s[2]}</td><td>{s[3]}</td></tr>" for s in summary)}</table>'
+
 def _facade_quick_links(layers):
     # TODO: Make links shorter and more readable. Remove unnecessary ones.
     return f'[<a href="/">Example</a>]'
-
-def _facade_palace_summary():
-    # Fetch the palace summary and render it as an html table.
-    return f'<table><tr><th>Topic</th><th>Count</th><th>Latest</th><th>Summary</th></tr>' \
-        f'{"".join(f"<tr><td>{t}</td><td>{c}</td><td>{ts}</td><td>{s}</td></tr>" for t, c, ts, s in palace_summary())}' \
-        f'</table>'
-
-
 
 def _facade_command_form(env, layers):
     if env['REQUEST_METHOD'] == 'POST':
