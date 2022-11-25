@@ -189,23 +189,22 @@ def facade_main(environ, respond):
         else:
             respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
             cmd = _facade_command_form(environ, layers)
-            if cmd and isinstance(cmd, str):
-                yield from hyper(cmd)
-            yield from hyper(f'<!DOCTYPE html><head><title>{SITE}</title>')
-            if css := palace_recall('qaczar.css'): 
-                yield from hyper(f'<style>{css.article}</style>')
-            yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>')
-            if cmd: yield from hyper(cmd)
-            yield b'</nav><main>'  # Main content starts here.
-            if not layers and (overview := _facade_palace_overview(environ)): 
-                emit(f'Overview {overview=}.')
-                yield from hyper(overview)
-            for layer in layers:
-                if (found := palace_recall(layer)) and (article := found.article):
-                    yield from hyper(article)
-            yield from hyper(
-                f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n (arthexis)' 
-                f'</footer></body></html>')
+            if not cmd: yield b'Done.' 
+            else:
+                yield from hyper(f'<!DOCTYPE html><head><title>{SITE}</title>')
+                if css := palace_recall('qaczar.css'): 
+                    yield from hyper(f'<style>{css.article}</style>')
+                yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>{cmd}</nav><main>')
+                # Main content starts here.
+                if not layers and (overview := _facade_palace_overview(environ)): 
+                    emit(f'Overview {overview=}.')
+                    yield from hyper(overview)
+                for layer in layers:
+                    if (found := palace_recall(layer)) and (article := found.article):
+                        yield from hyper(article)
+                yield from hyper(
+                    f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n (arthexis)' 
+                    f'</footer></body></html>')
     except Exception as e:
         emit(f'Unhandled facade error {e} in {environ["PATH_INFO"]}')
     finally:
