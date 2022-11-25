@@ -244,8 +244,7 @@ def update_roadmap():
             roadmap.append(line)
 
 class Unhandler(WSGIRequestHandler):
-    def log_request(self, code=None, size=None):
-        pass
+    def log_request(self, code=None, size=None): pass
 
 if __name__ == "__main__" and RUNLEVEL == 2:
     PALACE =  sqlite3.connect('p.sqlite', isolation_level='IMMEDIATE')
