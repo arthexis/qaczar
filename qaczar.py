@@ -289,6 +289,10 @@ def chain_run(*cmds):
     
 def certify_build():
     global BRANCH
+    # Use request_facade to get the overview and check the response contains all the CSS text.
+    r = request_facade()
+    css_content = palace_recall('qaczar__css').article
+    assert css_content in r, f'CSS not found in palace overview {summary(r)}'
     roadmap = []
     for ln, line in enumerate(BODY.splitlines()):
         if line.strip().startswith('# TODO:'):
