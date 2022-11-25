@@ -4,7 +4,7 @@
 # A Python script that does everything by itself.
 # H. V. D. C. by Rafa Guillén (arthexis@gmail.com) 2022-2023
 
-# Style considerations:
+# IMPORTANT REQUIREMENTS:
 # 1. Keep the width to less than 100 characters.
 # 2. Use functions to provide modularity and information hiding.
 
