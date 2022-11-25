@@ -185,8 +185,8 @@ def facade_main(environ, respond):
                 respond('404 Not Found', [('Content-Type', 'text/plain')])
                 yield b'Not found.'
         else:
-            respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
             cmd = _facade_command_form(environ, layers)
+            respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
             if not cmd: yield b'200 Ok.' 
             else:
                 yield from hyper(f'<!DOCTYPE html><head><title>{SITE}</title>')
