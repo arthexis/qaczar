@@ -145,8 +145,11 @@ def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
 
 # V.
 
+import secrets
 import urllib.parse
 from wsgiref.simple_server import make_server, WSGIRequestHandler
+
+SECRET = secrets.token_bytes(128)
 
 def hyper(text, wrap=None):
     if wrap: yield f'<{wrap}>'.encode('utf-8') 
@@ -226,7 +229,7 @@ def _facade_wrap_article(found):
         content = f'<div>{found.article}</div>'
     else:
         content = f'<pre>{found.article}</pre>'
-    return f'<article><h2>{found.topic}</h2><div>{content}</div></article>'
+    return f'<article><h2>Latest {found.topic}</h2><div>{content}</div></article>'
 
 class Unhandler(WSGIRequestHandler):
     def log_request(self, *args, **kwargs): pass
