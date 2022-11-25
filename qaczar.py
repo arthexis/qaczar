@@ -194,7 +194,7 @@ def facade_main(environ, respond):
                     yield from hyper(f'<style>{css.article}</style>')
                 yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>{cmd}</nav><main>')
                 # --- Main HTML content starts here. ---
-                if not layers and (overview := _facade_palace_overview(environ)): 
+                if not layers and (overview := palace_recall('roadmap.txt')): 
                     emit(f'Overview {overview=}.')
                     yield from hyper(overview)
                 for layer in layers:
@@ -218,20 +218,6 @@ def _facade_command_form(environ, layers):
             return None
     return '<form id="cmd-form" method="post"><input type="text" id="cmd" name="cmd" size=70></form>'
     
-def _facade_palace_overview(environ):
-    global PALACE, TOPICS
-    c = PALACE.cursor()
-    yield f'<h2>Palace overview</h2><ul>'
-    for topic in TOPICS:
-        c.execute(f'SELECT num, ts, article, md5, mtime FROM {topic} ORDER BY ts DESC LIMIT 1')
-        if found := c.fetchone():
-            try:
-                stored, ts = len(found[2]), found[1]
-                yield f'<li><a href="/{topic}">{topic}</a> {ts} : {stored} bytes </li>'.encode('utf-8')
-            except Exception as e:
-                yield (f'<li><a href="/{topic}">{topic}</a> : <strong>NO CONTENT</strong></li>').encode('utf-8')
-    yield f'</ul>'.encode('utf-8')
-
 class Unhandler(WSGIRequestHandler):
     def log_request(self, *args, **kwargs): pass
 
