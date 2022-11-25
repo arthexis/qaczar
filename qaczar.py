@@ -228,10 +228,10 @@ def _facade_command_form(env, layers):
         data = env['wsgi.input'].read(int(env.get('CONTENT_LENGTH', 0))).decode('utf-8')
         emit(f'Data received: {layers=} {summary(data)=}')
         if layers and (topic := layers[0]):
-            # TODO: Some commands should be processed before the result is stored.
             found = palace_recall(topic, store=data)
             emit(f'Article stored from POST {found.num=}.')
             return None
+    # TODO: GET commands should be processed before the result is stored.
     return (f'<form id="cmd-form" method="post">'
         f'<textarea id="cmd" name="cmd" cols=70 rows=1></textarea></form>')
 
@@ -305,7 +305,7 @@ def certify_build():
     roadmap = []
     for ln, line in enumerate(BODY.splitlines()):
         if line.strip().startswith('# TODO:'):
-            roadmap.append(f'@{ln+1} # TODO: {line.strip()[7:]}')
+            roadmap.append(f'@{ln+1:04d} {line.strip()[7:]}')
     roadmap = '\n'.join(roadmap)
     r = request_facade('roadmap__txt', upload=roadmap)
     emit(f'Facade response to roadmap.txt upload: {r}')
