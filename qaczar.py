@@ -203,7 +203,7 @@ def facade_main(environ, respond):
                 yield from hyper(
                     f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n (arthexis)' 
                     f'</footer></body></html>')
-    except Exception as e:
+    except (Exception, AssertionError) as e:
         emit(f'Unhandled facade error {e} in {environ["PATH_INFO"]}')
     finally:
         emit(f"Request completed in {int((time.time() - start)*1000)} ms.")
