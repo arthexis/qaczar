@@ -195,8 +195,8 @@ def facade_main(environ, respond):
             if cmd := _facade_command_form(environ, layers): 
                 yield from hyper(cmd)
             yield b'</nav><main>'
-            if not layers: 
-                yield from hyper(_facade_overview(environ))
+            if not layers and (overview := _facade_palace_overview(environ)): 
+                yield from hyper(overview)
             for layer in layers:
                 if (found := palace_recall(layer)) and (article := found.article):
                     yield from hyper(article)
@@ -218,7 +218,7 @@ def _facade_command_form(environ, layers):
     return (f'<form id="cmd-form" method="post">' 
             f'<input type="text" id="cmd" name="cmd" size=70></form>').encode('utf-8')
     
-def _facade_overview(environ):
+def _facade_palace_overview(environ):
     global PALACE, TOPICS
     c = PALACE.cursor()
     yield f'<h2>Palace overview</h2><ul>'.encode('utf-8')
