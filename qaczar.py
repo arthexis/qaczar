@@ -185,8 +185,8 @@ def facade_main(environ, respond):
 def facade_command_form(environ, layers):
     try:    
         if environ['REQUEST_METHOD'] == 'POST':
-            cmd = environ['wsgi.input'].read(int(environ.get('CONTENT_LENGTH', 0))).decode('utf-8')
-            emit(f'Command received: {cmd=}')
+            data = environ['wsgi.input'].read(int(environ.get('CONTENT_LENGTH', 0))).decode('utf-8')
+            emit(f'Data received: {layers=} {data=}')
         return (f'<form id="cmd-form" method="post">' 
                 f'<input type="text" id="cmd" name="cmd" size=70></form>').encode('utf-8')
     except Exception as e:
