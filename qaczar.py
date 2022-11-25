@@ -174,7 +174,7 @@ def facade_main(environ, respond):
     emit(f'--*-- Incoming {environ["REQUEST_METHOD"]} {environ["PATH_INFO"]} from {environ["REMOTE_ADDR"]} --*--')
     try:
         layers = [p for p in re.split(r'[/]+', environ['PATH_INFO']) if p]
-        if len(layers) == 1 and '.' in (fname := layers[0].replace('.', '__')):
+        if len(layers) == 1 and '.' in (fname := layers[0].replace('.', '__')):  # ERROR: Doesn't work for only files.
             emit(f'File request {fname=}.')
             if (found := palace_recall(fname, encoding=None)) and (article := found.article):
                 emit(f'File found {fname=} {found.num=} {found.ts=}.')
