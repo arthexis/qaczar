@@ -151,13 +151,11 @@ def palace_summary():
     c = PALACE.cursor()
     c.execute('SELECT name FROM sqlite_master WHERE '
         'type="table" AND name not LIKE "sqlite_%"')
-    topics = [t[0] for t in c.fetchall()]
-    for topic in topics:
+    for topic in [t[0] for t in c.fetchall()]:
         c.execute(f'SELECT num, ts, article FROM {topic} ORDER BY ts DESC LIMIT 1')
         found = c.fetchone()
         # The format of the output is [(topic, count, ts, summary)].
         if found: yield (topic, found[0], found[1], summary(found[2]))
-
 
 
 # V.
