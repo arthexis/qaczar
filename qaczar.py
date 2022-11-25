@@ -156,8 +156,6 @@ def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
 import urllib.parse
 from wsgiref.simple_server import make_server, WSGIRequestHandler
 
-IGNORE = ('favicon.ico', )
-
 def hyper(text):
     if isinstance(text, bytes): yield text
     if isinstance(text, str): yield text.encode('utf-8')
