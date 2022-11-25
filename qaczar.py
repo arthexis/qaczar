@@ -98,7 +98,7 @@ def md5(blob):
     if blob := blob.encode('utf-8') if isinstance(blob, str) else blob:
         return hashlib.md5(blob).hexdigest()
 
-def seed_mtime(topic, src='seeds'):
+def _seed_mtime(topic, src='seeds'):
     global DIR
     try:
         return int(os.path.getmtime(f'{DIR}/{src}/{topic}'))
@@ -106,7 +106,7 @@ def seed_mtime(topic, src='seeds'):
 
 def _plant_seed(c, fname, topic, mtime, encoding):
     if seed := fread(f'{DIR}/seeds/{fname}', e=encoding):     
-        ts, new_md5, mtime = isotime(), md5(seed), mtime or seed_mtime(fname)
+        ts, new_md5, mtime = isotime(), md5(seed), mtime or _seed_mtime(fname)
         num = c.execute(f'INSERT INTO {topic} (ts, article, md5, mtime) VALUES (?, ?, ?, ?)', 
             (ts, seed, new_md5, mtime)).lastrowid
         emit(f"Seed {fname} uploaded ({len(seed)} bytes).")
@@ -134,7 +134,7 @@ def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
         TOPICS.append(topic)
     found = c.execute(f'SELECT num, ts, article, md5, mtime FROM {topic} '
         f'ORDER BY ts DESC LIMIT 1').fetchone() if fetch else None
-    if found and found[4] and (mtime := seed_mtime(fname)) > found[4]:
+    if found and found[4] and (mtime := _seed_mtime(fname)) > found[4]:
         found = _plant_seed(c, fname, topic, mtime, encoding)
     next_md5 = md5(store)
     if store and (not found or found[3] != next_md5):
@@ -158,48 +158,67 @@ from wsgiref.simple_server import make_server, WSGIRequestHandler
 
 IGNORE = ('favicon.ico', )
 
+def hyper(text):
+    if isinstance(text, bytes): yield text
+    if isinstance(text, str): yield text.encode('utf-8')
+    if isinstance(text, (list, tuple)): 
+        yield from (hyper(c) for c in text)
+    yield b''
+
 # Main entrypoint for the user AND delegates. UI == API.
 def facade_main(environ, respond):
     global SITE
-    result, start = None, time.time()
-    emit(f'--*-- Incoming request {environ["REQUEST_METHOD"]} {environ["PATH_INFO"]} from {environ["REMOTE_ADDR"]} --*--')
+    start = time.time()
+    emit(f'--*-- Incoming {environ["REQUEST_METHOD"]} {environ["PATH_INFO"]} from {environ["REMOTE_ADDR"]} --*--')
     try:
-        while True:
-            layers = [p for p in re.split(r'[/]+', environ['PATH_INFO']) if p]
-            if len(layers) == 1 and '.' in (fname := layers[0]):
-                yield from standalone_file(fname, respond)
+        layers = [p for p in re.split(r'[/]+', environ['PATH_INFO']) if p]
+        if len(layers) == 1 and '.' in (fname := layers[0]):
+            emit(f'File request {fname=}.')
+            if (found := palace_recall(fname, encoding=None)) and (article := found.article):
+                emit(f'File found {fname=} {found.num=} {found.ts=}.')
+                mimetype = mimetypes.guess_type(fname, strict=False)[0] or 'application/octet-stream'
+                filesize = len(article)
+                respond('200 OK', [('Content-Type', mimetype), ('Content-Length', str(filesize))])
+                for i in range(0, len(article), 1024):
+                    yield article[i:i+1024]
+                emit(f'Served file {fname=} {mimetype=} {filesize=} bytes.')
             else:
-                respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
-                yield f'<!DOCTYPE html><head><title>{SITE}</title>'.encode('utf-8')
-                if css := palace_recall('qaczar.css'): yield f'<style>{css.article}</style>'.encode('utf-8')
-                yield (f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>'.encode('utf-8'))
-                if cmd := facade_command_form(environ, layers): yield cmd
-                yield b'</nav><main>'
-                if not layers: yield from facade_overview(environ)
-                for layer in layers:
-                    if found := palace_recall(layer): yield hypertext(found.article)
-                break
+                emit(f'File not found {fname=}.')
+                respond('404 Not Found', [('Content-Type', 'text/plain')])
+                yield b'Not found.'
+        else:
+            respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
+            yield from hyper(f'<!DOCTYPE html><head><title>{SITE}</title>')
+            if css := palace_recall('qaczar.css'): 
+                yield from hyper(f'<style>{css.article}</style>')
+            yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>')
+            if cmd := _facade_command_form(environ, layers): 
+                yield from hyper(cmd)
+            yield b'</nav><main>'
+            if not layers: 
+                yield from hyper(_facade_overview(environ))
+            for layer in layers:
+                if (found := palace_recall(layer)) and (article := found.article):
+                    yield from hyper(article)
+            yield from hyper(
+                f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n (arthexis)' 
+                f'</footer></body></html>')
+    except Exception as e:
+        emit(f'Unhandled facade error {e} in {environ["PATH_INFO"]}')
     finally:
-        yield (f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n (arthexis)' 
-                    f'</footer></body></html>').encode('utf-8')
         emit(f"Request completed in {int((time.time() - start)*1000)} ms.")
 
-def facade_command_form(environ, layers):
-    try:    
-        if environ['REQUEST_METHOD'] == 'POST':
-            data = environ['wsgi.input'].read(int(environ.get('CONTENT_LENGTH', 0))).decode('utf-8')
-            emit(f'Data received: {layers=} {data=}')
-            if layers and (topic := layers[0]):
-                found = palace_recall(topic, store=data)
-                emit(f'Article stored from POST {found.num=}.')
-                raise StopIteration
-        return (f'<form id="cmd-form" method="post">' 
-                f'<input type="text" id="cmd" name="cmd" size=70></form>').encode('utf-8')
-    except Exception as e:
-        emit(f'Error processing command form {e=}.')
-        return b'<strong>Command form error.</strong>'
+def _facade_command_form(environ, layers):
+    if environ['REQUEST_METHOD'] == 'POST':
+        data = environ['wsgi.input'].read(int(environ.get('CONTENT_LENGTH', 0))).decode('utf-8')
+        emit(f'Data received: {layers=} {data=}')
+        if layers and (topic := layers[0]):
+            found = palace_recall(topic, store=data)
+            emit(f'Article stored from POST {found.num=}.')
+    return (f'<form id="cmd-form" method="post">' 
+            f'<input type="text" id="cmd" name="cmd" size=70></form>').encode('utf-8')
     
-def facade_overview(environ):
+def _facade_overview(environ):
     global PALACE, TOPICS
     c = PALACE.cursor()
     yield f'<h2>Palace overview</h2><ul>'.encode('utf-8')
@@ -213,7 +232,7 @@ def facade_overview(environ):
                 yield (f'<li><a href="/{topic}">{topic}</a> : <strong>NO CONTENT</strong></li>').encode('utf-8')
     yield f'</ul>'.encode('utf-8')
         
-def standalone_file(fname, respond):
+def _facade_sendfile(fname, respond):
     if not (blob := palace_recall(fname, encoding=None)):
         respond('404 Not Found', [('Content-type', 'text/plain')])
         yield iter([b''])
@@ -223,25 +242,6 @@ def standalone_file(fname, respond):
     emit(f'Served file {fname=} {mimetype=} {len(blob)=} bytes.')
     for i in range(0, len(blob), 1024):
         yield blob[i:i+1024]
-
-# TODO: Create a function that generates arbitrary HTML tables for formatting.
-def table_layout(rows, cols, data):
-    return (f'<table><tr><th>{f"</th><th>".join(cols)}</th></tr>'
-        f'<tr><td>{f"</td><td>".join(data)}</td></tr></table>').encode('utf-8')
-
-def hypertext(article):
-    # TODO: Figure a better way to encapsulate binary content in html.
-    if not article: return b' '
-    if isinstance(article, bytes): return article
-    if isinstance(article, str): return article.encode('utf-8')
-    topic, num, ts, article = article
-    # Extract the prefix, the last part after __
-    prefix = article.split('__')[-1]
-    if prefix in ('css', 'py'):
-        article = article.replace("\n", "</li><li>")
-        article = f'<ol><li><pre>{article}</pre></li></ol>'
-    return (f'<article id="{topic}__{num}" data-ts="{ts}">' 
-        f'{article}</article>').encode('utf-8')
 
 class Unhandler(WSGIRequestHandler):
     def log_request(self, code=None, size=None): pass
@@ -268,7 +268,7 @@ from contextlib import contextmanager
 def request_facade(*args, upload=None):
     assert all(urllib.parse.quote(arg) == arg for arg in args), f"Invalid facade request {args=}"
     url = f'http://{HOST}:{PORT}/{"/".join(args)}'
-    emit(f'Send request: {url=} {upload=}')
+    emit(f'Send request: {url=} {summary(upload)=}')
     try:
         upload = upload.encode('utf-8') if upload else None
         with urllib.request.urlopen(url, data=upload, timeout=6) as r:
@@ -290,9 +290,9 @@ def certify_build():
         if line.strip().startswith('# TODO:'):
             roadmap.append(f'{ln+1}: {line.strip()[7:]}')
     roadmap = '\n'.join(roadmap)
-    with request_facade('roadmap', upload=roadmap) as r:
+    with request_facade('roadmap__txt', upload=roadmap) as r:
         emit(f'Facade response: {len(r)=} bytes.')
-        found = palace_recall('roadmap')
+        found = palace_recall('roadmap__txt')
         if not found or found[3] != roadmap:
             emit('Roadmap not updated properly.'); sys.exit(1)
         else:
