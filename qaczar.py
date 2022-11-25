@@ -147,14 +147,17 @@ def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
 
 
 def palace_summary():
-    # The format of the output is [(topic, count, ts, summary)].
     global PALACE
     c = PALACE.cursor()
     c.execute('SELECT name FROM sqlite_master WHERE '
         'type="table" AND name not LIKE "sqlite_%"')
     topics = [t[0] for t in c.fetchall()]
-    return [(t, *c.execute(f'SELECT COUNT(*), MAX(ts), article FROM {t}').fetchone())
-        for t in topics]
+    for topic in topics:
+        c.execute(f'SELECT num, ts, article FROM {topic} ORDER BY ts DESC LIMIT 1')
+        found = c.fetchone()
+        # The format of the output is [(topic, count, ts, summary)].
+        if found: yield (topic, found[0], found[1], summary(found[2]))
+
 
 
 # V.
