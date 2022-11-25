@@ -250,7 +250,7 @@ if __name__ == "__main__" and RUNLEVEL == 2:
     PORT = int(PORT)
     palace_recall('qaczar__py', store=BODY)
     with make_server(HOST, PORT, facade_main, handler_class=Unhandler) as s:
-        emit(f'Facade ready at http://{HOST}:{PORT}/')
+        emit(f'Facade ready on http://{HOST}:{PORT}/')
         create_fork(sys.argv[1], 'certify_build')
         s.serve_forever(poll_interval=1)
 
