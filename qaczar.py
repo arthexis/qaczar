@@ -250,7 +250,7 @@ if __name__ == "__main__" and RUNLEVEL == 2:
     PORT = int(PORT)
     palace_recall('qaczar__py', store=BODY)
     with make_server(HOST, PORT, facade_main, handler_class=Unhandler) as s:
-        emit(f'Facade ready on http://{HOST}:{PORT}/')
+        emit(f'Facade ready. Serving on http://{HOST}:{PORT}/')
         create_fork(sys.argv[1], 'certify_build')
         s.serve_forever(poll_interval=1)
 
@@ -271,13 +271,15 @@ def request_facade(*args, upload=None):
         emit(f'HTTPError: {e.code}'); raise e
 
 def chain_run(*cmds):
+    s = None
     for cmd in cmds:
         try:
             s = subprocess.run(cmd, shell=True, check=True, capture_output=True)
-            if s.returncode != 0: 
-                raise Exception(f'Command failed: {cmd=}'); raise
+            if s.returncode != 0: return s.returncode
         except (subprocess.CalledProcessError, RuntimeError) as e:
             emit(f'Command error: {e=}')
+            return s.returncode if s else -1
+    return s.returncode
 
 # TODO: Create a new kind of scheduler (cron) delegate.
     
@@ -297,10 +299,10 @@ def certify_build():
             emit('Roadmap update validated.')
     # TODO: Store platform information related to each build test.
     # TODO: Check if other seeded files (ie. qaczar.css) are loaded properly.
-    chain_run(['git', 'add', '.'])
-    chain_run(['git', 'commit', '-m', 'Automatic commit by certify_build.'])
-    s = chain_run(['git', 'push', 'origin', BRANCH])
-    emit(f'Git sync complete ({s.returncode=}).')
+    result = chain_run(['git', 'add', '.'],
+            ['git', 'commit', '-m', 'Automatic commit by certify_build.'],
+            ['git', 'push', 'origin', BRANCH])
+    emit(f'Git sync complete ({result}).')
     return 'SUCCESS'
 
 if __name__ == "__main__" and RUNLEVEL == 3:
