@@ -277,8 +277,8 @@ def certify_build():
         if line.strip().startswith('# TODO:'):
             roadmap.append(f'{ln+1}: {line.strip()[7:]}')
     roadmap = '\n'.join(roadmap)
-    if r := request_facade('roadmap__txt', upload=roadmap):
-        emit(f'Facade response: {r}')
+    if r := request_facade('roadmap.txt', upload=roadmap):
+        emit(f'Facade response to roadmap.txt upload: {r}')
         found = palace_recall('roadmap.txt')
         if not found or found[3] != roadmap:
             emit('Roadmap not updated properly.'); sys.exit(1)
