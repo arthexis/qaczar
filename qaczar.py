@@ -298,7 +298,7 @@ def certify_build():
     else:
         emit('Roadmap update validated.')
     # TODO: Store platform information related to each build test.
-    # TODO: Check that qaczar.py is loading properly in the UI.
+    # TODO: Check that qaczar.py is loading properly in the web.
     last_result = chain_run(
             ['git', 'add', '.'],
             ['git', 'commit', '-m', 'Automatic commit by certify_build.'],
