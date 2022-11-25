@@ -172,7 +172,6 @@ def facade_main(env, respond):
     start = time.time()
     method, path, origin = env["REQUEST_METHOD"], env["PATH_INFO"], env["REMOTE_ADDR"]
     emit(f'--*-- Incoming {method=} {path=} from {origin=} --*--')
-    # TODO: Facade security. Must be local or include a valid token.
     try:
         if origin != '127.0.0.1':
             emit(f'Invalid remote address {origin}.')
