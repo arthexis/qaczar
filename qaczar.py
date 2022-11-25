@@ -194,10 +194,8 @@ def facade_main(env, resp):
                     yield from hyper(f'<!DOCTYPE html><head><title>{SITE}</title>')
                     if js := palace_recall('qaczar.css'): 
                         yield from hyper(js.article, 'style')
-                    # TODO: Add quick links to the navigation bar next to the title.
                     # TODO: Show a summary of palace status and contents on the overview.
-                    links = [f'<a href="/{t}">{t}</a>' for t in TOPICS]
-
+                    links = _facade_quick_links()
                     yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>' 
                         f'{"".join(links)}{cmd}</nav><main>')
                     # --- Main HTML content starts here. ---
@@ -220,6 +218,10 @@ def _facade_wrap_file(fname, article):
     mimetype = mimetypes.guess_type(fname, strict=False)[0] or 'application/octet-stream'
     assert isinstance(article, bytes), f'File {fname=} {type(article)=} {article=}.'
     return (article[i:i+1024] for i in range(0, len(article), 1024)), mimetype
+
+def _facade_quick_links():
+    # TODO: Make links shorter and more readable. Remove unnecessary ones.
+    return [f'<a href="/{t}">{t}</a>' for t in TOPICS]
 
 def _facade_command_form(env, layers):
     if env['REQUEST_METHOD'] == 'POST':
@@ -278,7 +280,7 @@ def request_facade(*args, upload=None):
 
 def chain_run(*cmds):
     s = None
-    # TODO: PRoduce a report that can be uploaded to the palace.
+    # TODO: Produce a report that can be uploaded to the palace.
     for cmd in cmds:
         try:
             s = subprocess.run(cmd, shell=True, check=True, capture_output=True)
