@@ -278,6 +278,7 @@ def request_facade(*args, upload=None):
 
 def chain_run(*cmds):
     s = None
+    # TODO: PRoduce a report that can be uploaded to the palace.
     for cmd in cmds:
         try:
             s = subprocess.run(cmd, shell=True, check=True, capture_output=True)
