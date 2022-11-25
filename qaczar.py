@@ -283,7 +283,7 @@ def certify_build():
         # Commit all changed files to git and push.
         subprocess.run(['git', 'add', '.'])
         subprocess.run(['git', 'commit', '-m', 'Automatic commit by certify_build.'])
-        subprocess.run(['git', 'push', 'origin', 'master'])
+        subprocess.run(['git', 'push', 'origin', 'main'])
     return 'SUCCESS'
 
 if __name__ == "__main__" and RUNLEVEL == 3:
