@@ -248,7 +248,9 @@ def _facade_wrap_article(found, mode='ol'):
         content = f'<div>{found.article}</div>'
     else:
         content = f'<pre>{found.article}</pre>'
-    return f'<article><h2>Latest {found.topic}</h2><div>{content}</div></article>'
+    # Remove the prefix after __ from the title.
+    title = f'<h2>Latest {found.topic.split("__")[-1]}</h2>'
+    return f'<article>{title}<div>{content}</div></article>'
 
 class Unhandler(WSGIRequestHandler):
     def log_request(self, *args, **kwargs): pass
