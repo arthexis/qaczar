@@ -233,7 +233,7 @@ def _facade_palace_overview(environ):
     yield f'</ul>'.encode('utf-8')
 
 class Unhandler(WSGIRequestHandler):
-    def log_request(self, code=None, size=None): pass
+    def log_request(self, *args, **kwargs): pass
 
 if __name__ == "__main__" and RUNLEVEL == 2:
     PALACE =  sqlite3.connect('p.sqlite', isolation_level='IMMEDIATE')
@@ -259,7 +259,7 @@ def request_facade(*args, upload=None):
     try:
         upload = upload.encode('utf-8') if upload else None
         with urllib.request.urlopen(url, data=upload, timeout=6) as r:
-            if r.status == 200: return r.read().decode('utf-8')
+            return r.read().decode('utf-8')
     except urllib.error.HTTPError as e:
         emit(f'HTTPError: {e.code}'); raise e
 
