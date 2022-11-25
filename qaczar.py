@@ -144,7 +144,7 @@ def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
             emit(f'Insert comitted {topic=} {rowid=}.')
         if not fetch: return rowid
     if found: return Article(topic, found[0], found[1], found[2]) 
-    
+
 
 # V.
 
@@ -195,7 +195,7 @@ def facade_main(env, resp):
                     if js := palace_recall('qaczar.css'): 
                         yield from hyper(js.article, 'style')
                     # TODO: Show a summary of palace status and contents on the overview.
-                    links = _facade_quick_links()
+                    links = _facade_quick_links(layers)
                     yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>' 
                         f'{"".join(links)}{cmd}</nav><main>')
                     # --- Main HTML content starts here. ---
@@ -219,9 +219,9 @@ def _facade_wrap_file(fname, article):
     assert isinstance(article, bytes), f'File {fname=} {type(article)=} {article=}.'
     return (article[i:i+1024] for i in range(0, len(article), 1024)), mimetype
 
-def _facade_quick_links():
+def _facade_quick_links(layers):
     # TODO: Make links shorter and more readable. Remove unnecessary ones.
-    return [f'<a href="/{t}">{t}</a>' for t in TOPICS]
+    return f'[<a href="/">Example</a>]'
 
 def _facade_command_form(env, layers):
     if env['REQUEST_METHOD'] == 'POST':
@@ -235,7 +235,9 @@ def _facade_command_form(env, layers):
     return (f'<form id="cmd-form" method="post">'
         f'<textarea id="cmd" name="cmd" cols=70 rows=1></textarea></form>')
 
-def _facade_wrap_article(found):
+def _facade_wrap_article(found, mode='ol'):
+    # TODO: Implement the option to show the article as a table.
+    assert mode in ('ol', 'ul', 'table'), f'Invalid mode {mode=}.'
     if not found: return None
     assert isinstance(found, Article), f'Invalid article {type(found)=} {found=}.'
     prefix = found.topic.split('__')[-1]
