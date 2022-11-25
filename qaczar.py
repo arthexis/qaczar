@@ -4,8 +4,6 @@
 # A Python script that does everything.
 # H. V. D. C. by Rafa Guillén (arthexis@gmail.com) 2022-2023
 
-# TODO: Work on the control form and general styling.
-
 
 import os
 import sys
@@ -143,12 +141,6 @@ def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
             emit(f'Insert comitted {topic=} {rowid=}.')
         if not fetch: return rowid
     if found: return Article(topic, found[0], found[1], found[2])  # topic, num, ts, article
-
-
-    
-
-# TODO: Function that creates relationships between 2 articles.
-# TODO: Then, it prunes old articles with no relationships.
     
 
 # V.
@@ -175,7 +167,6 @@ def facade_main(environ, respond):
     emit(f'--*-- Incoming {environ["REQUEST_METHOD"]} {environ["PATH_INFO"]} from {environ["REMOTE_ADDR"]} --*--')
     try:
         layers = [p for p in re.split(r'[/]+', environ['PATH_INFO']) if p]
-        # TODO: Test this is serving TTF files properly.
         if len(layers) == 1 and '.' in (fname := layers[0]):  
             if (found := palace_recall(fname, encoding=None)) and (article := found.article):
                 iwrapped, mimetype, = _facade_wrap_file(fname, article)
@@ -251,8 +242,6 @@ if __name__ == "__main__" and RUNLEVEL == 2:
 
 # H.
 
-# TODO: Add a function to extract info from external sources.
-
 import urllib.request
 
 def request_facade(*args, upload=None):
@@ -274,7 +263,6 @@ def run_silently(cmd):
     
 def certify_build():
     global BRANCH
-    # TODO: Ensure the roadmap is stored and displayed properly.
     roadmap = []
     for ln, line in enumerate(BODY.splitlines()):
         if line.strip().startswith('# TODO:'):
@@ -287,6 +275,7 @@ def certify_build():
             emit('Roadmap not updated properly.'); sys.exit(1)
         else:
             emit('Roadmap update validated.')
+    # TODO: Check if other seeded files (such as qaczar.css) are loading properly.
     run_silently(['git', 'add', '.'])
     run_silently(['git', 'commit', '-m', 'Automatic commit by certify_build.'])
     s = run_silently(['git', 'push', 'origin', BRANCH])
