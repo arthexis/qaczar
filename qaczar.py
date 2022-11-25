@@ -196,7 +196,7 @@ def facade_main(environ, respond):
             else:
                 yield from hyper(f'<!DOCTYPE html><head><title>{SITE}</title>')
                 if css := palace_recall('qaczar.css'): 
-                    yield from hyper(f'<style>{css.article.decode("utf-8")}</style>')
+                    yield from hyper(f'<style>{css.article}</style>')
                 yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>{cmd}</nav><main>')
                 # --- Main HTML content starts here. ---
                 if not layers and (overview := palace_recall('roadmap.txt')): 
