@@ -261,8 +261,6 @@ if __name__ == "__main__" and RUNLEVEL == 2:
 # H.
 
 # TODO: Add a function to extract info from external sources.
-# TODO: Add a facade to handle version control (manual reverts).
-# TODO: Use a delegate to run tests and publish the production site.
 
 import urllib.request
 from contextlib import contextmanager
