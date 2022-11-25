@@ -216,7 +216,6 @@ def _facade_wrap_file(fname, article):
     return (article[i:i+1024] for i in range(0, len(article), 1024)), mimetype
 
 def _facade_command_form(env, layers):
-    # TODO: Make the command field flexible (grow/shrink).
     if env['REQUEST_METHOD'] == 'POST':
         data = env['wsgi.input'].read(int(env.get('CONTENT_LENGTH', 0))).decode('utf-8')
         emit(f'Data received: {layers=} {summary(data)=}')
