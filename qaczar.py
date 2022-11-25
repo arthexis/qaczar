@@ -195,10 +195,10 @@ def facade_main(environ, respond):
                 yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>{cmd}</nav><main>')
                 # --- Main HTML content starts here. ---
                 if not layers and (overview := palace_recall('roadmap__txt')): 
-                    yield from hyper(overview)
+                    yield from hyper(_facade_wrap_article(overview))
                 for layer in layers:
                     if (found := palace_recall(layer)) and (article := found.article):
-                        yield from hyper(article)
+                        yield from hyper(_facade_wrap_article(article))
                 yield from hyper(
                     f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n (arthexis)' 
                     f'</footer></body></html>')
@@ -217,11 +217,24 @@ def _facade_command_form(environ, layers):
         data = environ['wsgi.input'].read(int(environ.get('CONTENT_LENGTH', 0))).decode('utf-8')
         emit(f'Data received: {layers=} {summary(data)=}')
         if layers and (topic := layers[0]):
+            assert RUNLEVEL == 2, f'Cannot write to palace in {RUNLEVEL=}.'
             found = palace_recall(topic, store=data)
             emit(f'Article stored from POST {found.num=}.')
             return None
     return '<form id="cmd-form" method="post"><input type="text" id="cmd" name="cmd" size=70></form>'
-    
+
+def _facade_wrap_article(article):
+    if not article: return None
+    assert isinstance(article, Article), f'Invalid article {type(article)=} {article=}.'
+    prefix = article.topic.split('__')[-1]
+    if prefix in ('txt', 'css', 'py'):
+        content = '<ol><li>' + re.sub(r'\n', r'</li><li>', article.article) + '</li></ol>'
+    elif prefix == 'html':
+        content = f'<div>{article.article}</div>'
+    else:
+        content = f'<pre>{article.article}</pre>'
+    return f'<article>{content}</article>'
+
 class Unhandler(WSGIRequestHandler):
     def log_request(self, *args, **kwargs): pass
 
