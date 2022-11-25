@@ -189,7 +189,7 @@ def facade_main(environ, respond):
         else:
             respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
             cmd = _facade_command_form(environ, layers)
-            if not cmd: yield b'Done.' 
+            if not cmd: yield b'200 Ok.' 
             else:
                 yield from hyper(f'<!DOCTYPE html><head><title>{SITE}</title>')
                 if css := palace_recall('qaczar.css'): 
