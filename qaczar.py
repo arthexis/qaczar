@@ -167,7 +167,7 @@ def hyper(text, wrap=None):
     if wrap: yield f'</{wrap}>'.encode('utf-8') 
 
 # Main entrypoint for the user AND delegates. UI == API.
-def facade_main(env, respond):
+def facade_main(env, resp):
     global SITE
     start = time.time()
     method, path, origin = env["REQUEST_METHOD"], env["PATH_INFO"], env["REMOTE_ADDR"]
@@ -175,20 +175,20 @@ def facade_main(env, respond):
     try:
         if origin != '127.0.0.1':
             emit(f'Invalid remote address {origin}.')
-            respond('403 Forbidden', [('Content-Type', 'text/plain')]); yield b''
+            resp('403 Forbidden', [('Content-Type', 'text/plain')]); yield b''
         else:
             layers = [p for p in re.split(r'[/]+', path) if p]
             if len(layers) == 1 and '.' in (fname := layers[0]):  
                 if (found := palace_recall(fname, encoding=None)) and (blob := found.article):
                     iwrapped, mt, = _facade_wrap_file(fname, blob)
-                    respond('200 OK', [('Content-Type', mt), ('Content-Length', str(len(blob)))])
+                    resp('200 OK', [('Content-Type', mt), ('Content-Length', str(len(blob)))])
                     yield from iwrapped
                 else:
-                    respond('404 Not Found', [('Content-Type', 'text/plain')])
+                    resp('404 Not Found', [('Content-Type', 'text/plain')])
                     yield b'Not found.'
             else:
                 cmd = _facade_command_form(env, layers)
-                respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
+                resp('200 OK', [('Content-type', f'text/html; charset=utf-8')])
                 if not cmd: yield b'200 Ok.' 
                 else:
                     yield from hyper(f'<!DOCTYPE html><head><title>{SITE}</title>')
@@ -216,7 +216,7 @@ def _facade_wrap_file(fname, article):
     return (article[i:i+1024] for i in range(0, len(article), 1024)), mimetype
 
 def _facade_command_form(env, layers):
-    # TODO: Make the command form more flexible and useful.
+    # TODO: Make the command field flexible (grow/shrink).
     if env['REQUEST_METHOD'] == 'POST':
         data = env['wsgi.input'].read(int(env.get('CONTENT_LENGTH', 0))).decode('utf-8')
         emit(f'Data received: {layers=} {summary(data)=}')
@@ -248,7 +248,7 @@ if __name__ == "__main__" and RUNLEVEL == 2:
     PALACE =  sqlite3.connect('p.sqlite', isolation_level='IMMEDIATE')
     HOST, PORT = sys.argv[1].split(':')
     PORT = int(PORT)
-    palace_recall('qaczar.py', store=BODY)
+    palace_recall('qaczar__py', store=BODY)
     with make_server(HOST, PORT, facade_main, handler_class=Unhandler) as s:
         emit(f'Facade ready at http://{HOST}:{PORT}/')
         create_fork(sys.argv[1], 'certify_build')
@@ -270,11 +270,14 @@ def request_facade(*args, upload=None):
     except urllib.error.HTTPError as e:
         emit(f'HTTPError: {e.code}'); raise e
 
-def run_silently(cmd):
-    try:
-        return subprocess.run(cmd, shell=True, check=True, capture_output=True)
-    except subprocess.CalledProcessError as e:
-        emit(f'Command failed: {e=}')
+def chain_run(*cmds):
+    for cmd in cmds:
+        try:
+            s = subprocess.run(cmd, shell=True, check=True, capture_output=True)
+            if s.returncode != 0: 
+                raise Exception(f'Command failed: {cmd=}'); raise
+        except (subprocess.CalledProcessError, RuntimeError) as e:
+            emit(f'Command error: {e=}')
 
 # TODO: Create a new kind of scheduler (cron) delegate.
     
@@ -294,9 +297,9 @@ def certify_build():
             emit('Roadmap update validated.')
     # TODO: Store platform information related to each build test.
     # TODO: Check if other seeded files (ie. qaczar.css) are loaded properly.
-    run_silently(['git', 'add', '.'])
-    run_silently(['git', 'commit', '-m', 'Automatic commit by certify_build.'])
-    s = run_silently(['git', 'push', 'origin', BRANCH])
+    chain_run(['git', 'add', '.'])
+    chain_run(['git', 'commit', '-m', 'Automatic commit by certify_build.'])
+    s = chain_run(['git', 'push', 'origin', BRANCH])
     emit(f'Git sync complete ({s.returncode=}).')
     return 'SUCCESS'
 
