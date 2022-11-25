@@ -187,6 +187,9 @@ def facade_command_form(environ, layers):
         if environ['REQUEST_METHOD'] == 'POST':
             data = environ['wsgi.input'].read(int(environ.get('CONTENT_LENGTH', 0))).decode('utf-8')
             emit(f'Data received: {layers=} {data=}')
+            if layers and (topic := layers[0]):
+                found = palace_recall(topic, store=data)
+                emit(f'Article from PORT stored {found.num=}.')
         return (f'<form id="cmd-form" method="post">' 
                 f'<input type="text" id="cmd" name="cmd" size=70></form>').encode('utf-8')
     except Exception as e:
