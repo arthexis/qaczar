@@ -208,7 +208,7 @@ def _facade_command_form(env, layers):
         data = env['wsgi.input'].read(int(env.get('CONTENT_LENGTH', 0))).decode('utf-8')
         emit(f'Data received: {layers=} {summary(data)=}')
         if layers and (topic := layers[0]):
-            # TODO: Some commands should be processes before the result is stored.
+            # TODO: Some commands should be processed before the result is stored.
             found = palace_recall(topic, store=data)
             emit(f'Article stored from POST {found.num=}.')
             return None
