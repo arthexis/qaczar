@@ -17,6 +17,7 @@ import subprocess
 SITE = 'qaczar.com'
 RUNLEVEL = len(sys.argv)
 DIR = os.path.dirname(__file__)
+BRANCH = 'main'
 
 
 def isotime(t=None): 
