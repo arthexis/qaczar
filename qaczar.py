@@ -245,7 +245,7 @@ def _facade_palace_summary():
 def _facade_quick_links(layers):
     # TODO: Make links shorter and more readable. Remove unnecessary ones.
     # We still need to figure out what makes a link usefull.
-    return f'[<a href="/">Example</a>]'
+    return f'[<a href="/qaczar__py">Source</a>]'
 
 def _facade_command_form(env, layers):
     if env['REQUEST_METHOD'] == 'POST':
