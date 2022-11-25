@@ -194,6 +194,7 @@ def facade_main(env, resp):
                     yield from hyper(f'<!DOCTYPE html><head><title>{SITE}</title>')
                     if css := palace_recall('qaczar.css'): 
                         yield from hyper(css.article, 'style')
+                    # TODO: Add quick links to the navigation.
                     yield from hyper(f'</head><body><nav><h1><a href="/">' 
                             f'{SITE}</a>!</h1>{cmd}</nav><main>')
                     # --- Main HTML content starts here. ---
