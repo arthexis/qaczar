@@ -281,8 +281,8 @@ def certify_build():
         emit(f'Facade response: {len(r)=} bytes.')
         run_silently(['git', 'add', '.'])
         run_silently(['git', 'commit', '-m', 'Automatic commit by certify_build.'])
-        output = run_silently(['git', 'push', 'origin', BRANCH])
-        emit(f'Git push output: {output.stdout.decode("utf-8")}')
+        s = run_silently(['git', 'push', 'origin', BRANCH])
+        emit(f'Git push exit code: {s.returncode=}')
     return 'SUCCESS'
 
 if __name__ == "__main__" and RUNLEVEL == 3:
