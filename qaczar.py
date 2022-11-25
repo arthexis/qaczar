@@ -161,25 +161,27 @@ IGNORE = ('favicon.ico', )
 # Main entrypoint for the user AND delegates. UI == API.
 def facade_main(environ, respond):
     global SITE
-    start = time.time()
+    result, start = None, time.time()
     emit(f'--*-- Incoming request {environ["REQUEST_METHOD"]} {environ["PATH_INFO"]} from {environ["REMOTE_ADDR"]} --*--')
     try:
-        layers = [p for p in re.split(r'[/]+', environ['PATH_INFO']) if p]
-        if len(layers) == 1 and '.' in (fname := layers[0]):
-            yield from standalone_file(fname, respond)
-        else:
-            respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
-            yield f'<!DOCTYPE html><meta charset="utf-8"><head><title>{SITE}</title>'.encode('utf-8')
-            if css := palace_recall('qaczar.css'): yield f'<style>{css.article}</style>'.encode('utf-8')
-            yield (f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>'.encode('utf-8'))
-            if cmd := facade_command_form(environ, layers): yield cmd
-            yield b'</nav><main>'
-            if not layers: yield from facade_overview(environ)
-            for layer in layers:
-                if found := palace_recall(layer): yield hypertext(found.article)
-            yield (f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n (arthexis)' 
-                f'</footer></body></html>').encode('utf-8')
+        while True:
+            layers = [p for p in re.split(r'[/]+', environ['PATH_INFO']) if p]
+            if len(layers) == 1 and '.' in (fname := layers[0]):
+                yield from standalone_file(fname, respond)
+            else:
+                respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
+                yield f'<!DOCTYPE html><head><title>{SITE}</title>'.encode('utf-8')
+                if css := palace_recall('qaczar.css'): yield f'<style>{css.article}</style>'.encode('utf-8')
+                yield (f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>'.encode('utf-8'))
+                if cmd := facade_command_form(environ, layers): yield cmd
+                yield b'</nav><main>'
+                if not layers: yield from facade_overview(environ)
+                for layer in layers:
+                    if found := palace_recall(layer): yield hypertext(found.article)
+                break
     finally:
+        yield (f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n (arthexis)' 
+                    f'</footer></body></html>').encode('utf-8')
         emit(f"Request completed in {int((time.time() - start)*1000)} ms.")
 
 def facade_command_form(environ, layers):
@@ -190,6 +192,7 @@ def facade_command_form(environ, layers):
             if layers and (topic := layers[0]):
                 found = palace_recall(topic, store=data)
                 emit(f'Article stored from POST {found.num=}.')
+                raise StopIteration
         return (f'<form id="cmd-form" method="post">' 
                 f'<input type="text" id="cmd" name="cmd" size=70></form>').encode('utf-8')
     except Exception as e:
