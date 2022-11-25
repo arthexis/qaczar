@@ -157,7 +157,7 @@ import urllib.parse
 from wsgiref.simple_server import make_server, WSGIRequestHandler
 
 def hyper(text, wrap=None):
-    if wrap: yield f'<{wrap}>' if wrap != 'br' else '<br>'
+    if wrap: yield f'<{wrap}>'.encode('utf-8') if wrap != 'br' else '<br>'
     if text:
         if isinstance(text, bytes): yield text
         elif isinstance(text, str): yield text.encode('utf-8')
@@ -166,7 +166,7 @@ def hyper(text, wrap=None):
             yield from (hyper(c) for c in text)
         emit(f'Unknown hypertext conversion {type(text)=}.')
     yield b' '
-    if wrap: yield f'</{wrap}>' if wrap != 'br' else '<br>'
+    if wrap: yield f'</{wrap}>'.encode('utf-8') if wrap != 'br' else '<br>'
 
 # Main entrypoint for the user AND delegates. UI == API.
 def facade_main(environ, respond):
