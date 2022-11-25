@@ -284,8 +284,7 @@ def run_silently(cmd):
     
 def certify_build():
     global BRANCH
-    # TODO: Add a call to facade to update the roadmap topic with BODY TODOs. 
-    # Loop over each line in BODY enumerating the TODOs and store them in a list. 
+    # TODO: Ensure the roadmap is stored and displayed properly.
     roadmap = []
     for ln, line in enumerate(BODY.splitlines()):
         if line.strip().startswith('# TODO:'):
