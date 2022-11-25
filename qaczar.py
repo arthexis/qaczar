@@ -194,9 +194,9 @@ def facade_main(environ, respond):
             yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>')
             if cmd := _facade_command_form(environ, layers): 
                 yield from hyper(cmd)
-            yield b'</nav><main>'
-            emit('Ready to start with palace overview.')
+            yield b'</nav><main>'  # Main content starts here.
             if not layers and (overview := _facade_palace_overview(environ)): 
+                emit(f'Overview {overview=}.')
                 yield from hyper(overview)
             for layer in layers:
                 if (found := palace_recall(layer)) and (article := found.article):
