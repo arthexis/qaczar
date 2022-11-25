@@ -278,7 +278,7 @@ def certify_build():
             roadmap.append(f'{ln+1}: {line.strip()[7:]}')
     roadmap = '\n'.join(roadmap)
     if r := request_facade('roadmap__txt', upload=roadmap):
-        emit(f'Facade response: {len(r)=} bytes.')
+        emit(f'Facade response: {r}')
         found = palace_recall('roadmap.txt')
         if not found or found[3] != roadmap:
             emit('Roadmap not updated properly.'); sys.exit(1)
