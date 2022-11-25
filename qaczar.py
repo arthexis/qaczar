@@ -120,12 +120,15 @@ def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
     emit(f'Palace recall {topic=} {fetch=} {type(store)=} {encoding=}.') 
     c = PALACE.cursor()
     if not TOPICS:
-        c.execute('SELECT name FROM sqlite_master WHERE type="table" AND name not LIKE "sqlite_%"')
+        c.execute('SELECT name FROM sqlite_master WHERE '
+            'type="table" AND name not LIKE "sqlite_%"')
         TOPICS.extend(t[0] for t in c.fetchall())
     if topic not in TOPICS:            
-        atype = 'TEXT' if isinstance(store, str) else 'BLOB' if isinstance(store, bytes) else 'NULL'
+        atype = 'TEXT'
+        if isinstance(store, bytes): atype = 'BLOB'
         c.execute(f'CREATE TABLE IF NOT EXISTS {topic} ('
-                f'num INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, article {atype}, md5 TEXT, mtime INTEGER)')
+                f'num INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, '
+                f'article {atype}, md5 TEXT, mtime INTEGER)')
         emit(f"Created table {topic}.")
         _plant_seed(c, fname, topic, None, encoding)
         TOPICS.append(topic)
@@ -140,7 +143,7 @@ def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
             PALACE.commit()
             emit(f'Insert comitted {topic=} {rowid=}.')
         if not fetch: return rowid
-    if found: return Article(topic, found[0], found[1], found[2])  # topic, num, ts, article
+    if found: return Article(topic, found[0], found[1], found[2]) 
     
 
 # V.
@@ -149,7 +152,7 @@ import secrets
 import urllib.parse
 from wsgiref.simple_server import make_server, WSGIRequestHandler
 
-SECRET = secrets.token_bytes(128)
+SECRET = secrets.token_bytes()
 
 def hyper(text, wrap=None):
     if wrap: yield f'<{wrap}>'.encode('utf-8') 
@@ -167,36 +170,43 @@ def hyper(text, wrap=None):
 def facade_main(env, respond):
     global SITE
     start = time.time()
-    emit(f'--*-- Incoming {env["REQUEST_METHOD"]} {env["PATH_INFO"]} from {env["REMOTE_ADDR"]} --*--')
+    method, path, origin = env["REQUEST_METHOD"], env["PATH_INFO"], env["REMOTE_ADDR"]
+    emit(f'--*-- Incoming {method=} {path=} from {origin=} --*--')
     # TODO: Facade security. Must be local or include a valid token.
     try:
-        layers = [p for p in re.split(r'[/]+', env['PATH_INFO']) if p]
-        if len(layers) == 1 and '.' in (fname := layers[0]):  
-            if (found := palace_recall(fname, encoding=None)) and (article := found.article):
-                iwrapped, mimetype, = _facade_wrap_file(fname, article)
-                respond('200 OK', [('Content-Type', mimetype), ('Content-Length', str(len(article)))])
-                yield from iwrapped
-            else:
-                respond('404 Not Found', [('Content-Type', 'text/plain')])
-                yield b'Not found.'
+        if origin != '127.0.0.1':
+            emit(f'Invalid remote address {origin}.')
+            respond('403 Forbidden', [('Content-Type', 'text/plain')]); yield b''
         else:
-            cmd = _facade_command_form(env, layers)
-            respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
-            if not cmd: yield b'200 Ok.' 
+            layers = [p for p in re.split(r'[/]+', path) if p]
+            if len(layers) == 1 and '.' in (fname := layers[0]):  
+                if (found := palace_recall(fname, encoding=None)) and (blob := found.article):
+                    iwrapped, mimetype, = _facade_wrap_file(fname, blob)
+                    respond('200 OK', [
+                            ('Content-Type', mimetype), ('Content-Length', str(len(blob)))])
+                    yield from iwrapped
+                else:
+                    respond('404 Not Found', [('Content-Type', 'text/plain')])
+                    yield b'Not found.'
             else:
-                yield from hyper(f'<!DOCTYPE html><head><title>{SITE}</title>')
-                if css := palace_recall('qaczar.css'): 
-                    yield from hyper(f'<style>{css.article}</style>')
-                yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>{cmd}</nav><main>')
-                # --- Main HTML content starts here. ---
-                if not layers and (overview := palace_recall('roadmap__txt')): 
-                    yield from hyper(_facade_wrap_article(overview))
-                for layer in layers:
-                    if (found := palace_recall(layer)) and (article := found.article):
-                        yield from hyper(_facade_wrap_article(article))
-                yield from hyper(
-                    f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n (arthexis)' 
-                    f'</footer></body></html>')
+                cmd = _facade_command_form(env, layers)
+                respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
+                if not cmd: yield b'200 Ok.' 
+                else:
+                    yield from hyper(f'<!DOCTYPE html><head><title>{SITE}</title>')
+                    if css := palace_recall('qaczar.css'): 
+                        yield from hyper(f'<style>{css.article}</style>')
+                    yield from hyper(f'</head><body><nav><h1><a href="/">' 
+                            f'{SITE}</a>!</h1>{cmd}</nav><main>')
+                    # --- Main HTML content starts here. ---
+                    if not layers and (overview := palace_recall('roadmap__txt')): 
+                        yield from hyper(_facade_wrap_article(overview))
+                    for layer in layers:
+                        if (found := palace_recall(layer)) and (article := found.article):
+                            yield from hyper(_facade_wrap_article(article))
+                    yield from hyper(
+                        f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n ' 
+                        f'(arthexis) </footer></body></html>')
     # Don't catch exceptions here, or they will be hidden in the logs.
     finally:
         emit(f"Request completed in {int((time.time() - start)*1000)} ms.")
@@ -216,7 +226,8 @@ def _facade_command_form(env, layers):
             found = palace_recall(topic, store=data)
             emit(f'Article stored from POST {found.num=}.')
             return None
-    return '<form id="cmd-form" method="post"><input type="text" id="cmd" name="cmd" size=70></form>'
+    return ('<form id="cmd-form" method="post">'
+        '<input type="text" id="cmd" name="cmd" size=70></form>')
 
 def _facade_wrap_article(found):
     if not found: return None
