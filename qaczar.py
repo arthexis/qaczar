@@ -310,6 +310,7 @@ def certify_build():
     # TODO: Store platform information related to each build test.
     # TODO: Check that qaczar.py is loading properly in the web.
     # TODO: Consider encrypting the contents of the palace before storing them.
+    # TODO: New delegate that runs a git pull and checks the result.
     last_result = chain_run(
             ['git', 'add', '.'],
             ['git', 'commit', '-m', 'Automatic commit by certify_build.'],
