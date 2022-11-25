@@ -95,7 +95,7 @@ PALACE, TOPICS = None, []
 
 def summary(text):
     if not text or not isinstance(text, str): return 'N/A'
-    return re.sub(r'\s+', ' ', text)[:42] if text else 'N/A'
+    return re.sub(r'\s+', ' ', text)[:54] if text else 'N/A'
 
 def md5(blob):
     if blob := blob.encode('utf-8') if isinstance(blob, str) else blob:
