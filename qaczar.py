@@ -187,8 +187,10 @@ def facade_main(environ, respond):
                 respond('404 Not Found', [('Content-Type', 'text/plain')])
                 yield b'Not found.'
         else:
-            cmd = _facade_command_form(environ, layers)
             respond('200 OK', [('Content-type', f'text/html; charset=utf-8')])
+            cmd = _facade_command_form(environ, layers)
+            if cmd and isinstance(cmd, str):
+                yield from hyper(cmd)
             yield from hyper(f'<!DOCTYPE html><head><title>{SITE}</title>')
             if css := palace_recall('qaczar.css'): 
                 yield from hyper(f'<style>{css.article}</style>')
@@ -216,8 +218,8 @@ def _facade_command_form(environ, layers):
         if layers and (topic := layers[0]):
             found = palace_recall(topic, store=data)
             emit(f'Article stored from POST {found.num=}.')
-    return (f'<form id="cmd-form" method="post">' 
-            f'<input type="text" id="cmd" name="cmd" size=70></form>').encode('utf-8')
+            return None
+    return '<form id="cmd-form" method="post"><input type="text" id="cmd" name="cmd" size=70></form>'
     
 def _facade_palace_overview(environ):
     global PALACE, TOPICS
