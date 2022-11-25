@@ -275,6 +275,8 @@ def run_silently(cmd):
         return subprocess.run(cmd, shell=True, check=True, capture_output=True)
     except subprocess.CalledProcessError as e:
         emit(f'Command failed: {e=}')
+
+# TODO: Create a new kind of scheduler (cron) delegate.
     
 def certify_build():
     global BRANCH
