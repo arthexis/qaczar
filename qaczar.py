@@ -280,7 +280,6 @@ def facade_request(*args):
 def certify_build():
     with facade_request('') as r:
         emit(f'Facade response: {len(r)=} bytes.')
-        # Commit all changed files to git and push.
         subprocess.run(['git', 'add', '.'])
         subprocess.run(['git', 'commit', '-m', 'Automatic commit by certify_build.'])
         subprocess.run(['git', 'push', 'origin', 'main'])
