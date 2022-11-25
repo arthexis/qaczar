@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# A Python script that does everything.
+# A Python script that does everything by itself.
 # H. V. D. C. by Rafa Guillén (arthexis@gmail.com) 2022-2023
 
 
@@ -165,6 +165,7 @@ def facade_main(env, respond):
     global SITE
     start = time.time()
     emit(f'--*-- Incoming {env["REQUEST_METHOD"]} {env["PATH_INFO"]} from {env["REMOTE_ADDR"]} --*--')
+    # TODO: Facade security. Must be local or include a valid token.
     try:
         layers = [p for p in re.split(r'[/]+', env['PATH_INFO']) if p]
         if len(layers) == 1 and '.' in (fname := layers[0]):  
@@ -276,6 +277,7 @@ def certify_build():
             emit('Roadmap not updated properly.'); sys.exit(1)
         else:
             emit('Roadmap update validated.')
+    # TODO: Store platform information related to each build test.
     # TODO: Check if other seeded files (ie. qaczar.css) are loaded properly.
     run_silently(['git', 'add', '.'])
     run_silently(['git', 'commit', '-m', 'Automatic commit by certify_build.'])
