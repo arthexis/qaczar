@@ -267,7 +267,7 @@ def certify_build():
     roadmap = []
     for ln, line in enumerate(BODY.splitlines()):
         if line.strip().startswith('# TODO:'):
-            roadmap.append(f'@{ln+1:{4}} # TODO: {line.strip()[7:]}')
+            roadmap.append(f'@{ln+1} # TODO: {line.strip()[7:]}')
     roadmap = '\n'.join(roadmap)
     if r := request_facade('roadmap__txt', upload=roadmap):
         emit(f'Facade response to roadmap.txt upload: {r}')
