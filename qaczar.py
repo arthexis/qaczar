@@ -211,8 +211,8 @@ def facade_main(env, resp):
                 if not cmd: yield b'200 Ok.' 
                 else:
                     yield from hyper(f'<!DOCTYPE html><head><title>{SITE}</title>')
-                    if js := palace_recall('qaczar.css'): 
-                        yield from hyper(js.article, 'style')
+                    if css := palace_recall('qaczar.css'): 
+                        yield from hyper(css.article, 'style')
                     yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>')
                     if (links := facade_quick_links(layers)): yield from links
                     # --- Main HTML content starts here. ---
