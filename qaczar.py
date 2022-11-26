@@ -267,7 +267,7 @@ def _facade_wrap_article(found, topic=None, mode='ol'):
     if isinstance(found, str): found = Article('', 0, 0, found)
     assert isinstance(found, Article), f'Invalid article {type(found)=} {found=}.'
     topic = topic or found.topic or 'Untitled'
-    prefix = re.search(r'__|\.([^.]+)$', topic).group(-1) or 'txt'
+    prefix = re.search(r'__|\.([^.]+)$', topic).group(1) or 'txt'
     emit(f'Wrapping {topic=} {prefix=} {found.num=}.')
     if prefix in ('txt', 'css', 'py'):
         content = '<ol><li>' + re.sub(r'\n', r'</li><li>', found.article) + '</li></ol>'
