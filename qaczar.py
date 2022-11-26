@@ -149,6 +149,7 @@ def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
         if not fetch: return rowid
     if found: return Article(topic, found[0], found[1], found[2])  # topic, num, ts, article
 
+Summary = collections.namedtuple('Summary', 'topic num ts article')
 
 def palace_summary():
     global PALACE
@@ -159,7 +160,7 @@ def palace_summary():
         c.execute(f'SELECT num, ts, article FROM {topic} ORDER BY ts DESC LIMIT 1')
         found = c.fetchone()
         # The format of the output is [(topic, count, ts, summary)].
-        if found: yield (topic, found[0], found[1], summary(found[2]))
+        if found: yield Summary(topic, found[0], found[1], summary(found[2]))
 
 
 # V.
@@ -179,6 +180,7 @@ def hyper(text, wrap=None):
         elif isinstance(text, Article): yield from hyper(text.article)
         elif isinstance(text, (list, tuple)): 
             yield from (hyper(c) for c in text)
+        elif isinstance(text, collections.abc.Generator): yield from text
         else: emit(f'Unable to hyper text {type(text)=} {text=}.')
     yield b''
     if wrap: yield f'</{wrap}>'.encode('utf-8') 
@@ -197,30 +199,30 @@ def facade_main(env, resp):
             layers = [p for p in re.split(r'[/]+', path) if p]
             if len(layers) == 1 and '.' in (fname := layers[0]):  
                 if (found := palace_recall(fname, encoding=None)) and (blob := found.article):
-                    iwrapped, mt, = _facade_wrap_file(fname, blob)
+                    iwrapped, mt, = wrap_file(fname, blob)
                     resp('200 OK', [('Content-Type', mt), ('Content-Length', str(len(blob)))])
                     yield from iwrapped
                 else:
                     resp('404 Not Found', [('Content-Type', 'text/plain')])
                     yield b'Not found.'
             else:
-                cmd = _facade_command_form(env, layers)
+                cmd = facade_command_form(env, layers)
                 resp('200 OK', [('Content-type', f'text/html; charset=utf-8')])
                 if not cmd: yield b'200 Ok.' 
                 else:
                     yield from hyper(f'<!DOCTYPE html><head><title>{SITE}</title>')
                     if js := palace_recall('qaczar.css'): 
                         yield from hyper(js.article, 'style')
-                    links = _facade_quick_links(layers)
+                    links = facade_quick_links(layers)
                     yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>' 
                         f'{"".join(links)}{cmd}</nav><main>')
                     # --- Main HTML content starts here. ---
                     if not layers and (overview := palace_recall('roadmap__txt')): 
-                        yield from hyper(_facade_wrap_article(overview))
-                        yield from hyper(_facade_palace_summary())
+                        yield from hyper(wrap_article(overview))
+                        yield from hyper(wrap_summary())
                     for layer in layers:
                         if (found := palace_recall(layer)) and (article := found.article):
-                            yield from hyper(_facade_wrap_article(article, topic=layer))
+                            yield from hyper(wrap_article(article, topic=layer))
                     yield from hyper(
                         f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n ' 
                         f'(arthexis). Served {isotime()}.</footer></body></html>')
@@ -230,25 +232,10 @@ def facade_main(env, resp):
     finally:
         emit(f"Request completed in {int((time.time() - start)*1000)} ms.")
 
-def _facade_wrap_file(fname, article):
-    article = article if isinstance(article, bytes) else article.encode('utf-8')
-    mimetype = mimetypes.guess_type(fname, strict=False)[0] or 'application/octet-stream'
-    assert isinstance(article, bytes), f'File {fname=} {type(article)=} {article=}.'
-    return (article[i:i+1024] for i in range(0, len(article), 1024)), mimetype
-
-def _facade_palace_summary():
-    data = "".join(f"<tr><td>{s[0]}</td><td>{s[1]}</td>"
-        f"<td>{s[2]}</td><td><q>{s[3]}</q></td></tr>" 
-            for s in list(palace_summary()))
-    return (f'<article><table><tr><th>Topic</th>'
-        f'<th>Count</th><th>Timestamp</th><th>Summary</th>' 
-        f'</tr>{data}</table></article>')
-
-def _facade_quick_links(layers):
-    # TODO: Add a link to a more detailed roadmap (research ideas?)
+def facade_quick_links(layers):
     return f'[<a href="/qaczar__py">Source</a>]'
 
-def _facade_command_form(env, layers):
+def facade_command_form(env, layers):
     if env['REQUEST_METHOD'] == 'POST':
         data = env['wsgi.input'].read(int(env.get('CONTENT_LENGTH', 0))).decode('utf-8')
         emit(f'Data received: {layers=} {summary(data)=}')
@@ -261,10 +248,13 @@ def _facade_command_form(env, layers):
     return (f'<form id="cmd-form" method="post">'
         f'<textarea id="cmd" name="cmd" cols=70 rows=1></textarea></form>')
 
-def _facade_wrap_article(found, topic=None, mode='ol'):
-    # TODO: Make sure python scripts are rendered correctly (syntax highlighting).
-    # TODO: Instead of pre tags use html escape and render the text as html.
-    # TODO: Fix invalid article rendering for python scripts.
+def wrap_file(fname, article):
+    article = article if isinstance(article, bytes) else article.encode('utf-8')
+    mimetype = mimetypes.guess_type(fname, strict=False)[0] or 'application/octet-stream'
+    assert isinstance(article, bytes), f'File {fname=} {type(article)=} {article=}.'
+    return (article[i:i+1024] for i in range(0, len(article), 1024)), mimetype
+
+def wrap_article(found, topic=None, mode='ol'):
     assert mode in ('ol', 'ul', 'table'), f'Invalid mode {mode=}.'
     if not found: return None
     if isinstance(found, str): found = Article('', 0, 0, found)
@@ -284,6 +274,12 @@ def _facade_wrap_article(found, topic=None, mode='ol'):
         content = f'<pre>{found.article}</pre>'
     title = f'<h2>Latest {topic.rsplit("__")[0]}</h2>'
     return f'<article>{title}<div>{content}</div></article>'
+
+def wrap_summary():
+    yield f'<table><tr><th>Topic</th><th>Article</th><th>Time</th></tr>'
+    for topic, article, timestamp in summary.articles:
+        yield f'<tr><td>{topic}</td><td>{article}</td><td>{timestamp}</td></tr>'
+    yield f'</table>'
 
 class Unhandler(WSGIRequestHandler):
     def log_request(self, *args, **kwargs): pass
