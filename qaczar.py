@@ -216,11 +216,11 @@ def facade_main(env, resp):
                         f'{"".join(links)}{cmd}</nav><main>')
                     # --- Main HTML content starts here. ---
                     if not layers and (overview := palace_recall('roadmap__txt')): 
-                        yield from hyper(_facade_wrap_article(layer[0], overview))
+                        yield from hyper(_facade_wrap_article(overview))
                         yield from hyper(_facade_palace_summary())
                     for layer in layers:
                         if (found := palace_recall(layer)) and (article := found.article):
-                            yield from hyper(_facade_wrap_article(layer[0], article))
+                            yield from hyper(_facade_wrap_article(article, topic=layer))
                     yield from hyper(
                         f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n ' 
                         f'(arthexis). Served {isotime()}.</footer></body></html>')
@@ -259,14 +259,12 @@ def _facade_command_form(env, layers):
     return (f'<form id="cmd-form" method="post">'
         f'<textarea id="cmd" name="cmd" cols=70 rows=1></textarea></form>')
 
-def _facade_wrap_article(found, mode='ol'):
+def _facade_wrap_article(found, topic=None, mode='ol'):
     # TODO: Make sure python scripts are rendered correctly (syntax highlighting).
     # TODO: Fix invalid article rendering for python scripts.
     assert mode in ('ol', 'ul', 'table'), f'Invalid mode {mode=}.'
     if not found: return None
-    if isinstance(found, str): 
-         # Article = topic, num, ts, article
-        found = Article(found, 0, 0, found)
+    if isinstance(found, str): found = Article('', 0, 0, found)
     assert isinstance(found, Article), f'Invalid article {type(found)=} {found=}.'
     prefix = found.topic.split('__')[-1]
     if prefix in ('txt', 'css', 'py'):
