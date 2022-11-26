@@ -117,6 +117,7 @@ def _plant_seed(c, fname, topic, mtime, encoding):
     
 Article = collections.namedtuple('Article', 'topic num ts article')
 
+# All single-topic palace operations are performed by a single function.
 def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
     global PALACE, TOPICS, DIR
     assert topic and re.match(r'^[a-zA-Z0-9_.]+$', topic), f'Invalid recall {topic=}.'
@@ -149,7 +150,7 @@ def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
         if not fetch: return rowid
     if found: return Article(topic, found[0], found[1], found[2])  # topic, num, ts, article
 
-Summary = collections.namedtuple('Summary', 'topic num ts article')
+TopicSummary = collections.namedtuple('TopicSummary', 'topic num ts article')
 
 def palace_summary():
     global PALACE
@@ -160,7 +161,7 @@ def palace_summary():
         c.execute(f'SELECT num, ts, article FROM {topic} ORDER BY ts DESC LIMIT 1')
         found = c.fetchone()
         # The format of the output is [(topic, count, ts, summary)].
-        if found: yield Summary(topic, found[0], found[1], summary(found[2]))
+        if found: yield TopicSummary(topic, found[0], found[1], summary(found[2]))
 
 
 # V.
@@ -172,21 +173,22 @@ from wsgiref.simple_server import make_server, WSGIRequestHandler
 
 SECRET = secrets.token_bytes()
 
-def hyper(text, wrap=None):
+def encode(text, wrap=None):
     if wrap: yield f'<{wrap}>'.encode('utf-8') 
     if text:
         if isinstance(text, bytes): yield text
         elif isinstance(text, str): yield text.encode('utf-8')
-        elif isinstance(text, Article): yield from hyper(text.article)
+        elif isinstance(text, Article): yield from encode(text.article)
         elif isinstance(text, collections.abc.Iterable): 
-            yield from (hyper(c) for c in text)
-        else: emit(f'Unable to hyper text {type(text)=} {text=}.')
+            yield from (encode(c) for c in text)
+        else: emit(f'Unable to encode {type(text)=} {text=}.')
     else: yield b''
     if wrap: yield f'</{wrap}>'.encode('utf-8') 
 
 # Main entrypoint for the user AND delegates. UI == API.
 # This is the only function allowed to write to the client through HTTP.
-def facade_main(env, resp):
+# TODO: Test calling it from Gunicorn.
+def facade_wsgi_routing(env, resp):
     global SITE
     start = time.time()
     method, path, origin = env["REQUEST_METHOD"], env["PATH_INFO"], env["REMOTE_ADDR"]
@@ -210,23 +212,23 @@ def facade_main(env, resp):
                 resp('200 OK', [('Content-type', f'text/html; charset=utf-8')])
                 if not cmd: yield b'200 Ok.' 
                 else:
-                    yield from hyper(f'<!DOCTYPE html><head><title>{SITE}</title>')
+                    yield from encode(f'<!DOCTYPE html><head><title>{SITE}</title>')
                     if css := palace_recall('qaczar__css'): 
-                        yield from hyper(css.article, 'style')
-                    yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>')
+                        yield from encode(css.article, 'style')
+                    yield from encode(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>')
                     if (links := facade_quick_links(layers)): yield from links
                     # --- Main HTML content starts here. ---
                     if not layers and (overview := palace_recall('roadmap__txt')): 
-                        yield from hyper(wrap_palace_article(overview))
-                        yield from hyper(wrap_palace_summary())
+                        yield from encode(wrap_palace_article(overview))
+                        yield from encode(wrap_palace_summary())
                     for layer in layers:
                         if (found := palace_recall(layer)) and (article := found.article):
-                            yield from hyper(wrap_palace_article(article, topic=layer))
-                    yield from hyper(
+                            yield from encode(wrap_palace_article(article, topic=layer))
+                    yield from encode(
                         f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n ' 
                         f'(arthexis). Served {isotime()}.</footer></body></html>')
                     if js := palace_recall('qaczar__js'): 
-                        yield from hyper(js.article, 'script')
+                        yield from encode(js.article, 'script')
     # Don't catch exceptions here, or they will be hidden in the logs.
     finally:
         emit(f"Request completed in {int((time.time() - start)*1000)} ms.")
@@ -289,7 +291,7 @@ if __name__ == "__main__" and RUNLEVEL == 2:
     PORT = int(PORT)
     palace_recall('qaczar__py', store=BODY)
     # TODO: Add another delegate to generate SSL certificates if missing.
-    with make_server(HOST, PORT, facade_main, handler_class=Unhandler) as s:
+    with make_server(HOST, PORT, facade_wsgi_routing, handler_class=Unhandler) as s:
         emit(f'Facade ready. Serving on http://{HOST}:{PORT}/')
         create_fork(sys.argv[1], 'certify_build')
         s.serve_forever(poll_interval=1)
