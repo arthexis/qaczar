@@ -194,7 +194,7 @@ def facade_main(env, resp):
     try:
         if origin != '127.0.0.1':
             emit(f'Invalid remote address {origin}.')
-            resp('403 Forbidden', [('Content-Type', 'text/plain')]); yield b''
+            resp(b'403 Forbidden', [('Content-Type', 'text/plain')]); yield b''
         else:
             layers = [p for p in re.split(r'[/]+', path) if p]
             if len(layers) == 1 and '.' in (fname := layers[0]):  
