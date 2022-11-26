@@ -185,6 +185,7 @@ def hyper(text, wrap=None):
     if wrap: yield f'</{wrap}>'.encode('utf-8') 
 
 # Main entrypoint for the user AND delegates. UI == API.
+# This is the only function allowed to write to the client through HTTP.
 def facade_main(env, resp):
     global SITE
     start = time.time()
