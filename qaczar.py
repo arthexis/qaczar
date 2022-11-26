@@ -164,6 +164,7 @@ def palace_summary():
 
 # V.
 
+import html
 import secrets
 import urllib.parse
 from wsgiref.simple_server import make_server, WSGIRequestHandler
@@ -260,6 +261,7 @@ def _facade_command_form(env, layers):
 
 def _facade_wrap_article(found, topic=None, mode='ol'):
     # TODO: Make sure python scripts are rendered correctly (syntax highlighting).
+    # TODO: Instead of pre tags use html escape and render the text as html.
     # TODO: Fix invalid article rendering for python scripts.
     assert mode in ('ol', 'ul', 'table'), f'Invalid mode {mode=}.'
     if not found: return None
@@ -269,8 +271,9 @@ def _facade_wrap_article(found, topic=None, mode='ol'):
     prefix = re.search(r'__|\.([^.]+)$', topic).group(1) or 'txt'
     emit(f'Wrapping {topic=} {prefix=} {found.num=}.')
     if prefix in ('txt', 'css', 'py'):
+        article = html.escape(found.article)
         content = ('<ol><li><code>' + 
-            re.sub(r'\n', r'</code></li><li><code>', found.article) + '</code></li></ol>')
+            re.sub(r'\n', r'</code></li><li><code>', article) + '</code></li></ol>')
         content = re.sub(r'<code>#', r'<q>#', content)
         content = re.sub(r'  ', r'&nbsp;', content)
     elif prefix == 'html':
