@@ -225,7 +225,7 @@ def facade_main(env, resp):
                     yield from hyper(
                         f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n ' 
                         f'(arthexis). Served {isotime()}.</footer></body></html>')
-                    if js := palace_recall('qaczar.js'): 
+                    if js := palace_recall('qaczar__js'): 
                         yield from hyper(js.article, 'script')
     # Don't catch exceptions here, or they will be hidden in the logs.
     finally:
