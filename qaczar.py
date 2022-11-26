@@ -181,7 +181,7 @@ def hyper(text, wrap=None):
         elif isinstance(text, collections.abc.Iterable): 
             yield from (hyper(c) for c in text)
         else: emit(f'Unable to hyper text {type(text)=} {text=}.')
-    yield b''
+    else: yield b''
     if wrap: yield f'</{wrap}>'.encode('utf-8') 
 
 # Main entrypoint for the user AND delegates. UI == API.
