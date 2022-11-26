@@ -178,7 +178,7 @@ def hyper(text, wrap=None):
         if isinstance(text, bytes): yield text
         elif isinstance(text, str): yield text.encode('utf-8')
         elif isinstance(text, Article): yield from hyper(text.article)
-        elif isinstance(text, (list, tuple, collections.abc.Generator)): 
+        elif isinstance(text, collections.abc.Iterable): 
             yield from (hyper(c) for c in text)
         else: emit(f'Unable to hyper text {type(text)=} {text=}.')
     yield b''
@@ -198,7 +198,7 @@ def facade_main(env, resp):
             layers = [p for p in re.split(r'[/]+', path) if p]
             if len(layers) == 1 and '.' in (fname := layers[0]):  
                 if (found := palace_recall(fname, encoding=None)) and (blob := found.article):
-                    iwrapped, mt, = wrap_file(fname, blob)
+                    iwrapped, mt, = wrap_palace_file(fname, blob)
                     resp('200 OK', [('Content-Type', mt), ('Content-Length', str(len(blob)))])
                     yield from iwrapped
                 else:
@@ -212,16 +212,15 @@ def facade_main(env, resp):
                     yield from hyper(f'<!DOCTYPE html><head><title>{SITE}</title>')
                     if js := palace_recall('qaczar.css'): 
                         yield from hyper(js.article, 'style')
-                    links = facade_quick_links(layers)
-                    yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>' 
-                        f'{"".join(links)}{cmd}</nav><main>')
+                    yield from hyper(f'</head><body><nav><h1><a href="/">{SITE}</a>!</h1>')
+                    if (links := facade_quick_links(layers)): yield from links
                     # --- Main HTML content starts here. ---
                     if not layers and (overview := palace_recall('roadmap__txt')): 
-                        yield from hyper(wrap_article(overview))
-                        yield from hyper(wrap_summary())
+                        yield from hyper(wrap_palace_article(overview))
+                        yield from hyper(wrap_palace_summary())
                     for layer in layers:
                         if (found := palace_recall(layer)) and (article := found.article):
-                            yield from hyper(wrap_article(article, topic=layer))
+                            yield from hyper(wrap_palace_article(article, topic=layer))
                     yield from hyper(
                         f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n ' 
                         f'(arthexis). Served {isotime()}.</footer></body></html>')
@@ -247,13 +246,13 @@ def facade_command_form(env, layers):
     return (f'<form id="cmd-form" method="post">'
         f'<textarea id="cmd" name="cmd" cols=70 rows=1></textarea></form>')
 
-def wrap_file(fname, article):
+def wrap_palace_file(fname, article):
     article = article if isinstance(article, bytes) else article.encode('utf-8')
     mimetype = mimetypes.guess_type(fname, strict=False)[0] or 'application/octet-stream'
     assert isinstance(article, bytes), f'File {fname=} {type(article)=} {article=}.'
     return (article[i:i+1024] for i in range(0, len(article), 1024)), mimetype
 
-def wrap_article(found, topic=None, mode='ol'):
+def wrap_palace_article(found, topic=None, mode='ol'):
     assert mode in ('ol', 'ul', 'table'), f'Invalid mode {mode=}.'
     if not found: return None
     if isinstance(found, str): found = Article('', 0, 0, found)
@@ -274,7 +273,7 @@ def wrap_article(found, topic=None, mode='ol'):
     title = f'<h2>Latest {topic.rsplit("__")[0]}</h2>'
     return f'<article>{title}<div>{content}</div></article>'
 
-def wrap_summary():
+def wrap_palace_summary():
     yield f'<table><tr><th>Topic</th><th>Article</th><th>Time</th></tr>'
     for topic, article, timestamp in summary.articles:
         yield f'<tr><td>{topic}</td><td>{article}</td><td>{timestamp}</td></tr>'
