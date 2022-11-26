@@ -243,8 +243,7 @@ def _facade_palace_summary():
         f'</tr>{data}</table></article>')
 
 def _facade_quick_links(layers):
-    # TODO: Make links shorter and more readable. Remove unnecessary ones.
-    # We still need to figure out what makes a link usefull.
+    # TODO: Add a link to a more detailed roadmap (research ideas?)
     return f'[<a href="/qaczar__py">Source</a>]'
 
 def _facade_command_form(env, layers):
@@ -261,13 +260,13 @@ def _facade_command_form(env, layers):
         f'<textarea id="cmd" name="cmd" cols=70 rows=1></textarea></form>')
 
 def _facade_wrap_article(found, mode='ol'):
-    # TODO: Implement the option to show the article as a table.
+    # TODO: Make sure python scripts are rendered correctly (syntax highlighting).
+    # TODO: Fix invalid article rendering for python scripts.
     assert mode in ('ol', 'ul', 'table'), f'Invalid mode {mode=}.'
     if not found: return None
     assert isinstance(found, Article), f'Invalid article {type(found)=} {found=}.'
     prefix = found.topic.split('__')[-1]
     if prefix in ('txt', 'css', 'py'):
-        # TODO: Add a colorization and linkification function.
         content = '<ol><li>' + re.sub(r'\n', r'</li><li>', found.article) + '</li></ol>'
     elif prefix == 'html':
         content = f'<div>{found.article}</div>'
