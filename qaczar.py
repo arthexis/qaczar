@@ -272,8 +272,9 @@ def _facade_wrap_article(found, topic=None, mode='ol'):
     if prefix in ('txt', 'css', 'py'):
         content = ('<ol><li><code>' + 
             re.sub(r'\n', r'</code></li><li><code>', found.article) + '</code></li></ol>')
-        # If the line is a comment, replace code with q
         content = re.sub(r'<code>#', r'<q>#', content)
+        # Replace two blank spaces with a non-breaking space.
+        content = re.sub(r'  ', r'&nbsp;&nbsp;', content)
     elif prefix == 'html':
         content = f'<div>{found.article}</div>'
     else:
