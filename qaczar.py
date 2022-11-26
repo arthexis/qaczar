@@ -178,9 +178,8 @@ def hyper(text, wrap=None):
         if isinstance(text, bytes): yield text
         elif isinstance(text, str): yield text.encode('utf-8')
         elif isinstance(text, Article): yield from hyper(text.article)
-        elif isinstance(text, (list, tuple)): 
+        elif isinstance(text, (list, tuple, collections.abc.Generator)): 
             yield from (hyper(c) for c in text)
-        elif isinstance(text, collections.abc.Generator): yield from text
         else: emit(f'Unable to hyper text {type(text)=} {text=}.')
     yield b''
     if wrap: yield f'</{wrap}>'.encode('utf-8') 
