@@ -274,7 +274,7 @@ def _facade_wrap_article(found, topic=None, mode='ol'):
             re.sub(r'\n', r'</code></li><li><code>', found.article) + '</code></li></ol>')
         content = re.sub(r'<code>#', r'<q>#', content)
         # Replace two blank spaces with a non-breaking space.
-        content = re.sub(r'  ', r'&nbsp;&nbsp;', content)
+        content = re.sub(r'  ', r'&nbsp;', content)
     elif prefix == 'html':
         content = f'<div>{found.article}</div>'
     else:
