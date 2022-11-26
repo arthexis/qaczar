@@ -21,9 +21,6 @@ RUNLEVEL = len(sys.argv)
 DIR = os.path.dirname(__file__)
 BRANCH = 'main'
 
-# TODO: Pensar en algo para impresionar a Carlos.
-
-
 def isotime(t=None): 
     return time.strftime('%Y-%m-%d %H:%M:%S', t or time.gmtime())
 
