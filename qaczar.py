@@ -266,6 +266,7 @@ def _facade_wrap_article(found, topic=None, mode='ol'):
     if not found: return None
     if isinstance(found, str): found = Article('', 0, 0, found)
     assert isinstance(found, Article), f'Invalid article {type(found)=} {found=}.'
+    topic = topic or found.topic or 'Untitled'
     prefix = found.topic.split('__')[-1]
     if prefix in ('txt', 'css', 'py'):
         content = '<ol><li>' + re.sub(r'\n', r'</li><li>', found.article) + '</li></ol>'
@@ -273,7 +274,7 @@ def _facade_wrap_article(found, topic=None, mode='ol'):
         content = f'<div>{found.article}</div>'
     else:
         content = f'<pre>{found.article}</pre>'
-    title = f'<h2>Latest {found.topic.rsplit("__")[0]}</h2>'
+    title = f'<h2>Latest {topic.rsplit("__")[0]}</h2>'
     return f'<article>{title}<div>{content}</div></article>'
 
 class Unhandler(WSGIRequestHandler):
