@@ -270,8 +270,8 @@ def _facade_wrap_article(found, topic=None, mode='ol'):
     prefix = re.search(r'__|\.([^.]+)$', topic).group(1) or 'txt'
     emit(f'Wrapping {topic=} {prefix=} {found.num=}.')
     if prefix in ('txt', 'css', 'py'):
-        content = ('<ol><li><pre>' + 
-            re.sub(r'\n', r'</pre></li><li><pre>', found.article) + '</pre></li></ol>')
+        content = ('<ol><li><code>' + 
+            re.sub(r'\n', r'</code></li><li><code>', found.article) + '</code></li></ol>')
     elif prefix == 'html':
         content = f'<div>{found.article}</div>'
     else:
