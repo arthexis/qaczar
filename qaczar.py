@@ -148,7 +148,7 @@ def palace_recall(topic, /, fetch=True, store=None, encoding='utf-8'):
             PALACE.commit()
             emit(f'Insert comitted {topic=} {rowid=}.')
         if not fetch: return rowid
-    if found: return Article(topic, found[0], found[1], found[2]) 
+    if found: return Article(topic, found[0], found[1], found[2])  # topic, num, ts, article
 
 
 def palace_summary():
@@ -216,11 +216,11 @@ def facade_main(env, resp):
                         f'{"".join(links)}{cmd}</nav><main>')
                     # --- Main HTML content starts here. ---
                     if not layers and (overview := palace_recall('roadmap__txt')): 
-                        yield from hyper(_facade_wrap_article(overview))
+                        yield from hyper(_facade_wrap_article(layer[0], overview))
                         yield from hyper(_facade_palace_summary())
                     for layer in layers:
                         if (found := palace_recall(layer)) and (article := found.article):
-                            yield from hyper(_facade_wrap_article(article))
+                            yield from hyper(_facade_wrap_article(layer[0], article))
                     yield from hyper(
                         f'</main><footer>A programmable grimoire by Rafa Guill&eacute;n ' 
                         f'(arthexis). Served {isotime()}.</footer></body></html>')
@@ -264,6 +264,9 @@ def _facade_wrap_article(found, mode='ol'):
     # TODO: Fix invalid article rendering for python scripts.
     assert mode in ('ol', 'ul', 'table'), f'Invalid mode {mode=}.'
     if not found: return None
+    if isinstance(found, str): 
+         # Article = topic, num, ts, article
+        found = Article(found, 0, 0, found)
     assert isinstance(found, Article), f'Invalid article {type(found)=} {found=}.'
     prefix = found.topic.split('__')[-1]
     if prefix in ('txt', 'css', 'py'):
