@@ -8,14 +8,16 @@
 # 1. Keep the width to less than 100 characters.
 # 2. Use functions to provide modularity and information hiding.
 
-
 import os
 import sys
 import time
 import atexit
 import subprocess
 
+# We don't import everything at the start to keep the runtime of 
+# the crown (watcher) as simple as possible. Later we can import more modules.
 
+# This is the name that will appear on the title of the website.
 SITE = 'qaczar.com'
 RUNLEVEL = len(sys.argv)
 DIR = os.path.dirname(__file__)
@@ -33,13 +35,15 @@ def fread(fn, e='utf-8'):
     except FileNotFoundError: return None 
 
 BODY = fread(__file__)
-assert BODY, 'Bodyplan not found.'
+assert BODY, 'Bodyplan not found.'  # A rollback or mutation went wrong?
 
 
 # C.
 
 HOST, PORT = os.environ.get('HOSTNAME', 'localhost'), 8080 
 
+# Creates a copy of ourselves with different arguments.
+# If an old process is provided, it will be terminated gently first.
 def create_fork(*args, old=None):
     assert len(args) > 0
     if old is not None:
@@ -52,7 +56,11 @@ def create_fork(*args, old=None):
     emit(f"Created fork {' '.join(str(a) for a in args)} {s.pid=}.")
     return s
 
-def watch_over(s):  # aka. The Crown
+# aka. The Crown
+# Watch over s to ensure it never dies. If it does, create a new one.
+# If the source changes, kill s and start a new one with the same params.
+# If the new copy fails, abort and investigate the error.
+def watch_over(s):  
     global BODY
     while True:
         stable, mtime = True, os.path.getmtime(__file__)
@@ -73,6 +81,9 @@ def watch_over(s):  # aka. The Crown
                 sys.exit(1)
             stable = True
 
+# RUNLEVEL will only be greater than 0 when qaczar.py is executing.
+# (ie. not when it is being imported by another script).
+# Each subsequent runlevel represents a deeper level of fork recursion.
 if __name__ == "__main__" and RUNLEVEL == 1:
     emit('----------------------------------------')
     try:    
