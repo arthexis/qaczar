@@ -237,9 +237,11 @@ def _facade_wrap_file(fname, article):
     return (article[i:i+1024] for i in range(0, len(article), 1024)), mimetype
 
 def _facade_palace_summary():
-    data = "".join(f"<tr><td>{s[0]}</td><td>{s[1]}</td><td>{s[2]}</td><td><q>{s[3]}</q></td></tr>" 
-        for s in list(palace_summary()))
-    return (f'<article><table><tr><th>Topic</th><th>Count</th><th>Timestamp</th><th>Summary</th>' 
+    data = "".join(f"<tr><td>{s[0]}</td><td>{s[1]}</td>"
+        f"<td>{s[2]}</td><td><q>{s[3]}</q></td></tr>" 
+            for s in list(palace_summary()))
+    return (f'<article><table><tr><th>Topic</th>'
+        f'<th>Count</th><th>Timestamp</th><th>Summary</th>' 
         f'</tr>{data}</table></article>')
 
 def _facade_quick_links(layers):
