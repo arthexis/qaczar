@@ -330,6 +330,7 @@ def facade_wsgi_responder(env, start_response):
             if not w: start_response('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
             yield from html_doc_stream(articles, form)
     emit(f"Request completed at {round(time.time() - start, 2)} % capacity.")
+    return w
 
 class Unhandler(wsgiref.simple_server.WSGIRequestHandler):
     def log_request(self, *args, **kwargs): pass
