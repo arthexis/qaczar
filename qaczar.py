@@ -222,8 +222,9 @@ SECRET = secrets.token_bytes()
 
 # Functions useful for sending binary data in HTTP responses.
 
-def generate_table(headers, rows):
+def generate_table(headers, rows, title=None):
     # The output should already be binary encoded for performance.
+    if title: yield f'<h2>{title}</h2>'.encode('utf-8')
     yield b'<table><tr>'
     for h in headers.keys(): yield f'<th>{h}</th>'.encode('utf-8')
     yield b'</tr>'
@@ -279,7 +280,7 @@ def article_combinator(articles):
     headers = {'Topic': 'a', 'Ver': None, 'Last': 'time', 'Summary': 'q'}
     for article in articles:
         if not article: continue
-    tables = (x for x in generate_table(headers, palace_summary()))
+    tables = (x for x in generate_table(headers, palace_summary(), 'Palace Summary'))
     yield from hyper(tables, wrap='article')
 
 # Main user interface, rendered dynamically based user input.
