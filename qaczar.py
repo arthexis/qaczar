@@ -297,8 +297,8 @@ def facade_wsgi_responder(env, respond):
             if i == 0:
                 if article and len(topics) == 1 and '.' in topic:
                     emit(f'Found {topic=} {article.ctype}')
-                    respond('200 OK', [('Content-Type', article.ctype, 
-                            'Content-Length', str(len(article.content)))])
+                    respond('200 OK', [('Content-Type', article.ctype), 
+                            ('Content-Length', str(len(article.content)))])
                     yield from stream; break
                 else:
                     form, redirect = process_forms(env, topic)
