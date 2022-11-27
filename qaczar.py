@@ -233,7 +233,7 @@ def hyper(content, wrap=None, iwrap=None, href=None):
         elif isinstance(content, str): yield content.encode('utf-8')
         elif isinstance(content, Article): yield from hyper(content.content)
         elif isinstance(content, (list, tuple, collections.abc.Generator)): 
-            yield from (hyper(c, wrap=iwrap) for c in content)
+            for c in content: yield from hyper(c, wrap=iwrap)
         else: emit(f'Unable to encode {type(content)=} {content=}.')
     else: yield b''
     if href: yield '</a>'.encode('utf-8')
