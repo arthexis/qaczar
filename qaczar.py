@@ -255,7 +255,7 @@ def process_forms(env, topic):
         return None, False
     elif method == 'GET':        
         return ('<form id="query-form" method="get">'
-                '<textarea id="query-field" name="q" cols=70 rows=1></textarea></form>'
+                '<input type="text" id="query-field" name="q" cols=70 rows=1></input></form>'
                 '<div id="query-output"></div>'), False
 
 # Main user interface, rendered dynamically based user input.
