@@ -156,13 +156,13 @@ Article = collections.namedtuple('Article', 'topic ver ts content ctype')
 def palace_recall(topic, /, fetch=True, store=None):
     global PALACE, TOPICS, DIR
     assert topic, 'No topic provided.'
-    table, ts, sql = topic.replace('.', '__'), isotime(), None
+    table, ts, sql = 'top_' + topic.replace('.', '__'), isotime(), None
     if isinstance(store, str): store = store.encode('utf-8')
     c = PALACE.cursor()
     try:
         if not TOPICS:
             c.execute(sql := 'SELECT name FROM sqlite_master ' 
-                    'WHERE type="table" AND name not LIKE "sqlite_%"')
+                    'WHERE type="table" AND name LIKE "top_%"')
             for t in c.fetchall(): 
                 TOPICS[t[0]] = guess_ctype(t[0])
         if topic not in TOPICS:
@@ -203,13 +203,14 @@ def palace_summary():
     global PALACE
     c = PALACE.cursor()
     c.execute('SELECT name FROM sqlite_master WHERE type="table" '
-            'AND name not LIKE "sqlite_%"')
+            'AND name LIKE "top_%"')
     for t in c.fetchall():
+        topic = t[0][4:]
         found = c.execute(f"SELECT MAX(ver), MAX(ts), length(content) || ' bytes' "
             f'FROM {t[0]} GROUP BY ts ORDER BY ts DESC ').fetchone()
         if found: 
-            content = f'{TOPICS[t[0]] or "application/octet-stream"} ({found[2]}).'
-            yield TopicSummary(t[0], found[0], found[1], content)
+            content = f'{TOPICS[topic] or "application/octet-stream"} ({found[2]}).'
+            yield TopicSummary(topic, found[0], found[1], content)
     c.close()
 
 
