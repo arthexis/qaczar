@@ -200,15 +200,14 @@ def palace_recall(topic, /, fetch=True, store=None):
 TopicSummary = collections.namedtuple('TopicSummary', 'topic qty ts summary')
 
 def palace_summary():
+    # TODO: Test this function (palace_summary).
     global PALACE
     c = PALACE.cursor()
     c.execute('SELECT name FROM sqlite_master WHERE type="table" '
             'AND name not LIKE "sqlite_%"')
     for t in c.fetchall():
-        # Each row is a TopicSummary object. Qty requires a group by.
-        yield TopicSummary(t[0], *c.execute(f'SELECT COUNT(*), MAX(ts), '
-                f'SUBSTR(content, 0, 54) FROM {t[0]} GROUP BY ts').fetchone())
-
+        yield TopicSummary(t[0], *c.execute(f'SELECT COUNT(*), MAX(ts), SUBSTR(content, 0, 54) '
+            f'FROM {t[0]} GROUP BY ts ORDER BY ts DESC ').fetchone())
     c.close()
 
 
