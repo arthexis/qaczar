@@ -322,7 +322,7 @@ def facade_wsgi_responder(env, start_response):
                 if article and len(topics) == 1 and '.' in topic:
                     size = len(article.content)
                     write = start_response('200 OK', http_headers(article.ctype, size=size))
-                    for part in stream: write(part)
+                    yield from stream
                 else:
                     form, redirect = process_forms(env, topic)
                     if redirect:
@@ -332,7 +332,7 @@ def facade_wsgi_responder(env, start_response):
             # An actual use case for the else clause of a for loop.
             if not write: 
                 write = start_response('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
-            for part in html_doc_stream(articles, form): write(part)
+            yield from  html_doc_stream(articles, form)
     emit(f"Request completed at {round(time.time() - start, 2)} % capacity.")
 
 class Unhandler(wsgiref.simple_server.WSGIRequestHandler):
