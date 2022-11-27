@@ -198,7 +198,7 @@ def palace_recall(topic, /, fetch=True, store=None):
         emit(f'Palace error {e=} {sql=}'); raise
     c.close()
 
-TopicSummary = collections.namedtuple('TopicSummary', 'topic fname ver ts summary')
+TopicSummary = collections.namedtuple('TopicSummary', 'topic ver ts summary')
 
 def palace_summary():
     global PALACE
@@ -208,7 +208,8 @@ def palace_summary():
     for t in c.fetchall():
         found = c.execute(f'SELECT MAX(ver), MAX(ts), SUBSTR(content, 0, 54) '
             f'FROM {t[0]} GROUP BY ts ORDER BY ts DESC ').fetchone()
-        if found: yield TopicSummary(t[0], t[0].replace('__', '.'), *found)
+        # Split the topic name into a file name and a topic name.
+        if found: yield TopicSummary(t[0], *found)
     c.close()
 
 
@@ -233,7 +234,8 @@ def generate_table(headers, rows, title=None):
         for c, t in zip(r, headers.values()):
             # TODO: New type of table column for download links.
             if t is None: yield f'<td>{c}</td>'.encode('utf-8')
-            elif t == 'a': yield f'<td><a href="{c}">{c}</a></td>'.encode('utf-8')
+            elif t == 'a': 
+                yield f'<td><a href="{c}">{c}</a></td>'.encode('utf-8')
             else: yield f'<td><{t}>{c}</{t}></td>'.encode('utf-8')
         yield b'</tr>'
     yield b'</table>'
@@ -279,7 +281,7 @@ def process_forms(env, topic):
 def article_combinator(articles):
     if not articles:
         # This is the overview page, when no topic is specified.
-        headers = {'Topic': 'a', 'File': 'a', 'Ver': None, 'Last': 'time', 'Summary': 'q'}
+        headers = {'Topic': 'a', 'Ver': None, 'Last': 'time', 'Summary': 'q'}
         g = (x for x in generate_table(headers, palace_summary(), 'Palace Summary'))
         yield from hyper(g, wrap='article')
         articles = {palace_recall('roadmap.txt')}
