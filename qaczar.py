@@ -332,7 +332,9 @@ def facade_wsgi_responder(env, start_response):
             # An actual use case for the else clause of a for loop.
             if not write: 
                 write = start_response('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
-            for part in html_doc_stream(articles, form): write(part)
+            for part in html_doc_stream(articles, form): 
+                emit(f'Writing {len(part)=} bytes.')
+                write(part)
     emit(f"Request completed at {round(time.time() - start, 2)} % capacity.")
     return write
 
