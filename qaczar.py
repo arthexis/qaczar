@@ -352,7 +352,6 @@ def certify_build():
             ['git', 'add', '.'],
             ['git', 'commit', '-m', 'Automatic commit by certify_build.'],
             ['git', 'push', 'origin', BRANCH])
-    emit(f'Git sync complete ({last_result=}).')
     return last_result
 
 if __name__ == "__main__" and RUNLEVEL == 3:
