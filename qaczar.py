@@ -161,40 +161,43 @@ def palace_recall(topic, /, fetch=True, store=None):
     table, ts, sql = topic.replace('.', '__'), isotime(), None
     if isinstance(store, str): store = store.encode('utf-8')
     c = PALACE.cursor()
-    if not TOPICS:
-        c.execute(sql := 'SELECT name FROM sqlite_master ' 
-                'WHERE type="table" AND name not LIKE "sqlite_%"')
-        for t in c.fetchall(): 
-            TOPICS[t[0]] = guess_ctype(t[0])
-    if topic not in TOPICS:
-        c.execute(sql := f'CREATE TABLE IF NOT EXISTS {table} ('
-                f'ver INTEGER PRIMARY KEY AUTOINCREMENT, '
-                f'ts TEXT, content BLOB, md5 TEXT, mtime INTEGER)')
-        mtime, seed = seed_mtime(topic)
-        if seed:
-            c.execute(sql := f'INSERT INTO {table} (ts, content, md5, mtime) '
-                    f'VALUES (?, ?, ?, ?)', (ts, seed, md5_digest(seed), mtime))
+    try:
+        if not TOPICS:
+            c.execute(sql := 'SELECT name FROM sqlite_master ' 
+                    'WHERE type="table" AND name not LIKE "sqlite_%"')
+            for t in c.fetchall(): 
+                TOPICS[t[0]] = guess_ctype(t[0])
+        if topic not in TOPICS:
+            c.execute(sql := f'CREATE TABLE IF NOT EXISTS {table} ('
+                    f'ver INTEGER PRIMARY KEY AUTOINCREMENT, '
+                    f'ts TEXT, content BLOB, md5 TEXT, mtime INTEGER)')
+            mtime, seed = seed_mtime(topic)
+            if seed:
+                c.execute(sql := f'INSERT INTO {table} (ts, content, md5, mtime) '
+                        f'VALUES (?, ?, ?, ?)', (ts, seed, md5_digest(seed), mtime))
+                PALACE.commit()
+            TOPICS[topic] = guess_ctype(topic)
+        found = c.execute(sql := f'SELECT ver, ts, content, md5, mtime FROM {table} '
+                f'ORDER BY ts DESC LIMIT 1').fetchone() if fetch else None
+        if found and found[4]:
+            mtime, seed = seed_mtime(topic, found[4])
+            if seed and (new_seed_md5 := md5_digest(seed)) != found[3]:
+                c.execute(sql := f'INSERT INTO {table} (ts, content, md5, mtime) '
+                        f'VALUES (?, ?, ?, ?)', (ts, seed, new_seed_md5, mtime))
+                PALACE.commit()
+                found = c.execute(sql := f'SELECT ver, ts, content, md5, mtime FROM {table} '
+                        f'ORDER BY ts DESC LIMIT 1').fetchone()
+        store_md5 = md5_digest(store)
+        if store and (not found or found[3] != store_md5):
+            c.execute(sql :=f'INSERT INTO {table} (ts, content, md5, mtime) '
+                    f'VALUES (?, ?, ?, ?)', (ts, store, store_md5, 0))
+            emit(f'Insert commited {topic=} {len(store)=}.')
             PALACE.commit()
-        TOPICS[topic] = guess_ctype(topic)
-    found = c.execute(sql := f'SELECT ver, ts, content, md5, mtime FROM {table} '
-            f'ORDER BY ts DESC LIMIT 1').fetchone() if fetch else None
-    if found and found[4]:
-        mtime, seed = seed_mtime(topic, found[4])
-        if seed and (new_seed_md5 := md5_digest(seed)) != found[3]:
-            c.execute(sql := f'INSERT INTO {table} (ts, content, md5, mtime) '
-                    f'VALUES (?, ?, ?, ?)', (ts, seed, new_seed_md5, mtime))
-            PALACE.commit()
-            found = c.execute(sql := f'SELECT ver, ts, content, md5, mtime FROM {table} '
-                    f'ORDER BY ts DESC LIMIT 1').fetchone()
-    store_md5 = md5_digest(store)
-    if store and (not found or found[3] != store_md5):
-        c.execute(sql :=f'INSERT INTO {table} (ts, content, md5, mtime) '
-                f'VALUES (?, ?, ?, ?)', (ts, store, store_md5, 0))
-        emit(f'Insert commited {topic=} {len(store)=}.')
-        PALACE.commit()
-    if found: 
-        # Never return the row directly, it's a sqlite3.Row object.
-        return Article(topic, found[0], found[1], found[2], TOPICS[topic])
+        if found: 
+            # Never return the row directly, it's a sqlite3.Row object.
+            return Article(topic, found[0], found[1], found[2], TOPICS[topic])
+    except sqlite3.Error as e:
+        emit(f'Palace error {e=} {sql=}'); raise
     c.close()
 
 TopicSummary = collections.namedtuple('TopicSummary', 'topic qty ts summary')
@@ -307,6 +310,7 @@ def facade_wsgi_responder(env, respond):
         for i, topic in enumerate(topics):
             topic = topic.replace('-', '_')
             article, stream = content_stream(env, topic)
+            articles.add(article)
             if i == 0:
                 if article and len(topics) == 1 and '.' in topic:
                     ctype = article.ctype or 'application/octet-stream'
@@ -321,7 +325,6 @@ def facade_wsgi_responder(env, respond):
                         yield b''; break
                     else:
                         respond('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
-            articles.add(article)
         else:
             # I am so happy I found a use case for the else clause of a for loop.
             yield from html_doc_stream(articles, form)
