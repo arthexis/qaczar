@@ -232,6 +232,7 @@ def format_table(headers, rows, title=None):
     for r in rows:
         yield b'<tr>'
         for c, t in zip(r, headers.values()):
+            c = c.decode('utf-8') if isinstance(c, bytes) else c
             if t is None: yield f'<td>{c}</td>'.encode('utf-8')
             elif t == 'a': 
                 yield f'<td><a href="{c}">{c}</a></td>'.encode('utf-8')
