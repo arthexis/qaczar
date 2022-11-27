@@ -326,7 +326,7 @@ def facade_wsgi_responder(env, respond):
                         yield b''; break
                     else:
                         respond('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
-            articles.add(article)
+            if article: articles.add(article)
         else:
             # I am so happy I found a use case for the else clause of a for loop.
             emit(f'Generating HTML document {articles=}.')
