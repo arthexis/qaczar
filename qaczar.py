@@ -164,7 +164,8 @@ def palace_recall(topic, /, fetch=True, store=None):
             c.execute(sql := 'SELECT name FROM sqlite_master ' 
                     'WHERE type="table" AND name LIKE "top_%"')
             for t in c.fetchall(): 
-                TOPICS[t[0]] = guess_ctype(t[0])
+                topic = t[0][4:]
+                TOPICS[topic] = guess_ctype(topic)
         if topic not in TOPICS:
             c.execute(sql := f'CREATE TABLE IF NOT EXISTS {table} ('
                     f'ver INTEGER PRIMARY KEY AUTOINCREMENT, '
