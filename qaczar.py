@@ -195,8 +195,6 @@ def palace_recall(topic, /, fetch=True, store=None):
             PALACE.commit()
         if found: 
             return Article(topic, found[0], found[1], found[2], TOPICS[topic])
-        elif fetch:
-            emit(f'No articles for {topic=}.')
     except sqlite3.Error as e:
         emit(f'Palace error {e=} {sql=}'); raise
     c.close()
@@ -294,9 +292,7 @@ def html_doc_stream(articles, form):
     if links: yield from hyper(links, wrap='ul', iwrap='li')
     if form: yield from hyper(form)
     yield from hyper('</nav><main>')
-    # TODO: Add a function to generate the main content.
-    # TODO: The generator used depends on the number of articles combined.
-
+    if articles: yield from article_combinator(articles)
     yield from hyper('</main><footer>')
     yield from hyper(f'An hypertext grimoire. Served on {isotime()}.', wrap='p')
     yield from hyper('</footer></body></html>')
