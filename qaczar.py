@@ -208,8 +208,7 @@ def palace_summary():
     for t in c.fetchall():
         found = c.execute(f'SELECT MAX(ver), MAX(ts), SUBSTR(content, 0, 54) '
             f'FROM {t[0]} GROUP BY ts ORDER BY ts DESC ').fetchone()
-        if found: yield TopicSummary(t[0], found[0], found[1], 
-                re.sub(r'[^\x20-\x7e]', ' ', found[2]))
+        if found: yield TopicSummary(t[0], *found)
     c.close()
 
 
