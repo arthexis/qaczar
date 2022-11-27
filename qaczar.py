@@ -290,10 +290,9 @@ def html_doc_stream(articles, form):
     # TODO: Add a function to generate the main content.
     # TODO: The generator used depends on the number of articles combined.
     for article in articles:
-        if article: 
-            yield from generate_table(
-                    ['Topic', 'Qty', 'Last update', 'Summary'], palace_summary())
-        else: emit(f'Unable to render {article=}.') 
+        if not article: continue
+        yield from generate_table(
+                ['Topic', 'Qty', 'Last update', 'Summary'], palace_summary())
     yield from hyper('</main><footer>')
     yield from hyper(f'An hypertext grimoire. Served on {isotime()}.', wrap='p')
     yield from hyper('</footer></body></html>')
