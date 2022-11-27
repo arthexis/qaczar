@@ -238,10 +238,6 @@ def process_forms(env, topic):
         if topic:
             emit(f'Data received: {topic=} {len(data)=}')
             palace_recall(topic, store=data)
-        elif data: 
-            topic = urllib.parse.unquote(data.decode('utf-8'))
-            # TODO: Figure out how to interpret later.
-            return None, False
         return None, False
     elif method == 'GET':        
         return ('<form id="cmd-form" method="post">'
@@ -285,7 +281,6 @@ def facade_wsgi_responder(env, respond):
             article, stream = content_stream(env, topic.replace('-', '_'))
             if i == 0:
                 if article and len(topics) == 1 and '.' in topic:
-                    emit(f'Found {topic=} {article=}.')
                     respond('200 OK', [('Content-Type', article.ctype, 
                             'Content-Length', str(len(article.content)))])
                     yield from stream; break
