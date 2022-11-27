@@ -202,15 +202,15 @@ def palace_recall(topic, /, fetch=True, store=None):
 TopicSummary = collections.namedtuple('TopicSummary', 'topic ver ts summary')
 
 def palace_summary():
-    # TODO: Test this function (palace_summary).
     global PALACE
     c = PALACE.cursor()
     c.execute('SELECT name FROM sqlite_master WHERE type="table" '
             'AND name not LIKE "sqlite_%"')
     for t in c.fetchall():
+        topic = t[0].replace('__', '.')
         found = c.execute(f'SELECT MAX(ver), MAX(ts), SUBSTR(content, 0, 54) '
-            f'FROM {t[0]} GROUP BY ts ORDER BY ts DESC ').fetchone()
-        if found: yield TopicSummary(t[0], *found)
+            f'FROM {topic} GROUP BY ts ORDER BY ts DESC ').fetchone()
+        if found: yield TopicSummary(topic, *found)
     c.close()
 
 
@@ -224,7 +224,23 @@ SECRET = secrets.token_bytes()
 
 # Functions useful for sending binary data in HTTP responses.
 
+def generate_table(headers, rows):
+    # The output should already be binary encoded for performance.
+    yield b'<table><tr>'
+    for h in headers.keys(): yield f'<th>{h}</th>'.encode('utf-8')
+    yield b'</tr>'
+    for r in rows:
+        yield b'<tr>'
+        for c, t in zip(r, headers.values()):
+            if t == 'a': yield f'<td><a href="{c}">{c}</a></td>'.encode('utf-8')
+            elif t == 'q': yield f'<td>{c}</td>'.encode('utf-8')
+            elif t == 'time': yield f'<td>{c}</td>'.encode('utf-8')
+            else: yield f'<td>{c}</td>'.encode('utf-8')
+        yield b'</tr>'
+    yield b'</table>'
+
 def hyper(content, wrap=None, iwrap=None, href=None):
+    # This gets called a lot, so it should be fast.
     if wrap: yield f'<{wrap}>'.encode('utf-8') 
     if href: yield f'<a href="{href}">'.encode('utf-8')
     if content:
@@ -239,6 +255,7 @@ def hyper(content, wrap=None, iwrap=None, href=None):
     if wrap: yield f'</{wrap}>'.encode('utf-8') 
 
 def content_stream(env, topic):
+    # This is necesary to avoid the browser from buffering the entire response.
     if not topic or env['REQUEST_METHOD'] != 'GET': return None, None
     article = palace_recall(topic)
     if article and (content := article.content):
@@ -246,21 +263,8 @@ def content_stream(env, topic):
         return article, (content[i:i+1024] for i in range(0, len(content), 1024))
     else: return None, None
 
-def generate_table(headers, rows):
-    yield b'<table><tr>'
-    for h in headers: yield f'<th>{h}</th>'.encode('utf-8')
-    yield b'</tr>'
-    for r in rows:
-        yield b'<tr>'
-        for c in r:
-            if c == r[0]: 
-                vc = c.replace('__', '.')
-                yield f'<td><a href="{c}">{vc}</a></td>'.encode('utf-8')
-            else: yield f'<td>{c}</td>'.encode('utf-8')
-        yield b'</tr>'
-    yield b'</table>'
-
 def process_forms(env, topic):
+    # Returns the query form html, and redirect url if needed.
     method = env['REQUEST_METHOD']
     if method == 'POST':
         data = env['wsgi.input'].read(int(env.get('CONTENT_LENGTH', 0)))
@@ -274,11 +278,11 @@ def process_forms(env, topic):
                 '<div id="query-output"></div>'), False
     
 def article_combinator(articles):
-        th = ('Topic', 'Ver', 'Last', 'Summary')
-        for article in articles:
-            if not article: continue
-        tables = (x for x in generate_table(th, palace_summary()))
-        yield from hyper(tables, wrap='article')
+    headers = {'Topic': 'a', 'Ver': None, 'Last': 'time', 'Summary': 'q'}
+    for article in articles:
+        if not article: continue
+    tables = (x for x in generate_table(headers, palace_summary()))
+    yield from hyper(tables, wrap='article')
 
 # Main user interface, rendered dynamically based user input.
 def html_doc_stream(articles, form):
