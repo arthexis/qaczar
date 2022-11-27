@@ -239,7 +239,7 @@ def process_forms(env, topic):
             palace_recall(topic, store=data)
         elif data: 
             topic = urllib.parse.unquote(data.decode('utf-8'))
-            return f'302 Found', [('Location', f'/{topic}')]
+            return None, f'/{topic}'
         return None, False
     elif method == 'GET':        
         return ('<form id="cmd-form" method="post">'
