@@ -231,7 +231,7 @@ def generate_table(headers, rows, title=None):
     for r in rows:
         yield b'<tr>'
         for c, t in zip(r, headers.values()):
-            emit(f'{c=} {t=}')
+            # TODO: New type of table column for download links.
             if t is None: yield f'<td>{c}</td>'.encode('utf-8')
             elif t == 'a': yield f'<td><a href="{c}">{c}</a></td>'.encode('utf-8')
             else: yield f'<td><{t}>{c}</{t}></td>'.encode('utf-8')
@@ -280,8 +280,14 @@ def article_combinator(articles):
     headers = {'Topic': 'a', 'Ver': None, 'Last': 'time', 'Summary': 'q'}
     for article in articles:
         if not article: continue
-    tables = (x for x in generate_table(headers, palace_summary(), 'Palace Summary'))
-    yield from hyper(tables, wrap='article')
+    if not articles:
+        tables = (x for x in generate_table(headers, palace_summary(), 'Palace Summary'))
+        yield from hyper(tables, wrap='article')
+    else:
+        for article in articles:
+            if not article: continue
+            tables = (x for x in generate_table(headers, [article], f'{article.topic}'))
+            yield from hyper(tables, wrap='article')
 
 # Main user interface, rendered dynamically based user input.
 def html_doc_stream(articles, form):
@@ -336,7 +342,7 @@ def facade_wsgi_responder(env, start_response):
                         write = start_response('303 See Other', http_headers(redirect=redirect))
             if article: articles.add(article)
         else:
-            # An actual use case for the else clause of a for loop.
+            # Good use case for the else clause of a for loop.
             if not write: 
                 write = start_response('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
             yield from  html_doc_stream(articles, form)
