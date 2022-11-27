@@ -4,11 +4,10 @@
 # A Python script that does everything by itself.
 # H. V. D. C. by Rafa Guillén (arthexis@gmail.com) 2022-2023
 
-# Coding recommendations:
-
 # 1. Keep the line width to less than 100 characters.
 # 2. Use functions, not classes, for modularity, composability and encapsulation.
 # 3. Functions should not reference functions or globals from later in the script.
+# 4. The system must respond to all clients in 1 second or less.
 
 
 import os
