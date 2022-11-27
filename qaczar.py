@@ -249,14 +249,14 @@ def content_stream(env, topic):
     else: return None, None
 
 def generate_table(headers, rows):
-    yield '<table><tr>'
-    for h in headers: yield f'<th>{h}</th>'
-    yield '</tr>'
+    yield b'<table><tr>'
+    for h in headers: yield f'<th>{h}</th>'.encode('utf-8')
+    yield b'</tr>'
     for r in rows:
-        yield '<tr>'
-        for c in r: yield f'<td>{c}</td>'
-        yield '</tr>'
-    yield '</table>'
+        yield b'<tr>'
+        for c in r: yield f'<td>{c}</td>'.encode('utf-8')
+        yield b'</tr>'
+    yield b'</table>'
 
 def process_forms(env, topic):
     method = env['REQUEST_METHOD']
