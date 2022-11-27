@@ -298,15 +298,15 @@ def html_doc_stream(articles, form):
     yield from hyper('</footer></body></html>')
 
 # Main entrypoint for the user AND delegates. UI == API.
-def facade_wsgi_responder(env, respond):
+def facade_wsgi_responder(env, start_response):
     # TODO: I think the Error 500 is because of the missing Content-Length.
     global SITE
-    start = time.time()
+    w, start = None, time.time()
     method, path, origin = env["REQUEST_METHOD"], env["PATH_INFO"], env["REMOTE_ADDR"]
     emit(f'--*-- Incoming {method} {path} from {origin} --*--')
     if origin != '127.0.0.1':
         emit(f'Invalid remote address {origin=}.')
-        respond('403 Forbidden', [('Content-Type', 'text/plain')]); yield b''
+        w = start_response('403 Forbidden', [('Content-Type', 'text/plain')]); yield b''
     else:
         topics, _ = path[1:].split('?', 1) if '?' in path else (path[1:], '')
         topics, articles = topics.split('/'), set()
@@ -316,19 +316,18 @@ def facade_wsgi_responder(env, respond):
             if i == 0:
                 if article and len(topics) == 1 and '.' in topic:
                     ctype = article.ctype or 'application/octet-stream'
-                    respond('200 OK', [('Content-Type', ctype),
+                    w = start_response('200 OK', [('Content-Type', ctype),
                             ('Content-Length', str(len(article.content)))])
                     yield from stream
                 else:
                     form, redirect = process_forms(env, topic)
                     if redirect:
-                        respond('303 See Other', [('Location', redirect)])
+                        w = start_response('303 See Other', [('Location', redirect)])
                         yield b''
-                    respond('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
             if article: articles.add(article)
         else:
-            # I am so happy I found a use case for the else clause of a for loop.
-            emit(f'Generating HTML document {articles=}.')
+            # An actual use case for the else clause of a for loop.
+            if not w: start_response('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
             yield from html_doc_stream(articles, form)
     emit(f"Request completed at {round(time.time() - start, 2)} % capacity.")
 
