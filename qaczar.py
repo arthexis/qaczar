@@ -252,14 +252,16 @@ def html_doc_stream(env, articles, form, query):
     yield from hyper('</main></body></html>')
 
 def process_forms(env, topic):
-    if env['REQUEST_METHOD'] == 'POST':
+    method = env['REQUEST_METHOD']
+    if method == 'POST':
         data = env['wsgi.input'].read(int(env.get('CONTENT_LENGTH', 0)))
         emit(f'Data received: {topic=} {len(data)=}')
         palace_recall(topic, store=data)
         return None, False
-    return ('<form id="cmd-form" method="post">'
-            '<textarea id="cmd" name="cmd" cols=70 rows=1></textarea></form>'
-            '<div id="cmd-output"></div>'), False
+    elif method == 'GET':        
+        return ('<form id="cmd-form" method="post">'
+                '<textarea id="cmd" name="cmd" cols=70 rows=1></textarea></form>'
+                '<div id="cmd-output"></div>'), False
 
 # Main entrypoint for the user AND delegates. UI == API.
 def facade_wsgi_responder(env, respond):
