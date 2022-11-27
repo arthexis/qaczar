@@ -291,7 +291,7 @@ def html_doc_stream(articles, form):
     # TODO: The generator used depends on the number of articles combined.
     for article in articles:
         if not article: continue
-        yield from hyper(generate_table(
+        yield from hyper(x for x in generate_table(
                 ['Topic', 'Qty', 'Last update', 'Summary'], palace_summary()))
     yield from hyper('</main><footer>')
     yield from hyper(f'An hypertext grimoire. Served on {isotime()}.', wrap='p')
