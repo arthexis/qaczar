@@ -251,21 +251,6 @@ def format_article(article):
             f'</ol><aside>Version {article.ver} at {article.ts}.</aside></article>')
     yield from hyper('</article>')
 
-def hyper(content, wrap=None, iwrap=None, href=None):
-    # This gets called a lot, so it should be fast.
-    if wrap: yield f'<{wrap}>'.encode('utf-8') 
-    if href: yield f'<a href="{href}">'.encode('utf-8')
-    if content:
-        if isinstance(content, bytes): yield content
-        elif isinstance(content, str): yield content.encode('utf-8')
-        elif isinstance(content, Article): yield from hyper(content.content)
-        elif isinstance(content, (list, tuple, collections.abc.Generator)): 
-            for c in content: yield from hyper(c, wrap=iwrap)
-        else: emit(f'Unable to encode {type(content)=} {content=}.')
-    else: yield b''
-    if href: yield '</a>'.encode('utf-8')
-    if wrap: yield f'</{wrap}>'.encode('utf-8') 
-
 def content_stream(env, topic):
     # This is necesary to avoid the browser from buffering the entire response.
     if not topic or env['REQUEST_METHOD'] != 'GET': return None, None
@@ -288,7 +273,22 @@ def process_forms(env, topic):
         return ('<form id="query-form" method="get">'
                 '<input type="text" id="query-field" name="q" autofocus></form>'
                 '<div id="query-output"></div>'), False
-    
+
+def hyper(content, wrap=None, iwrap=None, href=None):
+    # This gets called a lot, so it should be fast.
+    if wrap: yield f'<{wrap}>'.encode('utf-8') 
+    if href: yield f'<a href="{href}">'.encode('utf-8')
+    if content:
+        if isinstance(content, bytes): yield content
+        elif isinstance(content, str): yield content.encode('utf-8')
+        elif isinstance(content, Article): yield from hyper(content.content)
+        elif isinstance(content, (list, tuple, collections.abc.Generator)): 
+            for c in content: yield from hyper(c, wrap=iwrap)
+        else: emit(f'Unable to encode {type(content)=} {content=}.')
+    else: yield b''
+    if href: yield '</a>'.encode('utf-8')
+    if wrap: yield f'</{wrap}>'.encode('utf-8') 
+      
 def article_combinator(articles):
     if not articles:
         # This is the overview page, when no topic is specified.
