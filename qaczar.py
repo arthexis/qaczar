@@ -287,9 +287,10 @@ def article_combinator(articles):
         if not article: continue
         # TODO: Add a specialized function for rendering article details.
         content = article.content.splitlines()
-        yield from hyper(f'<article><h2>{article.topic}</h2>')
-        yield from hyper(content, wrap='ol', title=article.topic, iwrap='li')
-        yield from hyper(f'<p>Version {article.ver} at {article.ts}.</p></article>')
+        yield from hyper(f'<article><h2>{article.topic}</h2><ol>')
+        for i, line in enumerate(content):
+            yield from hyper(f'<li>{line}</li>')
+        yield from hyper(f'</ol><p>Version {article.ver} at {article.ts}.</p></article>')
         yield from hyper('</article>')
 
 # Main user interface, rendered dynamically based user input.
