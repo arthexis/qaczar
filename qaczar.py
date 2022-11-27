@@ -281,6 +281,7 @@ def article_combinator(articles):
     for article in articles:
         if not article: continue
     if not articles:
+        # This is the overview page, when no topic is specified.
         tables = (x for x in generate_table(headers, palace_summary(), 'Palace Summary'))
         yield from hyper(tables, wrap='article')
         articles = {palace_recall('roadmap.txt')}
