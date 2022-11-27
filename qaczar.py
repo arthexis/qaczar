@@ -239,7 +239,6 @@ def process_forms(env, topic):
             palace_recall(topic, store=data)
         elif data: 
             topic = urllib.parse.unquote(data.decode('utf-8'))
-            emit(f'New topic: {topic=}')
             return f'302 Found', [('Location', f'/{topic}')]
         return None, False
     elif method == 'GET':        
