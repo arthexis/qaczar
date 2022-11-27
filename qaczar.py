@@ -252,7 +252,9 @@ def generate_table(headers, rows):
     yield b'</tr>'
     for r in rows:
         yield b'<tr>'
-        for c in r: yield f'<td>{c}</td>'.encode('utf-8')
+        for c in r: 
+            if c == r[0]: yield f'<td><a href="{c}">{c}</a></td>'.encode('utf-8')
+            else: yield f'<td>{c}</td>'.encode('utf-8')
         yield b'</tr>'
     yield b'</table>'
 
