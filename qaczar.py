@@ -290,7 +290,7 @@ def html_doc_stream(articles, form):
     for article in articles:
         if article: yield from hyper(article, wrap='article')
     yield from hyper('</main><footer>')
-    yield from hyper(f'An hypertext grimoire. Served {isotime()}')
+    yield from hyper(f'An hypertext grimoire. Served on {isotime()}.')
     yield from hyper('</footer></body></html>')
 
 # Main entrypoint for the user AND delegates. UI == API.
