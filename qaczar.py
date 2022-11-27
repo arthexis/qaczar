@@ -293,7 +293,6 @@ def html_doc_stream(articles, form):
         if not article: continue
         yield from hyper(x for x in generate_table(
                 ['Topic', 'Qty', 'Last update', 'Summary'], palace_summary()))
-    time.sleep(10)
     yield from hyper('</main><footer>')
     yield from hyper(f'An hypertext grimoire. Served on {isotime()}.', wrap='p')
     yield from hyper('</footer></body></html>')
@@ -319,15 +318,13 @@ def facade_wsgi_responder(env, respond):
                     ctype = article.ctype or 'application/octet-stream'
                     respond('200 OK', [('Content-Type', ctype),
                             ('Content-Length', str(len(article.content)))])
-                    yield from stream; break
+                    yield from stream
                 else:
                     form, redirect = process_forms(env, topic)
                     if redirect:
-                        emit(f'Redirecting to {redirect=}.')
                         respond('303 See Other', [('Location', redirect)])
-                        yield b''; break
-                    else:
-                        respond('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
+                        yield b''
+                    respond('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
             if article: articles.add(article)
         else:
             # I am so happy I found a use case for the else clause of a for loop.
