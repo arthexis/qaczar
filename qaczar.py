@@ -301,12 +301,12 @@ def html_doc_stream(articles, form):
 def facade_wsgi_responder(env, start_response):
     # TODO: I think the Error 500 is because of the missing Content-Length.
     global SITE
-    w, start = None, time.time()
+    write, start = None, time.time()
     method, path, origin = env["REQUEST_METHOD"], env["PATH_INFO"], env["REMOTE_ADDR"]
     emit(f'--*-- Incoming {method} {path} from {origin} --*--')
     if origin != '127.0.0.1':
         emit(f'Invalid remote address {origin=}.')
-        w = start_response('403 Forbidden', [('Content-Type', 'text/plain')]); yield b''
+        write = start_response('403 Forbidden', [('Content-Type', 'text/plain')]); yield b''
     else:
         topics, _ = path[1:].split('?', 1) if '?' in path else (path[1:], '')
         topics, articles = topics.split('/'), set()
@@ -316,20 +316,21 @@ def facade_wsgi_responder(env, start_response):
             if i == 0:
                 if article and len(topics) == 1 and '.' in topic:
                     ctype = article.ctype or 'application/octet-stream'
-                    w = start_response('200 OK', [('Content-Type', ctype),
+                    write = start_response('200 OK', [('Content-Type', ctype),
                             ('Content-Length', str(len(article.content)))])
-                    for i in stream: w(i)
+                    for part in stream: write(part)
                 else:
                     form, redirect = process_forms(env, topic)
                     if redirect:
-                        w = start_response('303 See Other', [('Location', redirect)])
+                        write = start_response('303 See Other', [('Location', redirect)])
             if article: articles.add(article)
         else:
             # An actual use case for the else clause of a for loop.
-            if not w: w = start_response('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
-            for i in html_doc_stream(articles, form): w(i)
+            if not write: 
+                write = start_response('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
+            for part in html_doc_stream(articles, form): write(part)
     emit(f"Request completed at {round(time.time() - start, 2)} % capacity.")
-    return w
+    return write
 
 class Unhandler(wsgiref.simple_server.WSGIRequestHandler):
     def log_request(self, *args, **kwargs): pass
