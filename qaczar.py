@@ -208,8 +208,8 @@ def palace_summary():
     for t in c.fetchall():
         found = c.execute(f'SELECT MAX(ver), MAX(ts), SUBSTR(content, 0, 54) '
             f'FROM {t[0]} GROUP BY ts ORDER BY ts DESC ').fetchone()
-        # Split the topic name into a file name and a topic name.
-        if found: yield TopicSummary(t[0], *found)
+        if found: yield TopicSummary(t[0], found[0], found[1], 
+                re.sub(r'[^\x20-\x7e]', ' ', found[2]))
     c.close()
 
 
@@ -232,7 +232,6 @@ def format_table(headers, rows, title=None):
     for r in rows:
         yield b'<tr>'
         for c, t in zip(r, headers.values()):
-            c = c.decode('utf-8') if isinstance(c, bytes) else c
             if t is None: yield f'<td>{c}</td>'.encode('utf-8')
             elif t == 'a': 
                 yield f'<td><a href="{c}">{c}</a></td>'.encode('utf-8')
