@@ -284,9 +284,13 @@ def article_combinator(articles):
         yield from hyper(g, wrap='article')
         articles = {palace_recall('roadmap.txt')}
     for article in articles:
-        if article:
-            # TODO: Add a specialized function for rendering article details.
-            yield from hyper(article.content, wrap='article', title=article.topic)
+        if not article: continue
+        # TODO: Add a specialized function for rendering article details.
+        content = article.content.splitlines()
+        yield from hyper(f'<article><h2>{article.topic}</h2>')
+        yield from hyper(content, wrap='ol', title=article.topic, iwrap='li')
+        yield from hyper(f'<p>Version {article.ver} at {article.ts}.</p></article>')
+        yield from hyper('</article>')
 
 # Main user interface, rendered dynamically based user input.
 def html_doc_stream(articles, form):
