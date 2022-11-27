@@ -292,7 +292,8 @@ def facade_wsgi_responder(env, respond):
         topics, _ = path[1:].split('?', 1) if '?' in path else (path[1:], '')
         topics, articles = topics.split('/'), set()
         for i, topic in enumerate(topics):
-            article, stream = content_stream(env, topic.replace('-', '_'))
+            topic = topic.replace('-', '_')
+            article, stream = content_stream(env, topic)
             if i == 0:
                 if article and len(topics) == 1 and '.' in topic:
                     emit(f'Found {topic=} {article.ctype}')
