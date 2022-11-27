@@ -285,6 +285,9 @@ def article_combinator(articles):
         articles = {palace_recall('roadmap.txt')}
     for article in articles:
         if not article: continue
+        if not article.content: 
+            yield from hyper(f'No content found for {article.topic}.', wrap='p')
+            continue
         # TODO: Move to a specialized function for rendering article details.
         content = article.content.decode('utf-8').splitlines()
         yield from hyper(f'<article><h2>{article.topic}</h2><ol>')
