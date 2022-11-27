@@ -321,7 +321,7 @@ def facade_wsgi_responder(env, start_response):
         write = start_response('403 Forbidden', http_headers())
     else:
         topics, _ = path[1:].split('?', 1) if '?' in path else (path[1:], '')
-        topics, articles = topics.split('/'), set()
+        topics, articles, form = topics.split('/'), set(), None
         for i, topic in enumerate(topics):
             topic = topic.replace('-', '_')
             article, stream = content_stream(env, topic)
