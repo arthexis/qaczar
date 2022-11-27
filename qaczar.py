@@ -297,6 +297,12 @@ def html_doc_stream(articles, form):
     yield from hyper(f'An hypertext grimoire. Served on {isotime()}.', wrap='p')
     yield from hyper('</footer></body></html>')
 
+def http_header(ctype='text/html; charset=utf-8', redirect=None, size=None):
+    if redirect: return [('Location', redirect)]
+    headers = [('Content-Type', ctype or 'application/octet-stream')] 
+    if size: headers.append(('Content-Length', str(size)))
+    return headers
+
 # Main entrypoint for the user AND delegates. UI == API.
 def facade_wsgi_responder(env, start_response):
     # TODO: I think the Error 500 is because of the missing Content-Length.
@@ -305,8 +311,7 @@ def facade_wsgi_responder(env, start_response):
     method, path, origin = env["REQUEST_METHOD"], env["PATH_INFO"], env["REMOTE_ADDR"]
     emit(f'--*-- Incoming {method} {path} from {origin} --*--')
     if origin != '127.0.0.1':
-        emit(f'Invalid remote address {origin=}.')
-        write = start_response('403 Forbidden', [('Content-Type', 'text/plain')]); yield b''
+        write = start_response('403 Forbidden', http_header())
     else:
         topics, _ = path[1:].split('?', 1) if '?' in path else (path[1:], '')
         topics, articles = topics.split('/'), set()
@@ -315,14 +320,13 @@ def facade_wsgi_responder(env, start_response):
             article, stream = content_stream(env, topic)
             if i == 0:
                 if article and len(topics) == 1 and '.' in topic:
-                    ctype = article.ctype or 'application/octet-stream'
-                    write = start_response('200 OK', [('Content-Type', ctype),
-                            ('Content-Length', str(len(article.content)))])
+                    size = len(article.content)
+                    write = start_response('200 OK', http_header(article.ctype, size=size))
                     for part in stream: write(part)
                 else:
                     form, redirect = process_forms(env, topic)
                     if redirect:
-                        write = start_response('303 See Other', [('Location', redirect)])
+                        write = start_response('303 See Other', http_header(redirect=redirect))
             if article: articles.add(article)
         else:
             # An actual use case for the else clause of a for loop.
