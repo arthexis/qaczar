@@ -263,7 +263,6 @@ def html_doc_stream(articles, form):
     # TODO: Why the roadmaps are not showing up?
     global SITE
     css = palace_recall('qaczar.css')
-    js = palace_recall('qaczar.js')
     links = []  # TODO: Add a function to generate the links.
     if not articles: articles = {palace_recall('roadmap.txt')}
     yield from hyper('<!DOCTYPE html><head><meta charset="utf-8"/>')
@@ -275,7 +274,6 @@ def html_doc_stream(articles, form):
     if form: yield from hyper(form)
     yield from hyper('</nav><main>')
     yield from hyper(f'An hypertext grimoire. Served {isotime()}', wrap='footer')
-    if js: yield from hyper(js.content, 'script')
     yield from hyper('</main></body></html>')
 
 # Main entrypoint for the user AND delegates. UI == API.
