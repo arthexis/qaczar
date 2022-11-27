@@ -324,7 +324,7 @@ def remote_facade(*args, upload=None):
     except urllib.error.HTTPError as e:
         emit(f'HTTPError: {e.code}'); raise e
 
-def run_serially(*cmds, s=None):
+def chain_run(*cmds, s=None):
     for cmd in cmds:
         try:
             if s is not None and s.returncode != 0: return s.returncode
@@ -348,11 +348,10 @@ def certify_build():
     if not found or found.content.decode('utf-8') != roadmap:
         emit(f'Roadmap updated: {len(roadmap)=} {len(found[3])=}')
         emit('Roadmap not updated properly.'); sys.exit(1)
-    last_result = run_serially(
+    return chain_run(
             ['git', 'add', '.'],
             ['git', 'commit', '-m', 'Automatic commit by certify_build.'],
             ['git', 'push', 'origin', BRANCH])
-    return last_result
 
 if __name__ == "__main__" and RUNLEVEL == 3:
     GOAL = sys.argv[2]
