@@ -209,8 +209,8 @@ def palace_summary():
         # TODO: Replace SUBSTR here. It messes up utf-8.
         found = c.execute(f"SELECT MAX(ver), MAX(ts), length(content) || ' bytes' "
             f'FROM {t[0]} GROUP BY ts ORDER BY ts DESC ').fetchone()
-        found[2] = f'{TOPICS[t[0]]}' + found[2]
-        if found: yield TopicSummary(t[0], *found)
+        content = f'{TOPICS[t[0]]}' + found[2]
+        if found: yield TopicSummary(t[0], found[0], found[1], content)
     c.close()
 
 
