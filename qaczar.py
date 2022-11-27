@@ -208,8 +208,9 @@ def palace_summary():
     c.execute('SELECT name FROM sqlite_master WHERE type="table" '
             'AND name not LIKE "sqlite_%"')
     for t in c.fetchall():
-        yield TopicSummary(t[0], *c.execute(f'SELECT COUNT(*), MAX(ts), SUBSTR(content, 0, 54) '
-            f'FROM {t[0]} GROUP BY ts ORDER BY ts DESC ').fetchone())
+        found = c.execute(f'SELECT COUNT(*), MAX(ts), SUBSTR(content, 0, 54) '
+            f'FROM {t[0]} GROUP BY ts ORDER BY ts DESC ').fetchone()
+        if found: yield TopicSummary(t[0], *found)
     c.close()
 
 
