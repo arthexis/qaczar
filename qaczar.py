@@ -233,6 +233,7 @@ def content_stream(env, topic):
 
 # Main user interface, rendered dynamically based user input.
 def html_doc_stream(env, articles, form, query):
+    # TODO: Why the roadmaps are not showing up?
     global SITE
     css = palace_recall('qaczar.css')
     js = palace_recall('qaczar.js')
@@ -244,6 +245,7 @@ def html_doc_stream(env, articles, form, query):
     yield from hyper('</head><body><nav>')   
     yield from hyper(SITE, wrap='h1', href='/')
     if links: yield from hyper(links, wrap='ul', iwrap='li')
+    if form: yield from hyper(form)
     yield from hyper('</nav><main>')
     yield from hyper(f'An hypertext grimoire. Served {isotime()}', wrap='footer')
     if js: yield from hyper(js.content, 'script')
