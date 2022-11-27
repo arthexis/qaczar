@@ -269,6 +269,13 @@ def process_forms(env, topic):
         return ('<form id="query-form" method="get">'
                 '<input type="text" id="query-field" name="q" autofocus></form>'
                 '<div id="query-output"></div>'), False
+    
+def article_combinator(articles):
+        th = ('Topic', 'Qty', 'Last', 'Summary')
+        for article in articles:
+            if not article: continue
+        tables = (x for x in generate_table(th, palace_summary()))
+        yield from hyper(tables, wrap='article')
 
 # Main user interface, rendered dynamically based user input.
 def html_doc_stream(articles, form):
@@ -289,10 +296,7 @@ def html_doc_stream(articles, form):
     yield from hyper('</nav><main>')
     # TODO: Add a function to generate the main content.
     # TODO: The generator used depends on the number of articles combined.
-    for article in articles:
-        if not article: continue
-        yield from hyper(x for x in generate_table(
-                ['Topic', 'Qty', 'Last update', 'Summary'], palace_summary()))
+
     yield from hyper('</main><footer>')
     yield from hyper(f'An hypertext grimoire. Served on {isotime()}.', wrap='p')
     yield from hyper('</footer></body></html>')
