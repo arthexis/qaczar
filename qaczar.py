@@ -286,9 +286,9 @@ def html_doc_stream(articles, form):
     # TODO: The generator used depends on the number of articles combined.
     for article in articles:
         yield from hyper(article, wrap='article')
-    yield from hyper('</main>')
-    yield from hyper(f'An hypertext grimoire. Served {isotime()}', wrap='footer')
-    yield from hyper('</body></html>')
+    yield from hyper('</main><footer>')
+    yield from hyper(f'An hypertext grimoire. Served {isotime()}')
+    yield from hyper('</footer></body></html>')
 
 # Main entrypoint for the user AND delegates. UI == API.
 def facade_wsgi_responder(env, respond):
