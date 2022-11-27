@@ -223,7 +223,6 @@ def hyper(content, wrap=None, iwrap=None, href=None):
     if wrap: yield f'</{wrap}>'.encode('utf-8') 
 
 def content_stream(env, topic):
-    # TODO: Figure out if we can return the BLOB directly.
     if not topic or env['REQUEST_METHOD'] != 'GET': return None, None
     article = palace_recall(topic)
     if article and (content := article.content):
@@ -231,8 +230,20 @@ def content_stream(env, topic):
         return article, (content[i:i+1024] for i in range(0, len(content), 1024))
     else: return None, None
 
+def process_forms(env, topic):
+    method = env['REQUEST_METHOD']
+    if method == 'POST':
+        data = env['wsgi.input'].read(int(env.get('CONTENT_LENGTH', 0)))
+        emit(f'Data received: {topic=} {len(data)=}')
+        palace_recall(topic, store=data)
+        return None, False
+    elif method == 'GET':        
+        return ('<form id="cmd-form" method="get">'
+                '<textarea id="cmd" name="cmd" cols=70 rows=1></textarea></form>'
+                '<div id="cmd-output"></div>'), False
+
 # Main user interface, rendered dynamically based user input.
-def html_doc_stream(env, articles, form, query):
+def html_doc_stream(articles, form):
     # TODO: Why the roadmaps are not showing up?
     global SITE
     css = palace_recall('qaczar.css')
@@ -251,18 +262,6 @@ def html_doc_stream(env, articles, form, query):
     if js: yield from hyper(js.content, 'script')
     yield from hyper('</main></body></html>')
 
-def process_forms(env, topic):
-    method = env['REQUEST_METHOD']
-    if method == 'POST':
-        data = env['wsgi.input'].read(int(env.get('CONTENT_LENGTH', 0)))
-        emit(f'Data received: {topic=} {len(data)=}')
-        palace_recall(topic, store=data)
-        return None, False
-    elif method == 'GET':        
-        return ('<form id="cmd-form" method="get">'
-                '<textarea id="cmd" name="cmd" cols=70 rows=1></textarea></form>'
-                '<div id="cmd-output"></div>'), False
-
 # Main entrypoint for the user AND delegates. UI == API.
 def facade_wsgi_responder(env, respond):
     # TODO: I think the Error 500 is because of the missing Content-Length.
@@ -274,12 +273,12 @@ def facade_wsgi_responder(env, respond):
         emit(f'Invalid remote address {origin=}.')
         respond('403 Forbidden', [('Content-Type', 'text/plain')]); yield b''
     else:
-        topics, query = path[1:].split('?', 1) if '?' in path else (path[1:], '')
+        topics, _ = path[1:].split('?', 1) if '?' in path else (path[1:], '')
         topics, articles = topics.split('/'), set()
         for i, topic in enumerate(topics):
             article, stream = content_stream(env, topic.replace('-', '_'))
             if i == 0:
-                if article and len(topics) == 1 and not query and '.' in topic:
+                if article and len(topics) == 1 and '.' in topic:
                     emit(f'Found {topic=} {article=}.')
                     respond('200 OK', [('Content-Type', article.ctype, 
                             'Content-Length', str(len(article.content)))])
@@ -295,7 +294,7 @@ def facade_wsgi_responder(env, respond):
             articles.add(article)
         else:
             # I am so happy I found a use case for the else clause of a for loop.
-            yield from html_doc_stream(env, articles, form, query)
+            yield from html_doc_stream(articles, form)
     emit(f"Request completed using {round(time.time() - start, 2)} % capacity.")
 
 class Unhandler(wsgiref.simple_server.WSGIRequestHandler):
