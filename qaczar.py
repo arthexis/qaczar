@@ -194,7 +194,6 @@ def palace_recall(topic, /, fetch=True, store=None):
             emit(f'Insert commited {topic=} {len(store)=}.')
             PALACE.commit()
         if found: 
-            # Never return the row directly, it's a sqlite3.Row object.
             return Article(topic, found[0], found[1], found[2], TOPICS[topic])
         elif fetch:
             emit(f'No articles for {topic=}.')
