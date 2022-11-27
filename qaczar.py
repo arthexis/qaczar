@@ -293,7 +293,7 @@ def article_combinator(articles):
         yield from hyper(f'<article><h2>{article.topic}</h2><ol>')
         for i, line in enumerate(content):
             yield from hyper(f'<li>{line}</li>')
-        yield from hyper(f'</ol><p>Version {article.ver} at {article.ts}.</p></article>')
+        yield from hyper(f'</ol><aside>Version {article.ver} at {article.ts}.</aside></article>')
         yield from hyper('</article>')
 
 # Main user interface, rendered dynamically based user input.
