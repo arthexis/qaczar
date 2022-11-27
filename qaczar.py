@@ -19,9 +19,6 @@ import subprocess
 # We don't import everything at the start to keep the runtime of 
 # the crown (watcher) as simple as possible. Later we can import more modules.
 
-# TODO: Python Source Query Language
-#       -> an easier way to inspect the source code of a Python module as text.
-
 # This is the name that will appear on the title of the website.
 SITE = 'qaczar.com'
 BRANCH = 'main'
@@ -206,7 +203,6 @@ def palace_summary():
     c.execute('SELECT name FROM sqlite_master WHERE type="table" '
             'AND name not LIKE "sqlite_%"')
     for t in c.fetchall():
-        # TODO: Replace SUBSTR here. It messes up utf-8.
         found = c.execute(f"SELECT MAX(ver), MAX(ts), length(content) || ' bytes' "
             f'FROM {t[0]} GROUP BY ts ORDER BY ts DESC ').fetchone()
         if found: 
@@ -327,7 +323,6 @@ def http_headers(ctype='text/html; charset=utf-8', redirect=None, size=None):
 
 # Main entrypoint for the user AND delegates. UI == API.
 def facade_wsgi_responder(env, start_response):
-    # TODO: I think the Error 500 is because of the missing Content-Length.
     global SITE
     write, start = None, time.time()
     method, path, origin = env["REQUEST_METHOD"], env["PATH_INFO"], env["REMOTE_ADDR"]
