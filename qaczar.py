@@ -326,6 +326,7 @@ def facade_wsgi_responder(env, respond):
                         respond('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
         else:
             # I am so happy I found a use case for the else clause of a for loop.
+            emit(f'Generating HTML document {len(articles)=}.')
             yield from html_doc_stream(articles, form)
     emit(f"Request completed at {round(time.time() - start, 2)} % capacity.")
 
