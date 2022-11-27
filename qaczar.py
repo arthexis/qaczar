@@ -37,7 +37,6 @@ def isotime(t=None):
     return time.strftime('%Y-%m-%d %H:%M:%S', t or time.gmtime())
 
 def emit(verse): 
-     assert len(verse) < 1000, 'Verse too long.'
      print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{isotime()}] {verse}')
 
 def fread(fn, decode=None):
