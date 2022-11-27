@@ -207,7 +207,7 @@ def palace_summary():
             'AND name not LIKE "sqlite_%"')
     for t in c.fetchall():
         # TODO: Replace SUBSTR here. It messes up utf-8.
-        found = c.execute(f'SELECT MAX(ver), MAX(ts), length(content) || " bytes", '
+        found = c.execute(f"SELECT MAX(ver), MAX(ts), length(content) || ' bytes' "
             f'FROM {t[0]} GROUP BY ts ORDER BY ts DESC ').fetchone()
         if found: yield TopicSummary(t[0], *found)
     c.close()
