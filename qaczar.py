@@ -244,6 +244,16 @@ def content_stream(env, topic):
         return article, (content[i:i+1024] for i in range(0, len(content), 1024))
     else: return None, None
 
+def generate_table(headers, rows):
+    yield '<table><tr>'
+    for h in headers: yield f'<th>{h}</th>'
+    yield '</tr>'
+    for r in rows:
+        yield '<tr>'
+        for c in r: yield f'<td>{c}</td>'
+        yield '</tr>'
+    yield '</table>'
+
 def process_forms(env, topic):
     method = env['REQUEST_METHOD']
     if method == 'POST':
@@ -272,6 +282,8 @@ def html_doc_stream(articles, form):
     if links: yield from hyper(links, wrap='ul', iwrap='li')
     if form: yield from hyper(form)
     yield from hyper('</nav><main>')
+    # TODO: Add a function to generate the main content.
+    # TODO: The generator used depends on the number of articles combined.
     yield from hyper(f'An hypertext grimoire. Served {isotime()}', wrap='footer')
     yield from hyper('</main></body></html>')
 
@@ -309,7 +321,7 @@ def facade_wsgi_responder(env, respond):
         else:
             # I am so happy I found a use case for the else clause of a for loop.
             yield from html_doc_stream(articles, form)
-    emit(f"Request completed using {round(time.time() - start, 2)} % capacity.")
+    emit(f"Request completed at {round(time.time() - start, 2)} % capacity.")
 
 class Unhandler(wsgiref.simple_server.WSGIRequestHandler):
     def log_request(self, *args, **kwargs): pass
