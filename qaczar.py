@@ -329,7 +329,7 @@ def facade_wsgi_responder(env, respond):
             articles.add(article)
         else:
             # I am so happy I found a use case for the else clause of a for loop.
-            emit(f'Generating HTML document {len(articles)=}.')
+            emit(f'Generating HTML document {articles=}.')
             yield from html_doc_stream(articles, form)
     emit(f"Request completed at {round(time.time() - start, 2)} % capacity.")
 
