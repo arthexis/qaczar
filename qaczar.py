@@ -7,7 +7,7 @@
 # 1. Keep the line width to less than 100 characters.
 # 2. Use functions, not classes, for modularity, composability and encapsulation.
 # 3. Functions should not reference functions or globals from later in the script.
-# 4. The system must respond to all clients in 1 second or less.
+# 4. The system must respond to all requests in 1 second or less.
 
 
 import os
