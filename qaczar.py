@@ -288,8 +288,7 @@ def html_doc_stream(articles, form):
     # TODO: Add a function to generate the main content.
     # TODO: The generator used depends on the number of articles combined.
     for article in articles:
-        emit(f'Generating {article.topic=} {article.ts=} {article.ctype=}.')
-        yield from hyper(article, wrap='article')
+        if article: yield from hyper(article, wrap='article')
     yield from hyper('</main><footer>')
     yield from hyper(f'An hypertext grimoire. Served {isotime()}')
     yield from hyper('</footer></body></html>')
