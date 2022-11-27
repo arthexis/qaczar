@@ -207,10 +207,9 @@ def palace_summary():
     c.execute('SELECT name FROM sqlite_master WHERE type="table" '
             'AND name not LIKE "sqlite_%"')
     for t in c.fetchall():
-        topic = t[0].replace('__', '.')
         found = c.execute(f'SELECT MAX(ver), MAX(ts), SUBSTR(content, 0, 54) '
-            f'FROM {topic} GROUP BY ts ORDER BY ts DESC ').fetchone()
-        if found: yield TopicSummary(topic, *found)
+            f'FROM {t[0]} GROUP BY ts ORDER BY ts DESC ').fetchone()
+        if found: yield TopicSummary(t[0].replace('__', '.'), *found)
     c.close()
 
 
@@ -286,13 +285,12 @@ def article_combinator(articles):
 
 # Main user interface, rendered dynamically based user input.
 def html_doc_stream(articles, form):
-    # TODO: Why the roadmaps are not showing up?
     global SITE
     css = palace_recall('qaczar.css')
     links = []  # TODO: Add a function to generate the links.
     if not articles: articles = {palace_recall('roadmap.txt')}
     assert articles, 'No articles found.'
-    # Prep done. Start yielding out bits of the HTML document.
+    # Prep done. Start yielding out bytes of the HTML document.
     yield from hyper('<!DOCTYPE html><head><meta charset="utf-8"/>')
     yield from hyper(SITE, wrap='title')  
     if css: yield from hyper(css.content, 'style')  
