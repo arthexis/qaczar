@@ -149,6 +149,8 @@ def text_summary(content, length=54):
 
 Article = collections.namedtuple('Article', 'topic ver ts content ctype')
 
+# TODO: Add a top_ prefix to topic database table names.
+
 # All single-topic palace operations are performed by a single function.
 # This reduces the number of points of failure for the database layer.
 def palace_recall(topic, /, fetch=True, store=None):
