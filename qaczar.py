@@ -318,17 +318,16 @@ def facade_wsgi_responder(env, start_response):
                     ctype = article.ctype or 'application/octet-stream'
                     w = start_response('200 OK', [('Content-Type', ctype),
                             ('Content-Length', str(len(article.content)))])
-                    yield from stream
+                    for i in stream: w(i)
                 else:
                     form, redirect = process_forms(env, topic)
                     if redirect:
                         w = start_response('303 See Other', [('Location', redirect)])
-                        yield b''
             if article: articles.add(article)
         else:
             # An actual use case for the else clause of a for loop.
-            if not w: start_response('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
-            yield from html_doc_stream(articles, form)
+            if not w: w = start_response('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
+            for i in html_doc_stream(articles, form): w(i)
     emit(f"Request completed at {round(time.time() - start, 2)} % capacity.")
     return w
 
