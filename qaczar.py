@@ -279,7 +279,7 @@ def process_forms(env, topic):
 def article_combinator(articles):
     if not articles:
         # This is the overview page, when no topic is specified.
-        headers = {'Topic': 'a', 'Ver': None, 'Last': 'time', 'Summary': 'q'}
+        headers = {'Topic': 'a', 'File': 'a', 'Ver': None, 'Last': 'time', 'Summary': 'q'}
         g = (x for x in generate_table(headers, palace_summary(), 'Palace Summary'))
         yield from hyper(g, wrap='article')
         articles = {palace_recall('roadmap.txt')}
