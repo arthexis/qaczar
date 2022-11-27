@@ -215,7 +215,6 @@ def palace_summary():
     c.close()
 
 
-
 # V.
 
 import secrets
@@ -279,6 +278,7 @@ def html_doc_stream(articles, form):
     links = []  # TODO: Add a function to generate the links.
     if not articles: articles = {palace_recall('roadmap.txt')}
     assert articles, 'No articles found.'
+    # Prep done. Start yielding out bits of the HTML document.
     yield from hyper('<!DOCTYPE html><head><meta charset="utf-8"/>')
     yield from hyper(SITE, wrap='title')  
     if css: yield from hyper(css.content, 'style')  
@@ -297,7 +297,7 @@ def html_doc_stream(articles, form):
     yield from hyper(f'An hypertext grimoire. Served on {isotime()}.', wrap='p')
     yield from hyper('</footer></body></html>')
 
-def http_header(ctype='text/html; charset=utf-8', redirect=None, size=None):
+def http_headers(ctype='text/html; charset=utf-8', redirect=None, size=None):
     if redirect: return [('Location', redirect)]
     headers = [('Content-Type', ctype or 'application/octet-stream')] 
     if size: headers.append(('Content-Length', str(size)))
@@ -311,7 +311,7 @@ def facade_wsgi_responder(env, start_response):
     method, path, origin = env["REQUEST_METHOD"], env["PATH_INFO"], env["REMOTE_ADDR"]
     emit(f'--*-- Incoming {method} {path} from {origin} --*--')
     if origin != '127.0.0.1':
-        write = start_response('403 Forbidden', http_header())
+        write = start_response('403 Forbidden', http_headers())
     else:
         topics, _ = path[1:].split('?', 1) if '?' in path else (path[1:], '')
         topics, articles = topics.split('/'), set()
@@ -321,12 +321,12 @@ def facade_wsgi_responder(env, start_response):
             if i == 0:
                 if article and len(topics) == 1 and '.' in topic:
                     size = len(article.content)
-                    write = start_response('200 OK', http_header(article.ctype, size=size))
+                    write = start_response('200 OK', http_headers(article.ctype, size=size))
                     for part in stream: write(part)
                 else:
                     form, redirect = process_forms(env, topic)
                     if redirect:
-                        write = start_response('303 See Other', http_header(redirect=redirect))
+                        write = start_response('303 See Other', http_headers(redirect=redirect))
             if article: articles.add(article)
         else:
             # An actual use case for the else clause of a for loop.
