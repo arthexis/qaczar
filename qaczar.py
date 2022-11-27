@@ -292,7 +292,7 @@ def facade_wsgi_responder(env, respond):
         else:
             # I am so happy I found a use case for the else clause of a for loop.
             yield from html_doc_stream(env, articles, form, query)
-    emit(f"Request completed using {round(time.time() - start, 2)} % max capacity.")
+    emit(f"Request completed using {round(time.time() - start, 2)} % capacity.")
 
 class Unhandler(wsgiref.simple_server.WSGIRequestHandler):
     def log_request(self, *args, **kwargs): pass
