@@ -301,7 +301,7 @@ def html_doc_stream(articles, form):
     if links: yield from hyper(links, wrap='ul', iwrap='li')
     if form: yield from hyper(form)
     yield from hyper('</nav><main>')
-    if articles: yield from article_combinator(articles)
+    yield from article_combinator(articles)
     yield from hyper('</main><footer>')
     yield from hyper(f'An hypertext grimoire. Served on {isotime()}.', wrap='p')
     yield from hyper('</footer></body></html>')
