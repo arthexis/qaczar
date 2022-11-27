@@ -223,7 +223,7 @@ SECRET = secrets.token_bytes()
 
 # Functions useful for sending binary data in HTTP responses.
 
-def generate_table(headers, rows, title=None):
+def format_table(headers, rows, title=None):
     # The output should already be binary encoded for performance.
     if title: yield f'<h2>{title}</h2>'.encode('utf-8')
     yield b'<table><tr>'
@@ -238,6 +238,15 @@ def generate_table(headers, rows, title=None):
             else: yield f'<td><{t}>{c}</{t}></td>'.encode('utf-8')
         yield b'</tr>'
     yield b'</table>'
+
+def format_article(article):
+    content = article.content.decode('utf-8').splitlines()
+    yield f'<article><h2>{article.topic}</h2><ol>'.encode('utf-8')
+    for i, line in enumerate(content):
+        yield from hyper(f'<li>{line}</li>')
+    yield from hyper(
+            f'</ol><aside>Version {article.ver} at {article.ts}.</aside></article>')
+    yield from hyper('</article>')
 
 def hyper(content, wrap=None, iwrap=None, href=None):
     # This gets called a lot, so it should be fast.
@@ -281,21 +290,14 @@ def article_combinator(articles):
     if not articles:
         # This is the overview page, when no topic is specified.
         headers = {'Topic': 'a', 'Ver': None, 'Last': 'time', 'Summary': 'q'}
-        g = (x for x in generate_table(headers, palace_summary(), 'Palace Summary'))
+        g = (x for x in format_table(headers, palace_summary(), 'Palace Summary'))
         yield from hyper(g, wrap='article')
         articles = {palace_recall('roadmap.txt')}
     for article in articles:
         if not article: continue
         if not article.content: 
             yield from hyper(f'No content found for {article.topic}.', wrap='p')
-            continue
-        # TODO: Move to a specialized function for rendering article details.
-        content = article.content.decode('utf-8').splitlines()
-        yield from hyper(f'<article><h2>{article.topic}</h2><ol>')
-        for i, line in enumerate(content):
-            yield from hyper(f'<li>{line}</li>')
-        yield from hyper(f'</ol><aside>Version {article.ver} at {article.ts}.</aside></article>')
-        yield from hyper('</article>')
+        else: yield from format_article(article)
 
 # Main user interface, rendered dynamically based user input.
 def html_doc_stream(articles, form):
