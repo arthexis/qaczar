@@ -397,8 +397,7 @@ def chain_run(*cmds, s=None):
             return s.returncode if s else -1
     return s.returncode
 
-# TODO: Create a dispatching function for delegate goals.
-# TODO: 
+# TODO: Create a dispatching function for delegate to arbitrary functions.
     
 def certify_build():
     global BRANCH
