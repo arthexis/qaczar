@@ -259,7 +259,7 @@ def process_forms(env, topic):
         palace_recall(topic, store=data)
         return None, False
     elif method == 'GET':        
-        return ('<form id="cmd-form" method="post">'
+        return ('<form id="cmd-form" method="get">'
                 '<textarea id="cmd" name="cmd" cols=70 rows=1></textarea></form>'
                 '<div id="cmd-output"></div>'), False
 
