@@ -297,7 +297,10 @@ def facade_wsgi_responder(env, respond):
             if i == 0:
                 if article and len(topics) == 1 and '.' in topic:
                     emit(f'Found {topic=} {article.ctype}')
-                    respond('200 OK', [('Content-Type', article.ctype), 
+                    emit(f'Content-Length: {len(article.content)}')
+                    emit(f'{TOPICS[topic]=}')
+                    ctype = article.ctype or 'application/octet-stream'
+                    respond('200 OK', [('Content-Type', ctype),
                             ('Content-Length', str(len(article.content)))])
                     yield from stream; break
                 else:
