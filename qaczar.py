@@ -199,7 +199,7 @@ def palace_recall(topic, /, fetch=True, store=None):
         emit(f'Palace error {e=} {sql=}'); raise
     c.close()
 
-TopicSummary = collections.namedtuple('TopicSummary', 'topic qty ts summary')
+TopicSummary = collections.namedtuple('TopicSummary', 'topic ver ts summary')
 
 def palace_summary():
     # TODO: Test this function (palace_summary).
@@ -208,7 +208,7 @@ def palace_summary():
     c.execute('SELECT name FROM sqlite_master WHERE type="table" '
             'AND name not LIKE "sqlite_%"')
     for t in c.fetchall():
-        found = c.execute(f'SELECT COUNT(*), MAX(ts), SUBSTR(content, 0, 54) '
+        found = c.execute(f'SELECT MAX(ver), MAX(ts), SUBSTR(content, 0, 54) '
             f'FROM {t[0]} GROUP BY ts ORDER BY ts DESC ').fetchone()
         if found: yield TopicSummary(t[0], *found)
     c.close()
@@ -270,7 +270,7 @@ def process_forms(env, topic):
                 '<div id="query-output"></div>'), False
     
 def article_combinator(articles):
-        th = ('Topic', 'Qty', 'Last', 'Summary')
+        th = ('Topic', 'Ver', 'Last', 'Summary')
         for article in articles:
             if not article: continue
         tables = (x for x in generate_table(th, palace_summary()))
