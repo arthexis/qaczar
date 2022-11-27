@@ -234,8 +234,13 @@ def process_forms(env, topic):
     method = env['REQUEST_METHOD']
     if method == 'POST':
         data = env['wsgi.input'].read(int(env.get('CONTENT_LENGTH', 0)))
-        emit(f'Data received: {topic=} {len(data)=}')
-        palace_recall(topic, store=data)
+        if topic:
+            emit(f'Data received: {topic=} {len(data)=}')
+            palace_recall(topic, store=data)
+        elif data: 
+            topic = urllib.parse.unquote(data.decode('utf-8'))
+            emit(f'New topic: {topic=}')
+            return f'302 Found', [('Location', f'/{topic}')]
         return None, False
     elif method == 'GET':        
         return ('<form id="cmd-form" method="get">'
