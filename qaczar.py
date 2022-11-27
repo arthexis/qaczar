@@ -6,10 +6,10 @@
 
 # Coding recommendations:
 
-# 1. Keep the width to less than 100 characters.
+# 1. Keep the line width to less than 100 characters.
 # 2. Use functions, not classes, for modularity, composability and encapsulation.
-# 3. Functions should never reference functions or globals from later in the script.
-#    (Time travel shennanigans are not allowed.)
+# 3. Functions should not reference functions or globals from later in the script.
+
 
 import os
 import sys
@@ -25,10 +25,10 @@ import subprocess
 
 # This is the name that will appear on the title of the website.
 SITE = 'qaczar.com'
+BRANCH = 'main'
 
 RUNLEVEL = len(sys.argv)
 DIR = os.path.dirname(__file__)
-BRANCH = 'main'
 
 
 # These utility functions are used everywhere, be careful when changing them.
@@ -46,7 +46,7 @@ def fread(fn, decode=None):
     except FileNotFoundError: 
         return None 
 
-BODY = fread(__file__, decode='utf-8')
+SOURCE = fread(__file__, decode='utf-8')
 
 
 # C.
@@ -74,15 +74,15 @@ def create_fork(*args, old=None):
 # If the source changes, kill s and start a new one with the same params.
 # If the new copy fails, abort and investigate the error.
 def watch_over(s):  
-    global BODY
+    global SOURCE
     while True:
         stable, mtime = True, os.path.getmtime(__file__)
         while True:
             time.sleep(2.6)  # A reasonable time for take backs.
             if os.path.getmtime(__file__) != mtime:
                 mutation, mtime = fread(__file__), os.path.getmtime(__file__)
-                if mutation != BODY:
-                    emit(f"Mutation detected {len(mutation)=} {len(BODY)=}. Restarting.")
+                if mutation != SOURCE:
+                    emit(f"Mutation detected {len(mutation)=} {len(SOURCE)=}. Restarting.")
                     s, stable = create_fork(*s.args, old=s), False
                 continue
             if s.poll() is not None:
@@ -197,7 +197,22 @@ def palace_recall(topic, /, fetch=True, store=None):
         return Article(topic, found[0], found[1], found[2], TOPICS[topic])
     c.close()
 
-    
+TopicSummary = collections.namedtuple('TopicSummary', 'topic qty ts summary')
+
+def palace_summary():
+    global PALACE
+    c = PALACE.cursor()
+    c.execute('SELECT name FROM sqlite_master WHERE type="table" '
+            'AND name not LIKE "sqlite_%"')
+    for t in c.fetchall():
+        # Each row is a TopicSummary object. Qty requires a group by.
+        yield TopicSummary(t[0], *c.execute(f'SELECT COUNT(*), MAX(ts), '
+                f'SUBSTR(content, 0, 54) FROM {t[0]} GROUP BY ts').fetchone())
+
+    c.close()
+
+
+
 # V.
 
 import secrets
@@ -280,6 +295,7 @@ def facade_wsgi_responder(env, respond):
             article, stream = content_stream(env, topic.replace('-', '_'))
             if i == 0:
                 if article and len(topics) == 1 and '.' in topic:
+                    emit(f'Found {topic=} {article.ctype}')
                     respond('200 OK', [('Content-Type', article.ctype, 
                             'Content-Length', str(len(article.content)))])
                     yield from stream; break
@@ -305,7 +321,7 @@ if __name__ == "__main__" and RUNLEVEL == 2:
     atexit.register(PALACE.close)
     HOST, PORT = sys.argv[1].split(':')
     PORT = int(PORT)
-    palace_recall('qaczar.py', store=BODY)
+    palace_recall('qaczar.py', store=SOURCE)
     with wsgiref.simple_server.make_server(
             HOST, PORT, facade_wsgi_responder, handler_class=Unhandler) as s:
         emit(f'Facade ready. Serving on http://{HOST}:{PORT}/')
@@ -317,7 +333,7 @@ if __name__ == "__main__" and RUNLEVEL == 2:
 
 import urllib.request
 
-def remote_facade(*args, upload=None):
+def request_facade(*args, upload=None):
     assert all(urllib.parse.quote(arg) == arg for arg in args), f"Invalid request {args=}"
     url = f'http://{HOST}:{PORT}/{"/".join(args)}'
     try:
@@ -342,11 +358,11 @@ def chain_run(*cmds, s=None):
 def certify_build():
     global BRANCH
     roadmap = []
-    for ln, line in enumerate(BODY.splitlines()):
+    for ln, line in enumerate(SOURCE.splitlines()):
         if line.strip().startswith('# TODO:'):
             roadmap.append(f'@{ln+1:04d} {line.strip()[7:]}')
     roadmap = '\n'.join(roadmap)
-    remote_facade('roadmap.txt', upload=roadmap)
+    request_facade('roadmap.txt', upload=roadmap)
     found = palace_recall('roadmap.txt')
     if not found or found.content.decode('utf-8') != roadmap:
         emit(f'Roadmap updated: {len(roadmap)=} {len(found[3])=}')
