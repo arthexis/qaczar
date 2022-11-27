@@ -283,20 +283,15 @@ def article_combinator(articles):
     if not articles:
         tables = (x for x in generate_table(headers, palace_summary(), 'Palace Summary'))
         yield from hyper(tables, wrap='article')
-    else:
-        for article in articles:
-            if not article: continue
-            tables = (x for x in generate_table(headers, [article], f'{article.topic}'))
-            yield from hyper(tables, wrap='article')
+        articles = {palace_recall('roadmap.txt')}
+    for article in articles:
+        yield from hyper(article.content, wrap='article')
 
 # Main user interface, rendered dynamically based user input.
 def html_doc_stream(articles, form):
     global SITE
     css = palace_recall('qaczar.css')
     links = []  # TODO: Add a function to generate the links.
-    if not articles: articles = {palace_recall('roadmap.txt')}
-    assert articles, 'No articles found.'
-    # Prep done. Start yielding out bytes of the HTML document.
     yield from hyper('<!DOCTYPE html><head><meta charset="utf-8"/>')
     yield from hyper(SITE, wrap='title')  
     if css: yield from hyper(css.content, 'style')  
