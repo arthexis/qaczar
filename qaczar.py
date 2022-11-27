@@ -216,6 +216,7 @@ def palace_summary():
 
 # V.
 
+import html
 import secrets
 import urllib.parse
 import wsgiref.simple_server 
@@ -244,6 +245,7 @@ def format_article(article):
     content = article.content.decode('utf-8').splitlines()
     yield f'<article><h2>{article.topic}</h2><ol>'.encode('utf-8')
     for i, line in enumerate(content):
+        line = html.escape(line)
         yield from hyper(f'<li>{line}</li>')
     yield from hyper(
             f'</ol><aside>Version {article.ver} at {article.ts}.</aside></article>')
@@ -395,7 +397,8 @@ def chain_run(*cmds, s=None):
             return s.returncode if s else -1
     return s.returncode
 
-# TODO: Create a new kind of scheduler (cron) delegate.
+# TODO: Create a dispatching function for delegate goals.
+# TODO: 
     
 def certify_build():
     global BRANCH
