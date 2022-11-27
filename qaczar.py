@@ -230,6 +230,7 @@ def generate_table(headers, rows):
     for r in rows:
         yield b'<tr>'
         for c, t in zip(r, headers.values()):
+            emit(f'{c=} {t=}')
             if t == 'a': yield f'<td><a href="{c}">{c}</a></td>'.encode('utf-8')
             elif t == 'q': yield f'<td>{c}</td>'.encode('utf-8')
             elif t == 'time': yield f'<td>{c}</td>'.encode('utf-8')
