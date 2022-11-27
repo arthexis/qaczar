@@ -280,11 +280,13 @@ def article_combinator(articles):
     if not articles:
         # This is the overview page, when no topic is specified.
         headers = {'Topic': 'a', 'Ver': None, 'Last': 'time', 'Summary': 'q'}
-        tables = (x for x in generate_table(headers, palace_summary(), 'Palace Summary'))
-        yield from hyper(tables, wrap='article')
+        g = (x for x in generate_table(headers, palace_summary(), 'Palace Summary'))
+        yield from hyper(g, wrap='article')
         articles = {palace_recall('roadmap.txt')}
     for article in articles:
-        yield from hyper(article.content, wrap='article')
+        if article:
+            yield from hyper(article.content, wrap='article')
+            yield from hyper(f'Version {article.ver} at {article.ts}', wrap='p')
 
 # Main user interface, rendered dynamically based user input.
 def html_doc_stream(articles, form):
