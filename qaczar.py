@@ -312,7 +312,6 @@ def facade_wsgi_responder(env, respond):
         for i, topic in enumerate(topics):
             topic = topic.replace('-', '_')
             article, stream = content_stream(env, topic)
-            articles.add(article)
             if i == 0:
                 if article and len(topics) == 1 and '.' in topic:
                     ctype = article.ctype or 'application/octet-stream'
@@ -327,6 +326,7 @@ def facade_wsgi_responder(env, respond):
                         yield b''; break
                     else:
                         respond('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
+            articles.add(article)
         else:
             # I am so happy I found a use case for the else clause of a for loop.
             emit(f'Generating HTML document {len(articles)=}.')
