@@ -242,7 +242,7 @@ def process_forms(env, topic):
             return f'302 Found', [('Location', f'/{topic}')]
         return None, False
     elif method == 'GET':        
-        return ('<form id="cmd-form" method="get">'
+        return ('<form id="cmd-form" method="post">'
                 '<textarea id="cmd" name="cmd" cols=70 rows=1></textarea></form>'
                 '<div id="cmd-output"></div>'), False
 
