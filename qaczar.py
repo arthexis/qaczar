@@ -196,6 +196,8 @@ def palace_recall(topic, /, fetch=True, store=None):
         if found: 
             # Never return the row directly, it's a sqlite3.Row object.
             return Article(topic, found[0], found[1], found[2], TOPICS[topic])
+        elif fetch:
+            emit(f'No articles for {topic=}.')
     except sqlite3.Error as e:
         emit(f'Palace error {e=} {sql=}'); raise
     c.close()
