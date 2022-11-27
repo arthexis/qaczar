@@ -89,7 +89,7 @@ def watch_over(s):
                     emit(f"Fork died {s.args=} {s.pid=}. Restarting.")
                     s, stable = create_fork(*s.args, old=s), False
                     continue
-                emit("Facade unstable, aborting. Check qaczar.py for errors.")
+                emit("Crown unstable, aborting. Check qaczar.py for errors.")
                 sys.exit(1)
             stable = True
 
