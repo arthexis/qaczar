@@ -293,6 +293,7 @@ def html_doc_stream(articles, form):
         if not article: continue
         yield from hyper(x for x in generate_table(
                 ['Topic', 'Qty', 'Last update', 'Summary'], palace_summary()))
+    time.sleep(10)
     yield from hyper('</main><footer>')
     yield from hyper(f'An hypertext grimoire. Served on {isotime()}.', wrap='p')
     yield from hyper('</footer></body></html>')
