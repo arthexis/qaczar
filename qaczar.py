@@ -254,9 +254,9 @@ def process_forms(env, topic):
             palace_recall(topic, store=data)
         return None, False
     elif method == 'GET':        
-        return ('<form id="cmd-form" method="post">'
-                '<textarea id="cmd" name="cmd" cols=70 rows=1></textarea></form>'
-                '<div id="cmd-output"></div>'), False
+        return ('<form id="query-form" method="get">'
+                '<textarea id="query-field" name="q" cols=70 rows=1></textarea></form>'
+                '<div id="query-output"></div>'), False
 
 # Main user interface, rendered dynamically based user input.
 def html_doc_stream(articles, form):
