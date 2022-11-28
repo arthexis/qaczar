@@ -353,7 +353,6 @@ def article_combinator(articles):
         articles = {palace_recall('roadmap.txt')}
     for article in articles:
         # TODO: Find something more interesting for the combinator.
-        # TODO: If a file cannot be visualized, show a download link.
         if not article: continue
         if not article.content: 
             yield from hyper(f'No content found for {article.topic}.', wrap='p')
