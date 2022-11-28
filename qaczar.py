@@ -261,7 +261,7 @@ def format_codeline(line):
     for c in line:
         if c == b'\t': yield b'&nbsp;&nbsp;'
         elif c == b'  ': yield b'&nbsp;'
-        else: yield c
+        else: yield c.encode('utf-8')
     yield b'</code>'
 
 def format_article(article):
