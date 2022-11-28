@@ -376,7 +376,7 @@ if __name__ == "__main__" and RUNLEVEL == 2:
             HOST, PORT, facade_wsgi_responder, handler_class=Unhandler) as s:
         emit(f'Facade ready. Serving on http://{HOST}:{PORT}/')
         create_fork(sys.argv[1], 'certify_build')
-        s.serve_forever(poll_interval=1)
+        s.serve_forever(poll_interval=6)
 
 
 # H.
