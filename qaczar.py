@@ -135,7 +135,8 @@ def seed_mtime(topic, old_mtime=0):
 
 def guess_ctype(topic):
     try:
-        return mimetypes.guess_type(topic.replace('__', '.'))[0]
+        return (mimetypes.guess_type(topic.replace('__', '.'))[0]
+            or 'application/octet-stream')
     except (FileNotFoundError, TypeError): 
         return 'application/octet-stream'
 
@@ -190,7 +191,8 @@ def palace_recall(topic, /, fetch=True, store=None):
             emit(f'Insert commited {topic=} {len(store)=}.')
             PALACE.commit()
         if found: 
-            return Article(topic, found[0], found[1], found[2], TOPICS[topic])
+            ctype = TOPICS.get(topic, 'application/octet-stream')
+            return Article(topic, found[0], found[1], found[2], ctype)
     except sqlite3.Error as e:
         emit(f'Palace error {e=} {sql=}'); raise
     c.close()
@@ -294,11 +296,14 @@ def hyper(content, wrap=None, iwrap=None, href=None):
     else: yield b''
     if href: yield '</a>'.encode('utf-8')
     if wrap: yield f'</{wrap}>'.encode('utf-8') 
+
+# TopicSummary = collections.namedtuple('TopicSummary', 'topic ver ts length ctype')
       
 def article_combinator(articles):
     if not articles:
         # This is the overview page, when no topic is specified.
-        headers = {'Topic': 'a', 'Ver': None, 'Last': 'time', 'Summary': 'q'}
+        headers = {
+                'Topic': 'a', 'Ver': None, 'Timestamp': 'time', 'Size': None}
         g = (x for x in format_table(headers, palace_summary(), 'Palace Summary'))
         yield from hyper(g, wrap='article')
         articles = {palace_recall('roadmap.txt')}
