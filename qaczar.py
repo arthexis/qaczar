@@ -447,7 +447,7 @@ def emit(verse, safe=False):
     ts = isotime()
     print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{ts}] {DELEGATE}: {verse}')
     if not safe:
-        verse = '<li><pre>' + html.escape(verse) + '</pre></li>'
+        verse = '<li><code>' + html.escape(verse) + '</code></li>'
     REPORT.append(verse)
 
 
@@ -510,7 +510,7 @@ if __name__ == "__main__" and RUNLEVEL in (3, 4):
 def self_check():
     global BRANCH, SOURCE
     import platform
-    emit(f'Validating build of <{BRANCH}>.')
+    emit(f'Validating build of {BRANCH=}.')
     facade_request('platform.txt', upload=(
         f'{platform.node()=}\n'
         f'{platform.machine()=}\n'
@@ -530,7 +530,7 @@ def self_check():
     if status != 200: return status
     returncode = chain_run(
             ['git', 'add', '.'],
-            ['git', 'commit', '-m', 'Commit by certify_build.'],
+            ['git', 'commit', '-m', 'Commit by self_check.'],
             ['git', 'push', 'origin', BRANCH])
     emit(f'Pushed to {BRANCH=} {returncode=}.')
     emit(f'Validation and push complete at {isotime()}.')
