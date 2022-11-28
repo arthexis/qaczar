@@ -438,7 +438,7 @@ def certify_build():
             ['git', 'commit', '-m', 'Automatic commit by certify_build.'],
             ['git', 'push', 'origin', BRANCH])
     report.append(f'Pushed to {BRANCH=} {returncode=}')
-    return report
+    return '\n'.join(report)
 
             
 # TODO: Think about how to deploy to AWS after SSL is working.            
