@@ -275,9 +275,7 @@ def format_codelines(lines, formater=None):
     yield b'<ol>'
     for i, line in enumerate(lines):
         yield b'<li>'
-        if formater: 
-            assert isinstance((formatted := formater(line)), bytes), f'{type(formatted)=}'
-            yield formatted
+        if formater: yield from formater(line)
         else: yield line.encode('utf-8')
         yield b'</li>'
     yield b'</ol>'
