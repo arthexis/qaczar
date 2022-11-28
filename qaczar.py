@@ -429,6 +429,8 @@ REPORT = []
 
 _emit = emit
 
+# TODO: Consider storing reports as hypertext instead of plain text.
+
 def emit(verse):
     global DELEGATE, REPORT
     _emit(f'{DELEGATE}: {verse}')
