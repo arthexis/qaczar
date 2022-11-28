@@ -34,7 +34,7 @@ def isotime(t=None):
     return time.strftime('%Y-%m-%d %H:%M:%S', t or time.gmtime())
 
 def emit(verse): 
-     print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{isotime()}] {verse}')
+    print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{isotime()}] {verse}')
 
 def fread(fn, decode=None):
     try: 
@@ -255,28 +255,34 @@ def format_table(headers, rows, title=None):
         yield b'</tr>'
     yield b'</table>'
 
-def format_codeline(line):
-    # TODO: Think about formatting based on content type.
-    assert isinstance(line, str)
-    yield b'<code>'
-    line = html.escape(line)
-    line = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
+def format_python_line(line):
     if line.strip().startswith('#'): yield f'<q>{line}</q>'.encode('utf-8')
     elif line.startswith('def') or line.startswith('import'):
         yield f'<strong>{line}</strong>'.encode('utf-8')
     elif 'except' in line or 'return' in line or 'yield' in line: 
         yield f'<mark>{line}</mark>'.encode('utf-8')
     else: yield line.encode('utf-8')
-    yield b'</code>'
+    
+def format_codelines(lines, formater=None):
+    yield b'</ol>'
+    for i, line in enumerate(lines):
+        yield b'<li><code>'
+        line = html.escape(line)
+        line = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
+        if formater: 
+            assert isinstance((formatted := formater(line)), bytes)
+            yield formatted
+        else: yield line.encode('utf-8')
+        yield b'</code></li>'
+    yield b'</ol>'
 
 def format_article(article, aside=None):
-    contents = article.content.decode('utf-8').splitlines()
+    # TODO: Think about formatting based on content type.
     yield f'<article><h2>{article.topic}</h2><ol>'.encode('utf-8')
-    for i, line in enumerate(contents):
-        yield b'<li>'
-        yield from format_codeline(line)
-        yield b'</li>'
-    yield b'</ol>'
+    ctype, formatter = article.ctype, None
+    if ctype.startswith('text/'):
+        if ctype == 'text/x-python': formatter = format_python_line
+        yield from format_codelines(article.content.splitlines(), formater=formatter)
     if aside: yield f'<aside>{aside}</aside>'.encode('utf-8')
     yield b'</article>'
 
@@ -301,12 +307,14 @@ def process_forms(env, topic):
     elif method == 'GET': 
         if query := urllib.parse.unquote(env.get('QUERY_STRING', '')):
             vars = urllib.parse.parse_qs(query); q = vars["q"][0]
-            report = q.replace(' ', '_') + '__txt'
+            # Try to use html reports instead.
+            report = q.replace(' ', '_') + '__html'
             msg = (f"Request received: {topic=} query='{q}'. "
                 f"Report: <a href='{report}'>{report}</a>.")
             delegation = query.replace('+', '_')
             # Avoid doing any work in the facade, always delegate to the backend. 
-            palace_recall(report, store='Delegation in progress...'.encode('utf-8'))
+            palace_recall(report, store=
+                '<h1>Delegation in progress...</h1>'.encode('utf-8'))
             create_fork(f'{HOST}:{PORT}', delegation)
             # Redirect to the expected report.
             return None, report
@@ -473,7 +481,7 @@ def delegate_task():
     else: 
         if CONTEXT: emit(f'Context <{CONTEXT}> ignored for delegate <{DELEGATE}>.')
         delegate()
-    report = '\n'.join(REPORT)
+    report = '\n'.join(REPORT)  # Name of the report should be HTML
     if report:
         status, _ = facade_request(f'{DELEGATE}.txt', upload=str(report))
         emit(f'Delegate <{DELEGATE}> completed and reported with {status=}.')
