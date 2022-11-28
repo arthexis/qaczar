@@ -8,6 +8,7 @@
 # 2. Use functions, not classes, for modularity, composability and encapsulation.
 # 3. Functions should not reference functions or globals from later in the script.
 # 4. The system must respond to all requests in 1 second or less.
+# 5. Don't overdesign, wait until the opportunity for reuse arises and take it.
 
 
 import os
@@ -194,7 +195,7 @@ def palace_recall(topic, /, fetch=True, store=None):
         emit(f'Palace error {e=} {sql=}'); raise
     c.close()
 
-TopicSummary = collections.namedtuple('TopicSummary', 'topic ver ts summary')
+TopicSummary = collections.namedtuple('TopicSummary', 'topic ver ts length ctype')
 
 def palace_summary():
     # TODO: Add columns for content type and bytes directly from here.
@@ -204,11 +205,11 @@ def palace_summary():
             'AND name LIKE "top_%"')
     for t in c.fetchall():
         topic = t[0][4:]
-        found = c.execute(f"SELECT MAX(ver), MAX(ts), length(content) || ' bytes' "
+        found = c.execute(f"SELECT MAX(ver), MAX(ts), length(content) "
             f'FROM {t[0]} GROUP BY ts ORDER BY ts DESC ').fetchone()
         if found: 
-            content = f'{TOPICS.get(topic, "application/octet-stream")} ({found[2]}).'
-            yield TopicSummary(topic, found[0], found[1], content)
+            ctype = TOPICS.get(topic, "application/octet-stream")
+            yield TopicSummary(topic, found[0], found[1], ctype, int(found[2]))
     c.close()
 
 
