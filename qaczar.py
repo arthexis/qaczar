@@ -209,7 +209,7 @@ def palace_summary(prefix=None):
     global PALACE
     c = PALACE.cursor()
     for table in palace_tableset('top'):
-        topic = table.replace('__', '.')
+        topic, table = table.replace('__', '.'), 'top_' + table
         if prefix and not table.startswith(prefix): continue
         found = c.execute(f"SELECT MAX(ver), MAX(ts), length(content) "
             f'FROM {table} GROUP BY ts ORDER BY ts DESC ').fetchone()
