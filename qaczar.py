@@ -148,6 +148,14 @@ def text_summary(content, length=54):
     if not content or not isinstance(content, str): return 'N/A'
     return re.sub(r'\s+', ' ', content)[:length] if content else 'N/A'
 
+def palace_tableset(prefix):
+    global PALACE
+    c = PALACE.cursor()
+    c.execute(f'SELECT name FROM sqlite_master WHERE type="table" '
+            f'AND name LIKE "{prefix}_%"')
+    for t in c.fetchall():
+        yield t[0][len(prefix)+1:]
+
 Article = collections.namedtuple('Article', 'topic ver ts content ctype')
 
 # All single-topic palace operations are performed by a single function.
@@ -160,10 +168,7 @@ def palace_recall(topic, /, fetch=True, store=None):
     c = PALACE.cursor()
     try:
         if not TOPICS:
-            c.execute(sql := 'SELECT name FROM sqlite_master ' 
-                    'WHERE type="table" AND name LIKE "top_%"')
-            for t in c.fetchall(): 
-                TOPICS[(topic := t[0][4:])] = guess_ctype(topic)
+            TOPICS = {t: guess_ctype(t) for t in palace_tableset('top')}
         if topic not in TOPICS:
             c.execute(sql := f'CREATE TABLE IF NOT EXISTS {table} ('
                     f'ver INTEGER PRIMARY KEY AUTOINCREMENT, '
@@ -199,20 +204,20 @@ def palace_recall(topic, /, fetch=True, store=None):
 
 TopicSummary = collections.namedtuple('TopicSummary', 'topic ver ts length ctype')
 
-def palace_summary():
+# TODO: Filter by topic prefix.
+def palace_summary(prefix=None):
     global PALACE
     c = PALACE.cursor()
-    c.execute('SELECT name FROM sqlite_master WHERE type="table" '
-            'AND name LIKE "top_%"')
-    for t in c.fetchall():
-        topic = t[0][4:]
+    for table in palace_tableset('top'):
+        topic = table.replace('__', '.')
+        if prefix and not table.startswith(prefix): continue
         found = c.execute(f"SELECT MAX(ver), MAX(ts), length(content) "
-            f'FROM {t[0]} GROUP BY ts ORDER BY ts DESC ').fetchone()
+            f'FROM {table[0]} GROUP BY ts ORDER BY ts DESC ').fetchone()
         if found: 
             ctype = TOPICS.get(topic, "application/octet-stream")
             yield TopicSummary(topic, found[0], found[1], int(found[2]), ctype)
     c.close()
-
+    
 
 # V.
 
