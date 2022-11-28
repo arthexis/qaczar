@@ -243,7 +243,7 @@ def format_table(headers, rows, title=None):
     # The output should already be binary encoded for performance.
     if title: yield f'<h2>{title}</h2>'.encode('utf-8')
     if not rows: 
-        yield '<p>No data found.</p>'.encode('utf-8')
+        yield '<p><strong>No data found.</strong></p>'.encode('utf-8')
     else:
         yield b'<table><tr>'
         for h in headers.keys(): yield f'<th>{h}</th>'.encode('utf-8')
