@@ -489,7 +489,6 @@ def self_check():
         f'{platform.python_version()=}\n'
         f'{sys.executable=}\n'
     ))
-    # TODO: Add a platform report and upload it to the palace.
     # TODO: Platform report is later used for environment maintenance.
     roadmap = []
     for ln, line in enumerate(SOURCE.splitlines()):
