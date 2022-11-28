@@ -344,6 +344,7 @@ def hyper(content, wrap=None, iwrap=None, href=None):
 def article_combinator(articles):
     if not articles:
         # This is the overview page, when no topic is specified.
+        # TODO: Add a way to limit the number of lines shown in the overview.
         th = {'Topic': 'a', 'Ver': None, 'Timestamp': 'time', 'Size': None, 'Type': 'q'}
         g = (x for x in format_table(th, palace_summary(), 'Palace Summary'))
         yield from hyper(g, wrap='article')
@@ -448,8 +449,6 @@ def emit(verse, safe=False):
         verse = '<code>' + html.escape(verse) + '</code>'
     REPORT.append(f'<li><time>{ts}</time> {verse}</li>')
 
-# TODO: Consider storing reports as hypertext instead of plain text.
-
 def facade_request(*args, upload=None):
     assert all(urllib.parse.quote(arg) == arg for arg in args), f"Invalid request {args=}"
     url = f'http://{HOST}:{PORT}/{"/".join(args)}'
@@ -501,8 +500,7 @@ CORE_FUNCTIONS = {f for f in globals().values() if callable(f)}
 if __name__ == "__main__" and RUNLEVEL in (3, 4):
     DELEGATE = sys.argv[2].lower()
     CONTEXT = sys.argv[3] if len(sys.argv) > 3 else None
-    # Delegates should not have access to the palace directly.
-    # Instead they should use the http facade to exchange data.
+    # Delegates should not have access to the palace directly, use the facade.
     assert PALACE is None, 'Palace connected. Not good.'
     delegate_task()
 
@@ -539,7 +537,7 @@ def self_check():
     emit(f'Validation and push completed.')
 
 # TODO: New delegate to run a script in a virtual environment.
-
+# TODO: Prune unnecessary functions from delagates before running them.
 # TODO: Think about new ways to visualize the code.
 # TODO: Think about how to deploy to AWS after SSL is working.            
 # TODO: Think of new functions to add to qaczar.
