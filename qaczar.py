@@ -235,6 +235,8 @@ SECRET = secrets.token_bytes()
 
 # Functions useful for sending binary data in HTTP responses.
 
+# TODO: Make AssertionError: write() error easier to debug.
+
 def format_table(headers, rows, title=None):
     # The output should already be binary encoded for performance.
     if title: yield f'<h2>{title}</h2>'.encode('utf-8')
