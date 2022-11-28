@@ -279,8 +279,8 @@ def process_forms(env, topic):
             delegation = query.replace('+', '_')
             create_fork(f'{HOST}:{PORT}', delegation)
         return ('<form id="query-form" method="get">'
-                '<input type="text" id="query-field" name="q" autofocus></form>'
-                '<div id="query-output"></div>'), False
+                '<input type="text" id="query-field" name="q" autofocus accesskey="q">'
+                '</form><div id="query-output"></div>'), False
 
 def hyper(content, wrap=None, iwrap=None, href=None):
     # This gets called a lot, so it should be fast.
