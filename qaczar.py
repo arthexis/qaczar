@@ -426,7 +426,7 @@ def delegate_task():
         emit(f'Received {len(context) + " bytes of" if context else "no"} context.')
         delegate(context)  
     else: 
-        emit(f'Context <{CONTEXT}> ignored for delegate <{DELEGATE}>.')
+        if CONTEXT: emit(f'Context <{CONTEXT}> ignored for delegate <{DELEGATE}>.')
         delegate()
     report = '\n'.join(REPORT)
     if report:
