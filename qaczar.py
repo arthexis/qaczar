@@ -203,6 +203,7 @@ def palace_recall(topic, /, fetch=True, store=None, append=False):
                         f'VALUES (?, ?, ?, ?)', (ts, store, store_md5, 0))
                 emit(f'Insert commited {topic=} {len(store)=}.')
             elif found:
+                # TODO: Test how append works with binary data.
                 c.execute(sql := f'UPDATE {table} SET ts=?, content=?, md5=? '
                         f'WHERE ver=?', (ts, found.store + store, store_md5, found[0]))
                 emit(f'Append commited {topic=} {len(store)=}.')
