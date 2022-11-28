@@ -481,7 +481,6 @@ def self_check():
     global BRANCH, SOURCE
     import platform
     emit(f'Validating build of <{BRANCH}>.')
-    # Get the name of the current virtual environment.
     facade_request('platform.txt', upload=(
         f'{platform.node()=}\n'
         f'{platform.machine()=}\n'
@@ -489,7 +488,6 @@ def self_check():
         f'{platform.python_version()=}\n'
         f'{sys.executable=}\n'
     ))
-    # TODO: Platform report is later used for environment maintenance.
     roadmap = []
     for ln, line in enumerate(SOURCE.splitlines()):
         if line.strip().startswith('# TODO:'):
