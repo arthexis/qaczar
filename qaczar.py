@@ -258,6 +258,7 @@ def format_table(headers, rows, title=None):
     yield f'<aside>{count} rows. Binary files not shown.</aside>'.encode('utf-8')
 
 def format_codeline(line):
+    # TODO: Think about aditional formatting for code.
     assert isinstance(line, str)
     yield b'<code>'
     line = html.escape(line)
