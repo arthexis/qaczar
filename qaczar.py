@@ -248,15 +248,24 @@ def format_table(headers, rows, title=None):
     yield b'</table>'
     yield f'<aside>{count} rows. Binary files not shown.</aside>'.encode('utf-8')
 
+def format_codeline(line):
+    line = html.escape(line).replace('\t', ' ' * 4).replace('  ', '&nbsp;')
+    yield b'<code>'
+    for c in line:
+        if c == b'\t': yield b'&nbsp;&nbsp;'
+        elif c == b'  ': yield b'&nbsp;'
+        else: yield c
+    yield b'</code>'
+
 def format_article(article):
     content = article.content.decode('utf-8').splitlines()
     yield f'<article><h2>{article.topic}</h2><ol>'.encode('utf-8')
     for i, line in enumerate(content):
-        line = html.escape(line)
-        line = line.replace('\t', ' ' * 4).replace('  ', '&nbsp;')
-        yield from hyper(f'<li>{line}</li>')
-    yield from hyper(
-            f'</ol><aside>Version {article.ver} at {article.ts}.</aside></article>')
+        yield b'<li>'
+        yield from format_codeline(line)
+        yield b'</li>'
+    yield (f'</ol><aside>Ver {article.ver} <time>{article.ts}'
+        f'</time>.</aside></article>').encode('utf-8')
     yield from hyper('</article>')
 
 def content_stream(env, topic):
