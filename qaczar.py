@@ -281,7 +281,6 @@ def format_codelines(lines, formater=None):
 def format_article(article, aside=None):
     yield f'<article><h2>{article.topic}</h2><ol>'.encode('utf-8')
     ctype, formatter = article.ctype, None
-    # Render HTML as is.
     if ctype.startswith('text/'):
         content = article.content.decode('utf-8').splitlines()
         if ctype == 'text/x-python': formatter = format_python_line
