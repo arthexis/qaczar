@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # A Python script that does everything by itself.
+# (aka. one night a mysterious cosmic voice told me to create an ark and here it is)
 # H. V. D. C. by Rafa Guillén (arthexis@gmail.com) 2022-2023
 
 # 1. Keep the line width to less than 100 characters.
@@ -258,7 +259,7 @@ def format_table(headers, rows, title=None):
     yield f'<aside>{count} rows. Binary files not shown.</aside>'.encode('utf-8')
 
 def format_codeline(line):
-    # TODO: Think about aditional formatting for code.
+    # TODO: Think about formatting based on content type.
     assert isinstance(line, str)
     yield b'<code>'
     line = html.escape(line)
@@ -282,7 +283,7 @@ def format_article(article):
         f'</time>.</aside></article>').encode('utf-8')
     yield b'</article>'
 
-def content_stream(env, topic):
+def format_stream(env, topic):
     # This is necesary to avoid the browser from buffering the entire response.
     if not topic or env['REQUEST_METHOD'] != 'GET': return None, None
     article = palace_recall(topic)
@@ -374,13 +375,14 @@ def facade_wsgi_responder(env, start_response):
     method, path, origin = env["REQUEST_METHOD"], env["PATH_INFO"], env["REMOTE_ADDR"]
     emit(f'--*-- Incoming {method} {path} from {origin} --*--')
     if origin != '127.0.0.1':
+        # TODO: Add a way to authorize other IPs to access the palace.
         write = start_response('403 Forbidden', http_headers())
     else:
         topics, _ = path[1:].split('?', 1) if '?' in path else (path[1:], '')
         topics, articles, form = topics.split('/'), set(), None
         for i, topic in enumerate(topics):
             topic = topic.replace('-', '_')
-            article, stream = content_stream(env, topic)
+            article, stream = format_stream(env, topic)
             if i == 0:
                 if article and len(topics) == 1 and '.' in topic:
                     size = len(article.content)
@@ -480,10 +482,7 @@ if __name__ == "__main__" and RUNLEVEL in (3, 4):
     delegate_task()
 
 
-# --- Non-foundation code below this line. ---
-
-
-# Here we can put functions that are only called as delegates.
+# --- Delegate-only functions go below this line. ---
     
 def self_check():
     global BRANCH, SOURCE
@@ -495,6 +494,8 @@ def self_check():
         f'{platform.platform()=}\n'
         f'{platform.python_version()=}\n'
         f'{sys.executable=}\n'
+        f'{DIR=}\n'
+        f'{BRANCH=}\n'
     ))
     roadmap = []
     for ln, line in enumerate(SOURCE.splitlines()):
