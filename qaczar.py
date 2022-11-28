@@ -314,7 +314,7 @@ def process_forms(env, topic):
             # Redirect to the expected report.
             return None, report
         return (f'<form id="query-form" method="get">'
-                f'<input type="text" id="query-field" name="q" autofocus accesskey="q">'
+                f'<input type="text" id="query-field" name="q" accesskey="q">'
                 f'</form><div id="query-output">{msg}</div>'), False
 
 def hyper(content, wrap=None, iwrap=None, href=None):
