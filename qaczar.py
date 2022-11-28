@@ -309,6 +309,7 @@ def article_combinator(articles):
         yield from hyper(g, wrap='article')
         articles = {palace_recall('roadmap.txt')}
     for article in articles:
+        # TODO: Find something more interesting than looping over articles.
         if not article: continue
         if not article.content: 
             yield from hyper(f'No content found for {article.topic}.', wrap='p')
