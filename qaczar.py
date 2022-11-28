@@ -275,7 +275,7 @@ def process_forms(env, topic):
         # TODO: Launch a delegate to obtain the goal.
         if query := urllib.parse.unquote(env.get('QUERY_STRING', '')):
             emit(f'Request received: {topic=} {query=}. Delegating.')
-            delegation = re.sub(r'\s+', '_', query)
+            delegation = query.replace('+', '_')
             create_fork(f'{HOST}:{PORT}', delegation)
         return ('<form id="query-form" method="get">'
                 '<input type="text" id="query-field" name="q" autofocus></form>'
