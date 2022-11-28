@@ -282,6 +282,10 @@ def format_article(article, aside=None):
             content = article.content.decode('utf-8').splitlines()
             if ctype == 'text/x-python': formatter = format_python_line
             yield from format_codelines(content, formater=formatter)
+    elif article.ctype == 'application/octet-stream':
+        fname = article.topic.replace('__', '.')
+        yield f'<strong>Unable to visualize {article.topic}</strong>.'.encode('utf-8')
+        yield f'<a href="{fname}">Download</a>'.encode('utf-8')
     if aside: yield f'<aside>{aside}</aside>'.encode('utf-8')
     yield b'</article>'
 
@@ -347,10 +351,6 @@ def article_combinator(articles):
         if not article: continue
         if not article.content: 
             yield from hyper(f'No content found for {article.topic}.', wrap='p')
-        if article.ctype == 'application/octet-stream':
-            fname = article.topic.replace('__', '.')
-            yield from hyper(f'Unable to visualize {article.topic}.', wrap='p')
-            yield from hyper(f'<a href="{fname}">Download</a>', wrap='p')
         else: yield from format_article(article)
 
 # Main user interface, rendered dynamically based user input.
