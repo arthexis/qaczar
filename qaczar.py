@@ -212,7 +212,7 @@ def palace_summary(prefix=None):
         topic = table.replace('__', '.')
         if prefix and not table.startswith(prefix): continue
         found = c.execute(f"SELECT MAX(ver), MAX(ts), length(content) "
-            f'FROM {table[0]} GROUP BY ts ORDER BY ts DESC ').fetchone()
+            f'FROM {table} GROUP BY ts ORDER BY ts DESC ').fetchone()
         if found: 
             ctype = TOPICS.get(topic, "application/octet-stream")
             yield TopicSummary(topic, found[0], found[1], int(found[2]), ctype)
