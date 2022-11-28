@@ -197,6 +197,7 @@ def palace_recall(topic, /, fetch=True, store=None):
 TopicSummary = collections.namedtuple('TopicSummary', 'topic ver ts summary')
 
 def palace_summary():
+    # TODO: Add columns for content type and bytes directly from here.
     global PALACE
     c = PALACE.cursor()
     c.execute('SELECT name FROM sqlite_master WHERE type="table" '
