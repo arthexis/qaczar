@@ -465,7 +465,6 @@ def certify_build():
     emit(f'Certification complete at {isotime()}')
     
 
-            
 # TODO: Think about how to deploy to AWS after SSL is working.            
 # TODO: Think of new functions to add to qaczar.
 
