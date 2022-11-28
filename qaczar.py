@@ -253,6 +253,7 @@ def format_article(article):
     yield f'<article><h2>{article.topic}</h2><ol>'.encode('utf-8')
     for i, line in enumerate(content):
         line = html.escape(line)
+        line = line.replace('\t', ' ' * 4).replace('  ', '&nbsp;')
         yield from hyper(f'<li>{line}</li>')
     yield from hyper(
             f'</ol><aside>Version {article.ver} at {article.ts}.</aside></article>')
