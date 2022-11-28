@@ -438,6 +438,15 @@ DELEGATE = None
 REPORT = []
 
 
+def emit(verse, safe=False):
+    global DELEGATE, REPORT
+    ts = isotime()
+    print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{ts}] {DELEGATE}: {verse}')
+    if not safe:
+        verse = '<li><pre>' + html.escape(verse) + '</pre></li>'
+    REPORT.append(verse)
+
+
 # TODO: Consider storing reports as hypertext instead of plain text.
 
 def facade_request(*args, upload=None):
@@ -463,14 +472,7 @@ def chain_run(*cmds, s=None):
     return s.returncode
 
 def delegate_task():
-    global HOST, PORT, DELEGATE, CONTEXT
-    def emit(verse, safe=False):
-        global DELEGATE, REPORT
-        ts = isotime()
-        print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{ts}] {DELEGATE}: {verse}')
-        if not safe:
-            verse = '<li>' + html.escape(verse) + '</li>'
-        REPORT.append(verse)
+    global HOST, PORT, DELEGATE, CONTEXT, REPORT
     emit(f'Delegate <{DELEGATE}> of <{HOST}:{PORT}> starting.')
     # Import qaczar itself to access functions from the future.
     import qaczar
@@ -484,7 +486,6 @@ def delegate_task():
     else: 
         if CONTEXT: emit(f'Context <{CONTEXT}> ignored for delegate <{DELEGATE}>.')
         delegate()
-    REPORT.append('</ol>')
     report = '\n'.join(REPORT)  # Name of the report should be HTML
     if report:
         status, _ = facade_request(f'{DELEGATE}__html', upload=str(report))
