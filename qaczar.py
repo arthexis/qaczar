@@ -300,6 +300,8 @@ def format_stream(env, topic):
         return article, (content[i:i+1024] for i in range(0, len(content), 1024))
     else: return None, None
 
+# TODO: Add a function that streams the entire contents of the palace.
+
 def process_forms(env, topic):
     # Returns the query form html, and redirect url if needed.
     method, msg = env['REQUEST_METHOD'], ''
