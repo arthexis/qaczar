@@ -473,14 +473,17 @@ def chain_run(*cmds, s=None):
             return s.returncode if s else -1
     return s.returncode
 
+CORE_FUNCTIONS = {}
+
 def delegate_task():
-    global HOST, PORT, DELEGATE, CONTEXT, REPORT
+    global HOST, PORT, DELEGATE, CONTEXT, REPORT, CORE_FUNCTIONS
     emit(f'Delegate "{DELEGATE}" of "{HOST}:{PORT}" starting.')
     # Import qaczar itself to access functions from the future.
     import qaczar
     qaczar.emit = emit  
-    delegate = getattr(qaczar, DELEGATE)
-    if not delegate: raise RuntimeError(f'No such delegate "{DELEGATE}".')
+    delegate = getattr(qaczar, DELEGATE, None)
+    assert callable(delegate), f'Invalid delegate {delegate=}.'
+    assert delegate not in CORE_FUNCTIONS, f"Core function {delegate=} not allowed."
     if delegate.__code__.co_argcount: 
         context = facade_request(CONTEXT) if context else None
         emit(f'Received {len(context) + " bytes of" if context else "no"} context.')
@@ -494,6 +497,8 @@ def delegate_task():
         emit(f'Delegate "{DELEGATE}" completed and reported with {status=}.')
     else: emit(f'Delegate "{DELEGATE}" completed without reporting.')
 
+CORE_FUNCTIONS = {f for f in globals().values() if callable(f)}
+
 if __name__ == "__main__" and RUNLEVEL in (3, 4):
     DELEGATE = sys.argv[2].lower()
     CONTEXT = sys.argv[3] if len(sys.argv) > 3 else None
@@ -504,6 +509,7 @@ if __name__ == "__main__" and RUNLEVEL in (3, 4):
 
 
 # --- Delegate-only functions go below this line. ---
+# Delegates can access core functions, but not other delegates.
     
 def self_check():
     global BRANCH, SOURCE
