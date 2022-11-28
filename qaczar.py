@@ -298,7 +298,9 @@ def process_forms(env, topic):
     elif method == 'GET': 
         if query := urllib.parse.unquote(env.get('QUERY_STRING', '')):
             vars = urllib.parse.parse_qs(query); q = vars["q"][0]
-            msg = f"Request received: {topic=} query='{q}'. Delegating."
+            report = q.replace(' ', '_') + '.txt'
+            msg = (f"Request received: {topic=} query='{q}'. Report: "
+                f"<a href='{report}'>{report}</a>.")
             delegation = query.replace('+', '_')
             create_fork(f'{HOST}:{PORT}', delegation)
         return (f'<form id="query-form" method="get">'
