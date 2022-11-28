@@ -425,19 +425,20 @@ if __name__ == "__main__" and RUNLEVEL == 3:
 def certify_build():
     # TODO: Instead of emitting, we should return a string with the result.
     global BRANCH
-    roadmap = []
+    report, roadmap = [], []
     for ln, line in enumerate(SOURCE.splitlines()):
         if line.strip().startswith('# TODO:'):
             roadmap.append(f'@{ln+1:04d} {line.strip()[7:]}')
     roadmap = '\n'.join(roadmap)
     status, result = request_facade('roadmap.txt', upload=roadmap)
-    emit(f'Roadmap uploaded {status=}.')
+    report.append(f'Roadmap uploaded {status=}')
     if status != 200: return status
-    return chain_run(
+    returncode = chain_run(
             ['git', 'add', '.'],
             ['git', 'commit', '-m', 'Automatic commit by certify_build.'],
             ['git', 'push', 'origin', BRANCH])
-    return 0
+    report.append(f'Pushed to {BRANCH=} {returncode=}')
+    return report
 
             
 # TODO: Think about how to deploy to AWS after SSL is working.            
