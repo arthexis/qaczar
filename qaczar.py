@@ -262,8 +262,9 @@ def format_codeline(line):
     yield b'<code>'
     line = html.escape(line)
     line = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
-    if line.startswith('#'): yield f'<q>{line}</q>'.encode('utf-8')
-    elif line.startswith('def'): yield f'<strong>{line}</strong>'.encode('utf-8')
+    if line.strip().startswith('#'): yield f'<q>{line}</q>'.encode('utf-8')
+    elif line.startswith('def') or line.startswith('import') or "__main__" in line:
+        yield f'<strong>{line}</strong>'.encode('utf-8')
     elif 'except' in line or 'return' in line or 'yield' in line: 
         yield f'<mark>{line}</mark>'.encode('utf-8')
     else: yield line.encode('utf-8')
