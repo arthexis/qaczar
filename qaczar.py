@@ -259,7 +259,6 @@ def format_table(headers, rows, title=None):
         yield b'</table>'
 
 def format_python_line(line):
-    # TODO: Figure out why qaczar.py output is not being rendered.
     line = html.escape(line)
     line = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
     yield b'<code>'
