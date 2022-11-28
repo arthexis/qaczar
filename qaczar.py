@@ -444,11 +444,10 @@ REPORT = []
 
 def emit(verse, safe=False):
     global DELEGATE, REPORT
-    ts = isotime()
-    print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{ts}] {DELEGATE}: {verse}')
+    print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{isotime()}] {DELEGATE}: {verse}')
     if not safe:
-        verse = '<li><code>' + html.escape(verse) + '</code></li>'
-    REPORT.append(verse)
+        verse = '<code>' + html.escape(verse) + '</code>'
+    REPORT.append(f'<li>{verse}</li>')
 
 
 # TODO: Consider storing reports as hypertext instead of plain text.
