@@ -406,6 +406,8 @@ def chain_run(*cmds, s=None):
             return s.returncode if s else -1
     return s.returncode
 
+REPORT = []
+
 def delegate_task():
     global HOST, PORT, DELEGATE, CONTEXT
     emit(f'Delegate <{DELEGATE}> of <{HOST}:{PORT}> starting.')
@@ -417,10 +419,11 @@ def delegate_task():
     if delegate.__code__.co_argcount: 
         context = facade_request(CONTEXT) if context else None
         emit(f'Received {len(context) + " bytes of" if context else "no"} context.')
-        report = delegate(context)  # <-- Execute the delegate function.
+        delegate(context)  # <-- Execute the delegate function.
     else: 
         emit(f'Context <{CONTEXT}> ignored for delegate <{DELEGATE}>.')
-        report = delegate()
+        delegate()
+    report = '\n'.join(REPORT)
     status, _ = facade_request(f'{DELEGATE}.txt', upload=str(report))
     emit(f'Delegate <{DELEGATE}> completed and reported with {status=}')
 
@@ -432,27 +435,35 @@ if __name__ == "__main__" and RUNLEVEL == 3:
     assert PALACE is None, 'Palace connected. Not good.'
     delegate_task()
 
-            
+
 # --- Non-foundation code below this line. ---
-            
+
+_emit = emit
+
+def emit(*args, **kwargs):
+    _emit(*args, **kwargs)
+    REPORT.append(f'{args} {kwargs}')
+
 # Here we can put functions that are only called as delegates.
     
 def certify_build():
     global BRANCH, SOURCE
-    report, roadmap = [], []
+    emit(f'Certifying build of <{BRANCH}>.')
+    roadmap = []
     for ln, line in enumerate(SOURCE.splitlines()):
         if line.strip().startswith('# TODO:'):
             roadmap.append(f'@{ln+1:04d} {line.strip()[7:]}')
     roadmap = '\n'.join(roadmap)
     status, _ = facade_request('roadmap.txt', upload=roadmap)
-    report.append(f'Roadmap uploaded {status=}')
+    emit(f'Roadmap uploaded {status=}')
     if status != 200: return status
     returncode = chain_run(
             ['git', 'add', '.'],
             ['git', 'commit', '-m', 'Commit by certify_build.'],
             ['git', 'push', 'origin', BRANCH])
-    report.append(f'Pushed to {BRANCH=} {returncode=}')
-    return '\n'.join(report)
+    emit(f'Pushed to {BRANCH=} {returncode=}')
+    emit(f'Certification complete at {isotime()}')
+    
 
             
 # TODO: Think about how to deploy to AWS after SSL is working.            
