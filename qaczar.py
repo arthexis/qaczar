@@ -419,7 +419,8 @@ def facade_wsgi_responder(env, start_response):
             yield from  html_doc_stream(articles, form)
     emit(f"Request completed at {round(time.time() - start, 2)} % capacity.")
     # TODO: Maybe keep track of visitors to create automated test plans later.
-    palace_recall('visitors.txt', f'{origin} {method} {path} {isotime()}', append=True)
+    palace_recall('visitors__txt', fetch=False, 
+        store=f'{origin} {method} {path} {isotime()}', append=True)
 
 
 class Unhandler(wsgiref.simple_server.WSGIRequestHandler):
