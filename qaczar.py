@@ -223,7 +223,7 @@ SECRET = secrets.token_bytes()
 
 # Functions useful for sending binary data in HTTP responses.
 
-def format_table(headers, rows, title=None):
+def format_table(headers, rows, title=None, aside=None):
     # The output should already be binary encoded for performance.
     if title: yield f'<h2>{title}</h2>'.encode('utf-8')
     yield b'<table><tr>'
@@ -238,6 +238,7 @@ def format_table(headers, rows, title=None):
             else: yield f'<td><{t}>{c}</{t}></td>'.encode('utf-8')
         yield b'</tr>'
     yield b'</table>'
+    if aside: yield f'<aside>{aside}</aside>'.encode('utf-8')
 
 def format_article(article):
     content = article.content.decode('utf-8').splitlines()
