@@ -211,7 +211,7 @@ def palace_summary():
             f'FROM {t[0]} GROUP BY ts ORDER BY ts DESC ').fetchone()
         if found: 
             ctype = TOPICS.get(topic, "application/octet-stream")
-            yield TopicSummary(topic, found[0], found[1], ctype, int(found[2]))
+            yield TopicSummary(topic, found[0], found[1], int(found[2]), ctype)
     c.close()
 
 
@@ -302,8 +302,7 @@ def hyper(content, wrap=None, iwrap=None, href=None):
 def article_combinator(articles):
     if not articles:
         # This is the overview page, when no topic is specified.
-        headers = {
-                'Topic': 'a', 'Ver': None, 'Timestamp': 'time', 'Size': None}
+        headers = {'Topic': 'a', 'Ver': '', 'Timestamp': 'time', 'Size': '', 'Content Type': ''}	
         g = (x for x in format_table(headers, palace_summary(), 'Palace Summary'))
         yield from hyper(g, wrap='article')
         articles = {palace_recall('roadmap.txt')}
