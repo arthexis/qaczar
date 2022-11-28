@@ -308,7 +308,10 @@ def process_forms(env, topic):
             msg = (f"Request received: {topic=} query='{q}'. "
                 f"Report: <a href='{report}'>{report}</a>.")
             delegation = query.replace('+', '_')
+            # Avoid doing any work in the facade, always delegate to the backend.
             create_fork(f'{HOST}:{PORT}', delegation)
+            # Redirect to the expected report.
+            return None, report
         return (f'<form id="query-form" method="get">'
                 f'<input type="text" id="query-field" name="q" autofocus accesskey="q">'
                 f'</form><div id="query-output">{msg}</div>'), False
