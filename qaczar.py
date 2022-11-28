@@ -436,13 +436,15 @@ import urllib.request
 DELEGATE = None
 REPORT = []
 
-_emit = emit
 
 # TODO: Consider storing reports as hypertext instead of plain text.
 
-def emit(verse):
+def emit(verse, escaped=True):
     global DELEGATE, REPORT
-    _emit(f'{DELEGATE}: {verse}')
+    ts = isotime()
+    print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{ts}] {DELEGATE}: {verse}')
+    if escaped:
+        verse = '<li>' + html.escape(verse) + '</li>'
     REPORT.append(verse)
 
 def facade_request(*args, upload=None):
@@ -478,13 +480,16 @@ def delegate_task():
     if delegate.__code__.co_argcount: 
         context = facade_request(CONTEXT) if context else None
         emit(f'Received {len(context) + " bytes of" if context else "no"} context.')
+        REPORT.append(f'<h2>Context</h2>{context}')
+        REPORT.append('<h2>Output</h2><ol>')
         delegate(context)  
+        REPORT.append('</ol>')
     else: 
         if CONTEXT: emit(f'Context <{CONTEXT}> ignored for delegate <{DELEGATE}>.')
         delegate()
     report = '\n'.join(REPORT)  # Name of the report should be HTML
     if report:
-        status, _ = facade_request(f'{DELEGATE}.txt', upload=str(report))
+        status, _ = facade_request(f'{DELEGATE}__html', upload=str(report))
         emit(f'Delegate <{DELEGATE}> completed and reported with {status=}.')
     else: emit(f'Delegate <{DELEGATE}> completed without reporting.')
 
