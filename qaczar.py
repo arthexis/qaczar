@@ -361,6 +361,7 @@ class Unhandler(wsgiref.simple_server.WSGIRequestHandler):
     def log_request(self, *args, **kwargs): pass
 
 if __name__ == "__main__" and RUNLEVEL == 2:
+    # TODO: Check if palace needs to be upgraded before starting the server.
     PALACE =  sqlite3.connect('p.sqlite', isolation_level='IMMEDIATE')
     atexit.register(PALACE.close)
     HOST, PORT = sys.argv[1].split(':')
@@ -384,7 +385,7 @@ def request_facade(*args, upload=None):
     try:
         upload = upload.encode('utf-8') if upload else None
         with urllib.request.urlopen(url, data=upload, timeout=6) as r:
-            return r.read().decode('utf-8')
+            return r.status, r.read().decode('utf-8')
     except urllib.error.HTTPError as e:
         emit(f'HTTPError: {e.code}'); raise e
 
@@ -405,8 +406,8 @@ def delegate_task():
     function = getattr(qaczar, task)
     if not function: raise RuntimeError(f'No such task: {task}')
     result = function(*args)
-    request_facade(f'{task}.txt', upload=str(result))
-    emit(f'Delegated <{task}> {args=} completed {result=}')
+    status, result = request_facade(f'{task}.txt', upload=str(result))
+    emit(f'Delegated <{task}> {args=} completed {status=}')
 
 if __name__ == "__main__" and RUNLEVEL == 3:
     GOAL = sys.argv[2]
@@ -422,19 +423,21 @@ if __name__ == "__main__" and RUNLEVEL == 3:
 # Here we can put functions that are only called as delegates.
     
 def certify_build():
+    # TODO: Instead of emitting, we should return a string with the result.
     global BRANCH
     roadmap = []
     for ln, line in enumerate(SOURCE.splitlines()):
         if line.strip().startswith('# TODO:'):
             roadmap.append(f'@{ln+1:04d} {line.strip()[7:]}')
     roadmap = '\n'.join(roadmap)
-    result = request_facade('roadmap.txt', upload=roadmap)
-    emit(f'Roadmap uploaded. {result=}')
+    status, result = request_facade('roadmap.txt', upload=roadmap)
+    emit(f'Roadmap uploaded {status=}.')
+    if status != 200: return status
     return chain_run(
             ['git', 'add', '.'],
             ['git', 'commit', '-m', 'Automatic commit by certify_build.'],
             ['git', 'push', 'origin', BRANCH])
-
+    return 0
 
             
 # TODO: Think about how to deploy to AWS after SSL is working.            
