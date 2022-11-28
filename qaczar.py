@@ -204,7 +204,6 @@ def palace_recall(topic, /, fetch=True, store=None):
 
 TopicSummary = collections.namedtuple('TopicSummary', 'topic ver ts length ctype')
 
-# TODO: Filter by topic prefix.
 def palace_summary(prefix=None):
     global PALACE
     c = PALACE.cursor()
