@@ -305,7 +305,6 @@ def process_forms(env, topic):
                 '</form><div id="query-output"></div>'), False
 
 def hyper(content, wrap=None, iwrap=None, href=None):
-    # This gets called a lot, so it should be fast.
     if wrap: yield f'<{wrap}>'.encode('utf-8') 
     if href: yield f'<a href="{href}">'.encode('utf-8')
     if content:
@@ -318,8 +317,6 @@ def hyper(content, wrap=None, iwrap=None, href=None):
     else: yield b''
     if href: yield b'</a>'
     if wrap: yield f'</{wrap}>'.encode('utf-8') 
-
-# TopicSummary = collections.namedtuple('TopicSummary', 'topic ver ts length ctype')
       
 def article_combinator(articles):
     if not articles:
