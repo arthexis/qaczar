@@ -451,6 +451,7 @@ if __name__ == "__main__" and RUNLEVEL in (3, 4):
 def certify_build():
     global BRANCH, SOURCE
     emit(f'Certifying build of <{BRANCH}>.')
+    # TODO: Add a platform report and upload it to the palace.
     roadmap = []
     for ln, line in enumerate(SOURCE.splitlines()):
         if line.strip().startswith('# TODO:'):
