@@ -256,24 +256,26 @@ def format_table(headers, rows, title=None):
     yield b'</table>'
 
 def format_python_line(line):
+    line = html.escape(line)
+    line = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
+    yield b'<code>'
     if line.strip().startswith('#'): yield f'<q>{line}</q>'.encode('utf-8')
     elif line.startswith('def') or line.startswith('import'):
         yield f'<strong>{line}</strong>'.encode('utf-8')
     elif 'except' in line or 'return' in line or 'yield' in line: 
         yield f'<mark>{line}</mark>'.encode('utf-8')
     else: yield line.encode('utf-8')
+    yield b'</code>'
     
 def format_codelines(lines, formater=None):
     yield b'<ol>'
     for i, line in enumerate(lines):
-        yield b'<li><code>'
-        line = html.escape(line)
-        line = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
+        yield b'<li>'
         if formater: 
             assert isinstance((formatted := formater(line)), bytes)
             yield formatted
         else: yield line.encode('utf-8')
-        yield b'</code></li>'
+        yield b'</li>'
     yield b'</ol>'
 
 def format_article(article, aside=None):
@@ -283,7 +285,7 @@ def format_article(article, aside=None):
     # Render HTML as is.
     if ctype.startswith('text/'):
         if ctype == 'text/x-python': formatter = format_python_line
-        elif ctype == 'text/html': formatter = lambda x: x.encode('utf-8')
+        elif ctype == 'text/html': formatter = lambda x: f'<div>{x}</div>'.encode('utf-8')
         content = article.content.decode('utf-8').splitlines()
         yield from format_codelines(content, formater=formatter)
     if aside: yield f'<aside>{aside}</aside>'.encode('utf-8')
