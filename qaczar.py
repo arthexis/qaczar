@@ -238,16 +238,14 @@ SECRET = secrets.token_bytes()
 
 # TODO: Make AssertionError: write() error easier to debug.
 
-def format_table(headers, rows, title=None):
+def format_table(headers, rows, title=None, aside=None):
     assert isinstance(headers, dict) 
     # The output should already be binary encoded for performance.
     if title: yield f'<h2>{title}</h2>'.encode('utf-8')
     yield b'<table><tr>'
     for h in headers.keys(): yield f'<th>{h}</th>'.encode('utf-8')
     yield b'</tr>'
-    count = 0
     for r in rows:
-        count += 1
         yield b'<tr>'
         for c, t in zip(r, headers.values()):
             if t is None: yield f'<td>{c}</td>'.encode('utf-8')
@@ -256,7 +254,7 @@ def format_table(headers, rows, title=None):
             else: yield f'<td><{t}>{c}</{t}></td>'.encode('utf-8')
         yield b'</tr>'
     yield b'</table>'
-    yield f'<aside>{count} rows. Binary files not shown.</aside>'.encode('utf-8')
+    if aside: yield f'<aside>{aside}</aside>'.encode('utf-8')
 
 def format_codeline(line):
     # TODO: Think about formatting based on content type.
@@ -272,15 +270,15 @@ def format_codeline(line):
     else: yield line.encode('utf-8')
     yield b'</code>'
 
-def format_article(article):
+def format_article(article, aside=None):
     contents = article.content.decode('utf-8').splitlines()
     yield f'<article><h2>{article.topic}</h2><ol>'.encode('utf-8')
     for i, line in enumerate(contents):
         yield b'<li>'
         yield from format_codeline(line)
         yield b'</li>'
-    yield (f'</ol><aside>Ver {article.ver} <time>{article.ts}'
-        f'</time>.</aside></article>').encode('utf-8')
+    yield b'</ol>'
+    if aside: yield f'<aside>{aside}</aside>'.encode('utf-8')
     yield b'</article>'
 
 def format_stream(env, topic):
@@ -308,7 +306,7 @@ def process_forms(env, topic):
             msg = (f"Request received: {topic=} query='{q}'. "
                 f"Report: <a href='{report}'>{report}</a>.")
             delegation = query.replace('+', '_')
-            # Avoid doing any work in the facade, always delegate to the backend.
+            # Avoid doing any work in the facade, always delegate to the backend. 
             palace_recall(report, store='Delegation in progress...'.encode('utf-8'))
             create_fork(f'{HOST}:{PORT}', delegation)
             # Redirect to the expected report.
@@ -335,8 +333,11 @@ def article_combinator(articles):
     if not articles:
         # This is the overview page, when no topic is specified.
         th = {'Topic': 'a', 'Ver': None, 'Timestamp': 'time', 'Size': None, 'Type': 'q'}
-        g = (x for x in format_table(th, palace_summary(), 'Palace Summary'))
-        yield from hyper(g, wrap='article')
+        # TODO: See if we can add a total for the bytes.
+        rows = palace_summary()
+        aside = f'{len(rows)} rows. Binary files not shown.'
+        g = (x for x in format_table(th, rows, 'Palace Summary'))
+        yield from hyper(g, wrap='article', aside=aside)
         articles = {palace_recall('roadmap.txt')}
     for article in articles:
         # TODO: Find something more interesting for the combinator.
