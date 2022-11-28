@@ -25,6 +25,7 @@ BRANCH = 'main'
 
 RUNLEVEL = len(sys.argv)
 DIR = os.path.dirname(__file__)
+DELEGATION = None
 
 
 # These utility functions are used everywhere, be careful when changing them.
@@ -271,18 +272,11 @@ def process_forms(env, topic):
             palace_recall(topic, store=data)
         return None, False
     elif method == 'GET': 
-        # TODO: Launch a delete to process the form.
-        if query := env.get('QUERY_STRING', ''):
-            query = urllib.parse.unquote(query)
-            goal = ''.join(c if c.isalnum() else ':' for c in query)
-            emit(f'Query received: {query=} {goal=}')
-            # Store the current topic contents from the palace in a new topic
-            # named tha same as the goal + __txt.
-            if topic and (found := palace_recall(topic)) and found.content:
-                palace_recall(goal + '__txt', store=found.content)
-            create_fork(f'{HOST}:{PORT}', goal)
-        
-        # Then, always return this form.
+        # TODO: Launch a delegate to obtain the goal.
+        if query := urllib.parse.unquote(env.get('QUERY_STRING', '')):
+            emit(f'Request received: {topic=} {query=}. Delegating.')
+            delegation = re.sub(r'\s+', '_', query)
+            create_fork(f'{HOST}:{PORT}', delegation)
         return ('<form id="query-form" method="get">'
                 '<input type="text" id="query-field" name="q" autofocus></form>'
                 '<div id="query-output"></div>'), False
@@ -413,21 +407,26 @@ def chain_run(*cmds, s=None):
     return s.returncode
 
 def delegate_task():
-    # TODO: Delegates should request more context from the facade.
-    if ':' in GOAL: task, *args = GOAL.split(':')
-    else: task, args = GOAL, ()
-    # We do it this way to avoid a circular import.
-    # This will also import functions that were declared afterwords.
+    global HOST, PORT, DELEGATE, CONTEXT
+    emit(f'Delegate <{DELEGATE}> of <{HOST}:{PORT}> starting.')
+    # Import qaczar itself to access functions declared in the future.
+    # This is important to allow the delegate to be self-contained.
     import qaczar
-    function = getattr(qaczar, task)
-    if not function: raise RuntimeError(f'No such task: {task}')
-    result = function(*args)
-    status, result = facade_request(f'{task}.txt', upload=str(result))
-    emit(f'Delegated <{task}> {args=} completed {status=}')
+    delegate = getattr(qaczar, DELEGATE)
+    if not delegate: raise RuntimeError(f'No such delegate <{DELEGATE}>')
+    if delegate.__code__.co_argcount: 
+        context = facade_request(CONTEXT) if context else None
+        emit(f'Received {len(context) + " bytes of" if context else "no"} context.')
+        report = delegate(context)  # <-- Execute the delegate function.
+    else: 
+        emit(f'Context <{CONTEXT}> ignored for delegate <{DELEGATE}>.')
+        report = delegate()
+    status, _ = facade_request(f'{DELEGATE}.txt', upload=str(report))
+    emit(f'Delegate <{DELEGATE}> completed and reported with {status=}')
 
 if __name__ == "__main__" and RUNLEVEL == 3:
-    GOAL = sys.argv[2]
-    emit(f'Delegate of <{HOST}:{PORT}> preparing to <{GOAL}>.')
+    DELEGATE = sys.argv[2].lower()
+    CONTEXT = sys.argv[3] if len(sys.argv) > 3 else None
     # Delegates should not have access to the palace directly.
     # Instead they should use the http facade to exchange data.
     assert PALACE is None, 'Palace connected. Not good.'
@@ -439,18 +438,18 @@ if __name__ == "__main__" and RUNLEVEL == 3:
 # Here we can put functions that are only called as delegates.
     
 def certify_build():
-    global BRANCH
+    global BRANCH, SOURCE
     report, roadmap = [], []
     for ln, line in enumerate(SOURCE.splitlines()):
         if line.strip().startswith('# TODO:'):
             roadmap.append(f'@{ln+1:04d} {line.strip()[7:]}')
     roadmap = '\n'.join(roadmap)
-    status, result = facade_request('roadmap.txt', upload=roadmap)
+    status, _ = facade_request('roadmap.txt', upload=roadmap)
     report.append(f'Roadmap uploaded {status=}')
     if status != 200: return status
     returncode = chain_run(
             ['git', 'add', '.'],
-            ['git', 'commit', '-m', 'Automatic commit by certify_build.'],
+            ['git', 'commit', '-m', 'Commit by certify_build.'],
             ['git', 'push', 'origin', BRANCH])
     report.append(f'Pushed to {BRANCH=} {returncode=}')
     return '\n'.join(report)
