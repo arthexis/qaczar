@@ -286,7 +286,6 @@ def format_article(article, aside=None):
     if ctype.startswith('text/'):
         content = article.content.decode('utf-8').splitlines()
         if ctype == 'text/x-python': formatter = format_python_line
-        elif ctype == 'text/html': formatter = lambda x: f'<div>{x}</div>'.encode('utf-8')
         yield from format_codelines(content, formater=formatter)
     if aside: yield f'<aside>{aside}</aside>'.encode('utf-8')
     yield b'</article>'
