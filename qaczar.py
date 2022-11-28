@@ -263,7 +263,8 @@ def format_codeline(line):
     line = html.escape(line)
     line = line.replace('  ', '&nbsp;')
     line = line.replace('\t', '&nbsp;&nbsp;')
-    yield line.encode('utf-8')
+    if line.startswith('#'): yield f'<q>{line}</q>'.encode('utf-8')
+    else: yield line.encode('utf-8')
     yield b'</code>'
 
 def format_article(article):
