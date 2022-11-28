@@ -377,6 +377,7 @@ if __name__ == "__main__" and RUNLEVEL == 2:
 
 import urllib.request
 
+
 def request_facade(*args, upload=None):
     assert all(urllib.parse.quote(arg) == arg for arg in args), f"Invalid request {args=}"
     url = f'http://{HOST}:{PORT}/{"/".join(args)}'
@@ -397,7 +398,28 @@ def chain_run(*cmds, s=None):
             return s.returncode if s else -1
     return s.returncode
 
-# TODO: Create a dispatching function for delegate to arbitrary functions.
+def delegate_task():
+    import qaczar
+    if ':' in GOAL: task, *args = GOAL.split(':')
+    else: task, args = GOAL, ()
+    function = getattr(qaczar, task)
+    if not function: raise RuntimeError(f'No such task: {task}')
+    result = function(*args)
+    request_facade(f'{task}.txt', upload=str(result))
+    emit(f'Delegated <{task}> {args=} completed {result=}')
+
+if __name__ == "__main__" and RUNLEVEL == 3:
+    GOAL = sys.argv[2]
+    emit(f'Delegate of <{HOST}:{PORT}> preparing to <{GOAL}>.')
+    assert PALACE is None, 'Palace already connected. Not good.'
+    PALACE =  sqlite3.connect('file:p.sqlite?mode=ro', uri=True)
+    atexit.register(PALACE.close)
+    delegate_task()
+
+            
+# --- Non-foundation code below this line. ---
+            
+# Here we can put functions that are only called as delegates.
     
 def certify_build():
     global BRANCH
@@ -406,33 +428,15 @@ def certify_build():
         if line.strip().startswith('# TODO:'):
             roadmap.append(f'@{ln+1:04d} {line.strip()[7:]}')
     roadmap = '\n'.join(roadmap)
-    request_facade('roadmap.txt', upload=roadmap)
-    found = palace_recall('roadmap.txt')
-    if not found or found.content.decode('utf-8') != roadmap:
-        emit(f'Roadmap updated: {len(roadmap)=} {len(found[3])=}')
-        emit('Roadmap not updated properly.'); sys.exit(1)
+    result = request_facade('roadmap.txt', upload=roadmap)
+    emit(f'Roadmap uploaded. {result=}')
     return chain_run(
             ['git', 'add', '.'],
             ['git', 'commit', '-m', 'Automatic commit by certify_build.'],
             ['git', 'push', 'origin', BRANCH])
 
-if __name__ == "__main__" and RUNLEVEL == 3:
-    GOAL = sys.argv[2]
-    emit(f'Delegate of <{HOST}:{PORT}> preparing to <{GOAL}>.')
-    assert PALACE is None, 'Palace already connected. Not good.'
-    PALACE =  sqlite3.connect('file:p.sqlite?mode=ro', uri=True)
-    for task in GOAL.split(':'):
-        try: 
-            task = globals()[GOAL]
-        except KeyError as e:
-            emit(f'No such task <{GOAL=}>.'); sys.exit(1)
-        try:
-            if last_return := task():
-                emit(f'Task <{GOAL}> completed: {last_return=}')
-                continue
-            emit(f'Task <{GOAL}> executed with no result.'); sys.exit(1)
-        except Exception as e:
-            emit(f'Task error: {e=}'); sys.exit(1)
 
+            
 # TODO: Think about how to deploy to AWS after SSL is working.            
 # TODO: Think of new functions to add to qaczar.
+
