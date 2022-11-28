@@ -533,7 +533,7 @@ def self_check():
             ['git', 'commit', '-m', 'Commit by self_check.'],
             ['git', 'push', 'origin', BRANCH])
     emit(f'Pushed to {BRANCH=} {returncode=}.')
-    emit(f'Validation and push complete at {isotime()}.')
+    emit(f'Validation and push complete at <time>{isotime()}</time>.', safe=True)
 
 # TODO: New delegate to run a script in a virtual environment.
 
