@@ -465,7 +465,6 @@ def self_check():
     # Get the name of the current virtual environment.
     facade_request('platform.txt', upload=(
         f'{platform.node()=}\n'
-        f'{platform.uname()=}\n'
         f'{platform.machine()=}\n'
         f'{platform.platform()=}\n'
         f'{platform.python_version()=}\n'
