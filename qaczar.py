@@ -304,8 +304,7 @@ def hyper(content, wrap=None, iwrap=None, href=None):
 def article_combinator(articles):
     if not articles:
         # This is the overview page, when no topic is specified.
-        th = {'Topic': 'a', 'Ver': None, 'Timestamp': 'time', 
-                'Size': None, 'Type': 'q'}	
+        th = {'Topic': 'a', 'Ver': None, 'Timestamp': 'time', 'Size': None, 'Type': 'q'}
         g = (x for x in format_table(th, palace_summary(), 'Palace Summary'))
         yield from hyper(g, wrap='article')
         articles = {palace_recall('roadmap.txt')}
