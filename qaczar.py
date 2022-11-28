@@ -265,9 +265,8 @@ def format_codeline(line):
     line = line.replace('\t', '&nbsp;&nbsp;')
     if line.startswith('#'): yield f'<q>{line}</q>'.encode('utf-8')
     elif line.startswith('def'): yield f'<strong>{line}</strong>'.encode('utf-8')
-    elif 'except' in line: yield f'<mark>{line}</mark>'.encode('utf-8')
-    elif 'return' in line: yield f'<mark>{line}</mark>'.encode('utf-8')
-    elif 'yield' in line: yield f'<mark>{line}</mark>'.encode('utf-8')
+    elif 'except' in line or 'return' in line or 'yield' in line: 
+        yield f'<mark>{line}</mark>'.encode('utf-8')
     else: yield line.encode('utf-8')
     yield b'</code>'
 
