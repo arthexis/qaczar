@@ -421,7 +421,6 @@ if __name__ == "__main__" and RUNLEVEL == 3:
 # Here we can put functions that are only called as delegates.
     
 def certify_build():
-    # TODO: Instead of emitting, we should return a string with the result.
     global BRANCH
     report, roadmap = [], []
     for ln, line in enumerate(SOURCE.splitlines()):
