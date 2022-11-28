@@ -447,7 +447,7 @@ def emit(verse, safe=False):
     print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{ts}] {DELEGATE}: {verse}')
     if not safe:
         verse = '<code>' + html.escape(verse) + '</code>'
-    REPORT.append(f'<li><time>{ts}</time>{verse}</li>')
+    REPORT.append(f'<li><time>{ts}</time> {verse}</li>')
 
 # TODO: Consider storing reports as hypertext instead of plain text.
 
