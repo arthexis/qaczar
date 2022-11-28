@@ -267,7 +267,7 @@ def format_codelines(lines, formater=None):
     yield b'</ol>'
     for i, line in enumerate(lines):
         yield b'<li><code>'
-        line = html.escape(line.decode('utf-8'))
+        line = html.escape(line)
         line = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
         if formater: 
             assert isinstance((formatted := formater(line)), bytes)
