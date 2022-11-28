@@ -240,7 +240,7 @@ def format_table(headers, rows, title=None):
             else: yield f'<td><{t}>{c}</{t}></td>'.encode('utf-8')
         yield b'</tr>'
     yield b'</table>'
-    yield f'<aside>{count} rows. Binary files excluded.</aside>'.encode('utf-8')
+    yield f'<aside>{count} rows. Binary files not shown.</aside>'.encode('utf-8')
 
 def format_article(article):
     content = article.content.decode('utf-8').splitlines()
