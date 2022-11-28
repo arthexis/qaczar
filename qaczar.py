@@ -288,7 +288,7 @@ def content_stream(env, topic):
 
 def process_forms(env, topic):
     # Returns the query form html, and redirect url if needed.
-    method = env['REQUEST_METHOD']
+    method, msg = env['REQUEST_METHOD'], ''
     if method == 'POST':
         data = env['wsgi.input'].read(int(env.get('CONTENT_LENGTH', 0)))
         if topic:
@@ -297,12 +297,12 @@ def process_forms(env, topic):
         return None, False
     elif method == 'GET': 
         if query := urllib.parse.unquote(env.get('QUERY_STRING', '')):
-            emit(o := f'Request received: {topic=} {query=}. Delegating.')
+            msg = f'Request received: {topic=} {query=}. Delegating.'
             delegation = query.replace('+', '_')
             create_fork(f'{HOST}:{PORT}', delegation)
         return (f'<form id="query-form" method="get">'
                 f'<input type="text" id="query-field" name="q" autofocus accesskey="q">'
-                f'</form><div id="query-output">{o}</div>'), False
+                f'</form><div id="query-output">{msg}</div>'), False
 
 def hyper(content, wrap=None, iwrap=None, href=None):
     if wrap: yield f'<{wrap}>'.encode('utf-8') 
