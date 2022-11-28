@@ -366,8 +366,7 @@ def facade_wsgi_responder(env, start_response):
                     if redirect:
                         write = start_response('303 See Other', http_headers(redirect=redirect))
             if article: articles.add(article)
-        else:
-            # Good use case for the else clause of a for loop.
+        else:  # Actual use case for the else clause of a for loop.
             if not write: 
                 write = start_response('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
             yield from  html_doc_stream(articles, form)
