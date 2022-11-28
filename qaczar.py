@@ -387,6 +387,7 @@ def http_headers(ctype='text/html; charset=utf-8', redirect=None, size=None):
 
 # Main entrypoint for the user AND delegates. UI == API.
 def facade_wsgi_responder(env, start_response):
+    # TODO: Maybe track human visits to create automated test plans.
     global SITE
     write, start = None, time.time()
     method, path, origin = env["REQUEST_METHOD"], env["PATH_INFO"], env["REMOTE_ADDR"]
