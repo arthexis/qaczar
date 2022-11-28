@@ -249,7 +249,6 @@ def format_table(headers, rows, title=None):
     yield f'<aside>{count} rows. Binary files not shown.</aside>'.encode('utf-8')
 
 def format_codeline(line):
-    line = html.escape(line).replace('\t', ' ' * 4).replace('  ', '&nbsp;')
     yield b'<code>'
     for c in line:
         if c == b'\t': yield b'&nbsp;&nbsp;'
@@ -258,9 +257,9 @@ def format_codeline(line):
     yield b'</code>'
 
 def format_article(article):
-    content = article.content.decode('utf-8').splitlines()
+    contents = article.content.decode('utf-8').splitlines()
     yield f'<article><h2>{article.topic}</h2><ol>'.encode('utf-8')
-    for i, line in enumerate(content):
+    for i, line in enumerate(contents):
         yield b'<li>'
         yield from format_codeline(line)
         yield b'</li>'
