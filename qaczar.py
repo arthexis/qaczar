@@ -493,8 +493,8 @@ def delegate_task():
     report = '\n'.join(REPORT)  
     if report:
         status, _ = facade_request(f'{DELEGATE}__html', upload=str(report))
-        emit(f'Delegate <{DELEGATE}> completed and reported with {status=}.')
-    else: emit(f'Delegate <{DELEGATE}> completed without reporting.')
+        emit(f'Delegate "{DELEGATE}" completed and reported with {status=}.')
+    else: emit(f'Delegate "{DELEGATE}" completed without reporting.')
 
 if __name__ == "__main__" and RUNLEVEL in (3, 4):
     DELEGATE = sys.argv[2].lower()
