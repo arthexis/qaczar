@@ -432,6 +432,8 @@ def facade_request(*args, upload=None):
             return r.status, r.read().decode('utf-8')
     except urllib.error.HTTPError as e:
         emit(f'HTTPError: {e.code}'); raise e
+    
+# TODO: New function to download data from an external source.
 
 def chain_run(*cmds, s=None):
     for cmd in cmds:
