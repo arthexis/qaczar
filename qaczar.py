@@ -317,6 +317,7 @@ def html_doc_stream(articles, form):
     global SITE
     css = palace_recall('qaczar.css')
     # TODO: Links should be generated for alternate views (e.g. txt, json, etc.)
+    # TODO: Use accesskey="#" and number the links.
     links = []  
     yield from hyper('<!DOCTYPE html><head><meta charset="utf-8"/>')
     yield from hyper(SITE, wrap='title')  
