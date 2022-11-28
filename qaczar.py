@@ -168,8 +168,7 @@ Article = collections.namedtuple('Article', 'topic ver ts content ctype')
 
 # All single-topic palace operations are performed by a single function.
 # This reduces the number of points of failure for the database layer.
-def palace_recall(topic, /, fetch=True, store=None):
-    # TODO: Consider the viability of an "append" mode.
+def palace_recall(topic, /, fetch=True, store=None, append=False):
     global PALACE, TOPICS, DIR
     assert topic, 'No topic provided.'
     table, ts, sql = 'top_' + topic.replace('.', '__'), isotime(), None
@@ -199,9 +198,14 @@ def palace_recall(topic, /, fetch=True, store=None):
                         f'ORDER BY ts DESC LIMIT 1').fetchone()
         store_md5 = md5_digest(store)
         if store and (not found or found[3] != store_md5):
-            c.execute(sql :=f'INSERT INTO {table} (ts, content, md5, mtime) '
-                    f'VALUES (?, ?, ?, ?)', (ts, store, store_md5, 0))
-            emit(f'Insert commited {topic=} {len(store)=}.')
+            if not append or not found:
+                c.execute(sql :=f'INSERT INTO {table} (ts, content, md5, mtime) '
+                        f'VALUES (?, ?, ?, ?)', (ts, store, store_md5, 0))
+                emit(f'Insert commited {topic=} {len(store)=}.')
+            elif found:
+                c.execute(sql := f'UPDATE {table} SET ts=?, content=?, md5=? '
+                        f'WHERE ver=?', (ts, found.store + store, store_md5, found[0]))
+                emit(f'Append commited {topic=} {len(store)=}.')
             PALACE.commit()
         if found: 
             ctype = TOPICS.get(topic, 'application/octet-stream')
