@@ -148,13 +148,19 @@ def text_summary(content, length=54):
     if not content or not isinstance(content, str): return 'N/A'
     return re.sub(r'\s+', ' ', content)[:length] if content else 'N/A'
 
-def palace_tableset(prefix):
+def sqlite_tableset(prefix=None):
     global PALACE
     c = PALACE.cursor()
-    c.execute(f'SELECT name FROM sqlite_master WHERE type="table" '
-            f'AND name LIKE "{prefix}_%"')
+    if prefix:
+        c.execute(f'SELECT name FROM sqlite_master WHERE type="table" '
+                f'AND name LIKE "{prefix}_%" and name NOT LIKE "sqlite_%";')
+    else:
+        c.execute('SELECT name FROM sqlite_master '
+            'WHERE type="table" and name NOT LIKE "sqlite_%";')
+    offset = len(prefix) + 1 if prefix else 0
     for t in c.fetchall():
-        yield t[0][len(prefix)+1:]
+        yield t[0][offset:]
+    c.close()
 
 Article = collections.namedtuple('Article', 'topic ver ts content ctype')
 
@@ -168,7 +174,7 @@ def palace_recall(topic, /, fetch=True, store=None):
     c = PALACE.cursor()
     try:
         if not TOPICS:
-            TOPICS = {t: guess_ctype(t) for t in palace_tableset('top')}
+            TOPICS = {t: guess_ctype(t) for t in sqlite_tableset('top')}
         if topic not in TOPICS:
             c.execute(sql := f'CREATE TABLE IF NOT EXISTS {table} ('
                     f'ver INTEGER PRIMARY KEY AUTOINCREMENT, '
@@ -207,7 +213,7 @@ TopicSummary = collections.namedtuple('TopicSummary', 'topic ver ts length ctype
 def palace_summary(prefix=None):
     global PALACE
     c = PALACE.cursor()
-    for topic in palace_tableset('top'):
+    for topic in sqlite_tableset('top'):
         if prefix and not topic.startswith(prefix): continue
         found = c.execute(f"SELECT MAX(ver), MAX(ts), length(content) "
             f'FROM top_{topic} GROUP BY ts ORDER BY ts DESC ').fetchone()
