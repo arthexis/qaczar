@@ -209,7 +209,7 @@ def palace_summary():
         found = c.execute(f"SELECT MAX(ver), MAX(ts), length(content) || ' bytes' "
             f'FROM {t[0]} GROUP BY ts ORDER BY ts DESC ').fetchone()
         if found: 
-            content = f'{TOPICS[topic] or "application/octet-stream"} ({found[2]}).'
+            content = f'{TOPICS.get(topic, "application/octet-stream")} ({found[2]}).'
             yield TopicSummary(topic, found[0], found[1], content)
     c.close()
 
