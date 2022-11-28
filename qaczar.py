@@ -21,7 +21,7 @@ import subprocess
 # the crown (watcher) as simple as possible. Later we can import more modules.
 
 # This is the name that will appear on the title of the website.
-SITE = 'qaczar.com'
+SITE = 'QACZAR.COM'
 BRANCH = 'main'
 
 RUNLEVEL = len(sys.argv)
