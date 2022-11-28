@@ -284,8 +284,8 @@ def format_article(article, aside=None):
             yield from format_codelines(content, formater=formatter)
     elif article.ctype == 'application/octet-stream':
         fname = article.topic.replace('__', '.')
-        yield f'<p><strong>Unable to visualize {article.topic}</strong>.'.encode('utf-8')
-        yield f'<a href="{fname}">Click here to download {fname}</a></p>'.encode('utf-8')
+        yield (f'<p><strong>Unable to visualize content of type {article.ctype}</strong>.'
+            f'<a href="{fname}">Click here to download {fname}</a></p>').encode('utf-8')
     if aside: yield f'<aside>{aside}</aside>'.encode('utf-8')
     yield b'</article>'
 
