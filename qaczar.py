@@ -353,6 +353,7 @@ def html_doc_stream(articles, form):
     yield from article_combinator(articles)
     yield from hyper('</main><footer>')
     yield from hyper(f'An hypertext grimoire. Served on {isotime()}.', wrap='p')
+    # TODO: Add suggested navigation links at the bottom.
     yield from hyper('</footer></body></html>')
 
 def http_headers(ctype='text/html; charset=utf-8', redirect=None, size=None):
