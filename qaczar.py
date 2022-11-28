@@ -309,7 +309,7 @@ def process_forms(env, topic):
                 f"Report: <a href='{report}'>{report}</a>.")
             delegation = query.replace('+', '_')
             # Avoid doing any work in the facade, always delegate to the backend.
-            palace_recall(report, store='Delegation in progress...'.encode('utf-8'))
+            palace_recall(report, store=b'')
             create_fork(f'{HOST}:{PORT}', delegation)
             # Redirect to the expected report.
             return None, report
