@@ -216,6 +216,7 @@ def palace_summary(prefix=None):
             yield TopicSummary(topic, found[0], found[1], int(found[2]), ctype)
     c.close()
     
+# TODO: Make temporal correlation of topics possible.
 
 # V.
 
