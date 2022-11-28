@@ -229,11 +229,8 @@ def palace_summary(prefix=None):
 # V.
 
 import html
-import secrets
 import urllib.parse
 import wsgiref.simple_server 
-
-SECRET = secrets.token_bytes()
 
 # Functions useful for sending binary data in HTTP responses.
 
@@ -388,14 +385,15 @@ def http_headers(ctype='text/html; charset=utf-8', redirect=None, size=None):
     if size: headers.append(('Content-Length', str(size)))
     return headers
 
+ALLOWLIST = os.environ.get('ALLOWLIST', '').split()
+
 # Main entrypoint for the user AND delegates. UI == API.
 def facade_wsgi_responder(env, start_response):
-    global SITE
+    global ALLOWLIST
     write, start = None, time.time()
     method, path, origin = env["REQUEST_METHOD"], env["PATH_INFO"], env["REMOTE_ADDR"]
     emit(f'--*-- Incoming {method} {path} from {origin} --*--')
-    if origin != '127.0.0.1':
-        # TODO: Add a way to authorize other IPs to access the palace.
+    if origin != '127.0.0.1' and origin not in ALLOWLIST:
         write = start_response('403 Forbidden', http_headers())
     else:
         topics, _ = path[1:].split('?', 1) if '?' in path else (path[1:], '')
