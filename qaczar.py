@@ -267,7 +267,7 @@ def format_codelines(lines, formater=None):
     yield b'</ol>'
     for i, line in enumerate(lines):
         yield b'<li><code>'
-        line = html.escape(line)
+        line = html.escape(line.decode('utf-8'))
         line = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
         if formater: 
             assert isinstance((formatted := formater(line)), bytes)
@@ -282,7 +282,8 @@ def format_article(article, aside=None):
     ctype, formatter = article.ctype, None
     if ctype.startswith('text/'):
         if ctype == 'text/x-python': formatter = format_python_line
-        yield from format_codelines(article.content.splitlines(), formater=formatter)
+        content = article.content.decode('utf-8').splitlines()
+        yield from format_codelines(content, formater=formatter)
     if aside: yield f'<aside>{aside}</aside>'.encode('utf-8')
     yield b'</article>'
 
