@@ -441,14 +441,13 @@ import urllib.request
 DELEGATE = None
 REPORT = []
 
-
 def emit(verse, safe=False):
     global DELEGATE, REPORT
-    print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{isotime()}] {DELEGATE}: {verse}')
+    ts = isotime()
+    print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{ts}] {DELEGATE}: {verse}')
     if not safe:
         verse = '<code>' + html.escape(verse) + '</code>'
-    REPORT.append(f'<li>{verse}</li>')
-
+    REPORT.append(f'<li><time>{ts}</time>{verse}</li>')
 
 # TODO: Consider storing reports as hypertext instead of plain text.
 
@@ -532,7 +531,7 @@ def self_check():
             ['git', 'commit', '-m', 'Commit by self_check.'],
             ['git', 'push', 'origin', BRANCH])
     emit(f'Pushed to {BRANCH=} {returncode=}.')
-    emit(f'Validation and push complete at <time>{isotime()}</time>.', safe=True)
+    emit(f'Validation and push completed.')
 
 # TODO: New delegate to run a script in a virtual environment.
 
