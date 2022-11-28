@@ -430,7 +430,6 @@ def delegate_task():
         emit(f'Context <{CONTEXT}> ignored for delegate <{DELEGATE}>.')
         delegate()
     report = '\n'.join(REPORT)
-    # TODO: This is being uploaded with a GET for some reason. Fix it.
     status, _ = facade_request(f'{DELEGATE}.txt', upload=str(report))
     emit(f'Delegate <{DELEGATE}> completed and reported with {status=}.')
 
