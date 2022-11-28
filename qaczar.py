@@ -261,8 +261,7 @@ def format_codeline(line):
     assert isinstance(line, str)
     yield b'<code>'
     line = html.escape(line)
-    line = line.replace('  ', '&nbsp;')
-    line = line.replace('\t', '&nbsp;&nbsp;')
+    line = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
     if line.startswith('#'): yield f'<q>{line}</q>'.encode('utf-8')
     elif line.startswith('def'): yield f'<strong>{line}</strong>'.encode('utf-8')
     elif 'except' in line or 'return' in line or 'yield' in line: 
