@@ -439,11 +439,11 @@ REPORT = []
 
 # TODO: Consider storing reports as hypertext instead of plain text.
 
-def emit(verse, escaped=True):
+def emit(verse, safe=True):
     global DELEGATE, REPORT
     ts = isotime()
     print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{ts}] {DELEGATE}: {verse}')
-    if escaped:
+    if not safe:
         verse = '<li>' + html.escape(verse) + '</li>'
     REPORT.append(verse)
 
