@@ -300,9 +300,9 @@ def process_forms(env, topic):
             emit(o := f'Request received: {topic=} {query=}. Delegating.')
             delegation = query.replace('+', '_')
             create_fork(f'{HOST}:{PORT}', delegation)
-        return ('<form id="query-form" method="get">'
-                '<input type="text" id="query-field" name="q" autofocus accesskey="q">'
-                '</form><div id="query-output">{o}</div>'), False
+        return (f'<form id="query-form" method="get">'
+                f'<input type="text" id="query-field" name="q" autofocus accesskey="q">'
+                f'</form><div id="query-output">{o}</div>'), False
 
 def hyper(content, wrap=None, iwrap=None, href=None):
     if wrap: yield f'<{wrap}>'.encode('utf-8') 
