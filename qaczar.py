@@ -208,11 +208,10 @@ TopicSummary = collections.namedtuple('TopicSummary', 'topic ver ts length ctype
 def palace_summary(prefix=None):
     global PALACE
     c = PALACE.cursor()
-    for table in palace_tableset('top'):
-        topic, table = table.replace('__', '.'), 'top_' + table
-        if prefix and not table.startswith(prefix): continue
+    for topic in palace_tableset('top'):
+        if prefix and not topic.startswith(prefix): continue
         found = c.execute(f"SELECT MAX(ver), MAX(ts), length(content) "
-            f'FROM {table} GROUP BY ts ORDER BY ts DESC ').fetchone()
+            f'FROM top_{topic} GROUP BY ts ORDER BY ts DESC ').fetchone()
         if found: 
             ctype = TOPICS.get(topic, "application/octet-stream")
             yield TopicSummary(topic, found[0], found[1], int(found[2]), ctype)
