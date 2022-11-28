@@ -270,7 +270,6 @@ def process_forms(env, topic):
             palace_recall(topic, store=data)
         return None, False
     elif method == 'GET': 
-        # TODO: Launch a delegate to obtain the goal.
         if query := urllib.parse.unquote(env.get('QUERY_STRING', '')):
             emit(f'Request received: {topic=} {query=}. Delegating.')
             delegation = query.replace('+', '_')
