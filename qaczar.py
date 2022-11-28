@@ -267,6 +267,7 @@ def format_codeline(line):
     elif line.startswith('def'): yield f'<strong>{line}</strong>'.encode('utf-8')
     elif 'except' in line: yield f'<mark>{line}</mark>'.encode('utf-8')
     elif 'return' in line: yield f'<mark>{line}</mark>'.encode('utf-8')
+    elif 'yield' in line: yield f'<mark>{line}</mark>'.encode('utf-8')
     else: yield line.encode('utf-8')
     yield b'</code>'
 
