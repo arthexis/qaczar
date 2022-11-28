@@ -270,7 +270,19 @@ def process_forms(env, topic):
             emit(f'Data received: {topic=} {len(data)=}')
             palace_recall(topic, store=data)
         return None, False
-    elif method == 'GET':        
+    elif method == 'GET': 
+        # TODO: Launch a delete to process the form.
+        if query := env.get('QUERY_STRING', ''):
+            query = urllib.parse.unquote(query)
+            goal = ''.join(c if c.isalnum() else ':' for c in query)
+            emit(f'Query received: {query=} {goal=}')
+            # Store the current topic contents from the palace in a new topic
+            # named tha same as the goal + __txt.
+            if topic and (found := palace_recall(topic)) and found.content:
+                palace_recall(goal + '__txt', store=found.content)
+            create_fork(f'{HOST}:{PORT}', goal)
+        
+        # Then, always return this form.
         return ('<form id="query-form" method="get">'
                 '<input type="text" id="query-field" name="q" autofocus></form>'
                 '<div id="query-output"></div>'), False
@@ -380,7 +392,7 @@ if __name__ == "__main__" and RUNLEVEL == 2:
 import urllib.request
 
 
-def request_facade(*args, upload=None):
+def facade_request(*args, upload=None):
     assert all(urllib.parse.quote(arg) == arg for arg in args), f"Invalid request {args=}"
     url = f'http://{HOST}:{PORT}/{"/".join(args)}'
     try:
@@ -401,13 +413,16 @@ def chain_run(*cmds, s=None):
     return s.returncode
 
 def delegate_task():
-    import qaczar
+    # TODO: Delegates should request more context from the facade.
     if ':' in GOAL: task, *args = GOAL.split(':')
     else: task, args = GOAL, ()
+    # We do it this way to avoid a circular import.
+    # This will also import functions that were declared afterwords.
+    import qaczar
     function = getattr(qaczar, task)
     if not function: raise RuntimeError(f'No such task: {task}')
     result = function(*args)
-    status, result = request_facade(f'{task}.txt', upload=str(result))
+    status, result = facade_request(f'{task}.txt', upload=str(result))
     emit(f'Delegated <{task}> {args=} completed {status=}')
 
 if __name__ == "__main__" and RUNLEVEL == 3:
@@ -430,7 +445,7 @@ def certify_build():
         if line.strip().startswith('# TODO:'):
             roadmap.append(f'@{ln+1:04d} {line.strip()[7:]}')
     roadmap = '\n'.join(roadmap)
-    status, result = request_facade('roadmap.txt', upload=roadmap)
+    status, result = facade_request('roadmap.txt', upload=roadmap)
     report.append(f'Roadmap uploaded {status=}')
     if status != 200: return status
     returncode = chain_run(
