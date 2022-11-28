@@ -462,10 +462,14 @@ def self_check():
     global BRANCH, SOURCE
     import platform
     emit(f'Validating build of <{BRANCH}>.')
+    # Get the name of the current virtual environment.
     facade_request('platform.txt', upload=(
-        f'{platform.python_version()=}'
-        f'{platform.platform()=}'
-        f'{platform.machine()=}'
+        f'{platform.node()=}\n'
+        f'{platform.uname()=}\n'
+        f'{platform.machine()=}\n'
+        f'{platform.platform()=}\n'
+        f'{platform.python_version()=}\n'
+        f'{sys.executable=}\n'
     ))
     # TODO: Add a platform report and upload it to the palace.
     # TODO: Platform report is later used for environment maintenance.
