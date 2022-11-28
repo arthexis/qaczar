@@ -279,7 +279,6 @@ def format_codelines(lines, formater=None):
     yield b'</ol>'
 
 def format_article(article, aside=None):
-    # TODO: Think about formatting based on content type.
     yield f'<article><h2>{article.topic}</h2><ol>'.encode('utf-8')
     ctype, formatter = article.ctype, None
     # Render HTML as is.
