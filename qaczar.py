@@ -282,13 +282,12 @@ def format_article(article, aside=None):
     yield f'<article><h2>{article.topic}</h2><ol>'.encode('utf-8')
     ctype, formatter = article.ctype, None
     if ctype.startswith('text/'):
-        if ctype == 'text/html': 
-            yield f'<!-- RAW -->'.encode('utf-8')
-            yield article.content
+        if ctype == 'text/html': yield article.content
         else:
             content = article.content.decode('utf-8').splitlines()
             if ctype == 'text/x-python': formatter = format_python_line
             yield from format_codelines(content, formater=formatter)
+    # TODO: Add links to navigate to the previous and next versions.
     if aside: yield f'<aside>{aside}</aside>'.encode('utf-8')
     yield b'</article>'
 
@@ -540,6 +539,7 @@ def self_check():
 # TODO: New delegate to run a script in a virtual environment.
 # TODO: Prune unnecessary functions from delagates before running them.
 # TODO: Think about new ways to visualize the code.
-# TODO: Think about how to deploy to AWS after SSL is working.            
+# TODO: Think about how to deploy to AWS after SSL is working.     
+# TODO: Consider using black to reduce the number of cache updates.       
 # TODO: Think of new functions to add to qaczar.
 
