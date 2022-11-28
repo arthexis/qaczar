@@ -420,6 +420,7 @@ def delegate_task():
     # Import qaczar itself to access functions declared in the future.
     # This is important to allow the delegate to be self-contained.
     import qaczar
+    qaczar.emit = emit  
     delegate = getattr(qaczar, DELEGATE)
     if not delegate: raise RuntimeError(f'No such delegate <{DELEGATE}>.')
     if delegate.__code__.co_argcount: 
