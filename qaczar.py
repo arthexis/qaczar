@@ -238,7 +238,7 @@ SECRET = secrets.token_bytes()
 
 # TODO: Make AssertionError: write() error easier to debug.
 
-def format_table(headers, rows, title=None, aside=None):
+def format_table(headers, rows, title=None):
     assert isinstance(headers, dict) 
     # The output should already be binary encoded for performance.
     if title: yield f'<h2>{title}</h2>'.encode('utf-8')
@@ -254,7 +254,6 @@ def format_table(headers, rows, title=None, aside=None):
             else: yield f'<td><{t}>{c}</{t}></td>'.encode('utf-8')
         yield b'</tr>'
     yield b'</table>'
-    if aside: yield f'<aside>{aside}</aside>'.encode('utf-8')
 
 def format_codeline(line):
     # TODO: Think about formatting based on content type.
