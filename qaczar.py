@@ -25,8 +25,6 @@ BRANCH = 'main'
 
 RUNLEVEL = len(sys.argv)
 DIR = os.path.dirname(__file__)
-DELEGATION = None
-
 
 # These utility functions are used everywhere, be careful when changing them.
 
@@ -386,6 +384,16 @@ if __name__ == "__main__" and RUNLEVEL == 2:
 import urllib.request
 
 
+DELEGATE = None
+REPORT = []
+
+_emit = emit
+
+def emit(verse):
+    global DELEGATE, REPORT
+    _emit(f'{DELEGATE}: {verse}')
+    REPORT.append(verse)
+
 def facade_request(*args, upload=None):
     assert all(urllib.parse.quote(arg) == arg for arg in args), f"Invalid request {args=}"
     url = f'http://{HOST}:{PORT}/{"/".join(args)}'
@@ -402,11 +410,9 @@ def chain_run(*cmds, s=None):
             if s is not None and s.returncode != 0: return s.returncode
             s = subprocess.run(cmd, shell=True, check=True, capture_output=True)
         except (subprocess.CalledProcessError, RuntimeError) as e:
-            emit(f'Command error: {e=}')
+            emit(f'Command failed with error: {e=}.')
             return s.returncode if s else -1
     return s.returncode
-
-REPORT = []
 
 def delegate_task():
     global HOST, PORT, DELEGATE, CONTEXT
@@ -415,7 +421,7 @@ def delegate_task():
     # This is important to allow the delegate to be self-contained.
     import qaczar
     delegate = getattr(qaczar, DELEGATE)
-    if not delegate: raise RuntimeError(f'No such delegate <{DELEGATE}>')
+    if not delegate: raise RuntimeError(f'No such delegate <{DELEGATE}>.')
     if delegate.__code__.co_argcount: 
         context = facade_request(CONTEXT) if context else None
         emit(f'Received {len(context) + " bytes of" if context else "no"} context.')
@@ -426,9 +432,9 @@ def delegate_task():
     report = '\n'.join(REPORT)
     # TODO: This is being uploaded with a GET for some reason. Fix it.
     status, _ = facade_request(f'{DELEGATE}.txt', upload=str(report))
-    emit(f'Delegate <{DELEGATE}> completed and reported with {status=}')
+    emit(f'Delegate <{DELEGATE}> completed and reported with {status=}.')
 
-if __name__ == "__main__" and RUNLEVEL == 3:
+if __name__ == "__main__" and RUNLEVEL in (3, 4):
     DELEGATE = sys.argv[2].lower()
     CONTEXT = sys.argv[3] if len(sys.argv) > 3 else None
     # Delegates should not have access to the palace directly.
@@ -439,11 +445,6 @@ if __name__ == "__main__" and RUNLEVEL == 3:
 
 # --- Non-foundation code below this line. ---
 
-_emit = emit
-
-def emit(*args, **kwargs):
-    _emit(*args, **kwargs)
-    REPORT.append(f'{args} {kwargs}')
 
 # Here we can put functions that are only called as delegates.
     
@@ -456,14 +457,14 @@ def certify_build():
             roadmap.append(f'@{ln+1:04d} {line.strip()[7:]}')
     roadmap = '\n'.join(roadmap)
     status, _ = facade_request('roadmap.txt', upload=roadmap)
-    emit(f'Roadmap uploaded {status=}')
+    emit(f'Roadmap uploaded {status=}.')
     if status != 200: return status
     returncode = chain_run(
             ['git', 'add', '.'],
             ['git', 'commit', '-m', 'Commit by certify_build.'],
             ['git', 'push', 'origin', BRANCH])
-    emit(f'Pushed to {BRANCH=} {returncode=}')
-    emit(f'Certification complete at {isotime()}')
+    emit(f'Pushed to {BRANCH=} {returncode=}.')
+    emit(f'Certification complete at {isotime()}.')
     
 
 # TODO: Think about how to deploy to AWS after SSL is working.            
