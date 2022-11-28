@@ -313,7 +313,6 @@ def process_forms(env, topic):
     elif method == 'GET': 
         if query := urllib.parse.unquote(env.get('QUERY_STRING', '')):
             vars = urllib.parse.parse_qs(query); q = vars["q"][0]
-            # TODO: Try to use html reports instead.
             report = q.replace(' ', '_') + '__html'
             msg = (f"Request received: {topic=} query='{q}'. "
                 f"Report: <a href='{report}'>{report}</a>.")
