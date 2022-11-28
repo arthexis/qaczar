@@ -387,7 +387,6 @@ def http_headers(ctype='text/html; charset=utf-8', redirect=None, size=None):
 
 # Main entrypoint for the user AND delegates. UI == API.
 def facade_wsgi_responder(env, start_response):
-    # TODO: Maybe track human visits to create automated test plans.
     global SITE
     write, start = None, time.time()
     method, path, origin = env["REQUEST_METHOD"], env["PATH_INFO"], env["REMOTE_ADDR"]
@@ -416,6 +415,8 @@ def facade_wsgi_responder(env, start_response):
                 write = start_response('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
             yield from  html_doc_stream(articles, form)
     emit(f"Request completed at {round(time.time() - start, 2)} % capacity.")
+    # TODO: Maybe keep track of visitors to create automated test plans later.
+
 
 class Unhandler(wsgiref.simple_server.WSGIRequestHandler):
     def log_request(self, *args, **kwargs): pass
