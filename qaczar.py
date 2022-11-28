@@ -490,7 +490,7 @@ def delegate_task():
     else: 
         if CONTEXT: emit(f'Context <{CONTEXT}> ignored for delegate <{DELEGATE}>.')
         delegate()
-    report = '\n'.join(REPORT)  # Name of the report should be HTML
+    report = '\n'.join(REPORT)  
     if report:
         status, _ = facade_request(f'{DELEGATE}__html', upload=str(report))
         emit(f'Delegate <{DELEGATE}> completed and reported with {status=}.')
