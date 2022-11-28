@@ -416,8 +416,7 @@ def chain_run(*cmds, s=None):
 def delegate_task():
     global HOST, PORT, DELEGATE, CONTEXT
     emit(f'Delegate <{DELEGATE}> of <{HOST}:{PORT}> starting.')
-    # Import qaczar itself to access functions declared in the future.
-    # This is important to allow the delegate to be self-contained.
+    # Import qaczar itself to access functions from the future.
     import qaczar
     qaczar.emit = emit  
     delegate = getattr(qaczar, DELEGATE)
@@ -425,13 +424,15 @@ def delegate_task():
     if delegate.__code__.co_argcount: 
         context = facade_request(CONTEXT) if context else None
         emit(f'Received {len(context) + " bytes of" if context else "no"} context.')
-        delegate(context)  # <-- Execute the delegate function.
+        delegate(context)  
     else: 
         emit(f'Context <{CONTEXT}> ignored for delegate <{DELEGATE}>.')
         delegate()
     report = '\n'.join(REPORT)
-    status, _ = facade_request(f'{DELEGATE}.txt', upload=str(report))
-    emit(f'Delegate <{DELEGATE}> completed and reported with {status=}.')
+    if report:
+        status, _ = facade_request(f'{DELEGATE}.txt', upload=str(report))
+        emit(f'Delegate <{DELEGATE}> completed and reported with {status=}.')
+    else: emit(f'Delegate <{DELEGATE}> completed without reporting.')
 
 if __name__ == "__main__" and RUNLEVEL in (3, 4):
     DELEGATE = sys.argv[2].lower()
