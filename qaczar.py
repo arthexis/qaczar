@@ -310,7 +310,8 @@ def article_combinator(articles):
 def html_doc_stream(articles, form):
     global SITE
     css = palace_recall('qaczar.css')
-    links = []  # TODO: Add a function to generate the links.
+    # TODO: Links should be generated for alternate views (e.g. txt, json, etc.)
+    links = []  
     yield from hyper('<!DOCTYPE html><head><meta charset="utf-8"/>')
     yield from hyper(SITE, wrap='title')  
     if css: yield from hyper(css.content, 'style')  
