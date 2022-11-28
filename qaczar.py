@@ -266,7 +266,7 @@ def format_article(article):
         yield b'</li>'
     yield (f'</ol><aside>Ver {article.ver} <time>{article.ts}'
         f'</time>.</aside></article>').encode('utf-8')
-    yield from hyper('</article>')
+    yield b'</article>'
 
 def content_stream(env, topic):
     # This is necesary to avoid the browser from buffering the entire response.
@@ -307,7 +307,7 @@ def hyper(content, wrap=None, iwrap=None, href=None):
             for c in content: yield from hyper(c, wrap=iwrap)
         else: emit(f'Unable to encode {type(content)=} {content=}.')
     else: yield b''
-    if href: yield '</a>'.encode('utf-8')
+    if href: yield b'</a>'
     if wrap: yield f'</{wrap}>'.encode('utf-8') 
 
 # TopicSummary = collections.namedtuple('TopicSummary', 'topic ver ts length ctype')
