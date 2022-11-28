@@ -264,7 +264,7 @@ def format_python_line(line):
     else: yield line.encode('utf-8')
     
 def format_codelines(lines, formater=None):
-    yield b'</ol>'
+    yield b'<ol>'
     for i, line in enumerate(lines):
         yield b'<li><code>'
         line = html.escape(line)
