@@ -229,7 +229,9 @@ def format_table(headers, rows, title=None):
     yield b'<table><tr>'
     for h in headers.keys(): yield f'<th>{h}</th>'.encode('utf-8')
     yield b'</tr>'
+    count = 0
     for r in rows:
+        count += 1
         yield b'<tr>'
         for c, t in zip(r, headers.values()):
             if t is None: yield f'<td>{c}</td>'.encode('utf-8')
@@ -238,7 +240,7 @@ def format_table(headers, rows, title=None):
             else: yield f'<td><{t}>{c}</{t}></td>'.encode('utf-8')
         yield b'</tr>'
     yield b'</table>'
-    yield f'<aside>{len(rows)} rows.</aside>'.encode('utf-8')
+    yield f'<aside>{count} rows.</aside>'.encode('utf-8')
 
 def format_article(article):
     content = article.content.decode('utf-8').splitlines()
