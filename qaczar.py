@@ -477,12 +477,12 @@ def chain_run(*cmds, s=None):
 
 def delegate_task():
     global HOST, PORT, DELEGATE, CONTEXT, REPORT
-    emit(f'Delegate <{DELEGATE}> of <{HOST}:{PORT}> starting.')
+    emit(f'Delegate "{DELEGATE}" of "{HOST}:{PORT}" starting.')
     # Import qaczar itself to access functions from the future.
     import qaczar
     qaczar.emit = emit  
     delegate = getattr(qaczar, DELEGATE)
-    if not delegate: raise RuntimeError(f'No such delegate <{DELEGATE}>.')
+    if not delegate: raise RuntimeError(f'No such delegate "{DELEGATE}".')
     if delegate.__code__.co_argcount: 
         context = facade_request(CONTEXT) if context else None
         emit(f'Received {len(context) + " bytes of" if context else "no"} context.')
