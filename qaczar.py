@@ -411,9 +411,9 @@ def delegate_task():
 if __name__ == "__main__" and RUNLEVEL == 3:
     GOAL = sys.argv[2]
     emit(f'Delegate of <{HOST}:{PORT}> preparing to <{GOAL}>.')
-    assert PALACE is None, 'Palace already connected. Not good.'
-    PALACE =  sqlite3.connect('file:p.sqlite?mode=ro', uri=True)
-    atexit.register(PALACE.close)
+    # Delegates should not have access to the palace directly.
+    # Instead they should use the http facade to exchange data.
+    assert PALACE is None, 'Palace connected. Not good.'
     delegate_task()
 
             
