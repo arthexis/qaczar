@@ -384,7 +384,7 @@ if __name__ == "__main__" and RUNLEVEL == 2:
     with wsgiref.simple_server.make_server(
             HOST, PORT, facade_wsgi_responder, handler_class=Unhandler) as s:
         emit(f'Facade ready. Serving on http://{HOST}:{PORT}/')
-        create_fork(sys.argv[1], 'certify_build')
+        create_fork(sys.argv[1], 'self_check')
         s.serve_forever(poll_interval=6)
 
 
@@ -458,9 +458,15 @@ if __name__ == "__main__" and RUNLEVEL in (3, 4):
 
 # Here we can put functions that are only called as delegates.
     
-def certify_build():
+def self_check():
     global BRANCH, SOURCE
-    emit(f'Certifying build of <{BRANCH}>.')
+    import platform
+    emit(f'Validating build of <{BRANCH}>.')
+    facade_request('platform.txt', upload=(
+        f'{platform.python_version()=}'
+        f'{platform.platform()=}'
+        f'{platform.machine()=}'
+    ))
     # TODO: Add a platform report and upload it to the palace.
     # TODO: Platform report is later used for environment maintenance.
     roadmap = []
@@ -476,7 +482,7 @@ def certify_build():
             ['git', 'commit', '-m', 'Commit by certify_build.'],
             ['git', 'push', 'origin', BRANCH])
     emit(f'Pushed to {BRANCH=} {returncode=}.')
-    emit(f'Certification complete at {isotime()}.')
+    emit(f'Validation and push complete at {isotime()}.')
     
 
 # TODO: Think about new ways to visualize the code.
