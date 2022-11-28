@@ -511,7 +511,8 @@ def self_check():
             ['git', 'push', 'origin', BRANCH])
     emit(f'Pushed to {BRANCH=} {returncode=}.')
     emit(f'Validation and push complete at {isotime()}.')
-    
+
+# TODO: New delegate to run a script in a virtual environment.
 
 # TODO: Think about new ways to visualize the code.
 # TODO: Think about how to deploy to AWS after SSL is working.            
