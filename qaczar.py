@@ -48,7 +48,8 @@ SOURCE = fread(__file__, decode='utf-8')
 
 # C.
 
-HOST, PORT = os.environ.get('HOSTNAME', 'localhost'), 8080 
+HOST = os.environ.get('FACADE_HOSTNAME', 'localhost')
+PORT = int(os.environ.get('FACADE_PORT', 8080)) 
 
 # Creates a running copy of ourselves with different arguments.
 # If an old process is provided, it will be terminated gently first.
