@@ -257,11 +257,12 @@ def format_table(headers, rows, title=None):
     yield f'<aside>{count} rows. Binary files not shown.</aside>'.encode('utf-8')
 
 def format_codeline(line):
+    assert isinstance(line, bytes)
     yield b'<code>'
     for c in line:
         if c == b'\t': yield b'&nbsp;&nbsp;'
         elif c == b'  ': yield b'&nbsp;'
-        else: yield c.encode('utf-8')
+        else: yield c
     yield b'</code>'
 
 def format_article(article):
