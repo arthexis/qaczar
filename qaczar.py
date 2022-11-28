@@ -308,14 +308,14 @@ def process_forms(env, topic):
     elif method == 'GET': 
         if query := urllib.parse.unquote(env.get('QUERY_STRING', '')):
             vars = urllib.parse.parse_qs(query); q = vars["q"][0]
-            # Try to use html reports instead.
+            # TODO: Try to use html reports instead.
             report = q.replace(' ', '_') + '__html'
             msg = (f"Request received: {topic=} query='{q}'. "
                 f"Report: <a href='{report}'>{report}</a>.")
             delegation = query.replace('+', '_')
             # Avoid doing any work in the facade, always delegate to the backend. 
             palace_recall(report, store=
-                '<h1>Delegation in progress...</h1>'.encode('utf-8'))
+                '<strong>Delegation in progress...</strong>'.encode('utf-8'))
             create_fork(f'{HOST}:{PORT}', delegation)
             # Redirect to the expected report.
             return None, report
