@@ -242,18 +242,21 @@ def format_table(headers, rows, title=None):
     assert isinstance(headers, dict) 
     # The output should already be binary encoded for performance.
     if title: yield f'<h2>{title}</h2>'.encode('utf-8')
-    yield b'<table><tr>'
-    for h in headers.keys(): yield f'<th>{h}</th>'.encode('utf-8')
-    yield b'</tr>'
-    for r in rows:
-        yield b'<tr>'
-        for c, t in zip(r, headers.values()):
-            if t is None: yield f'<td>{c}</td>'.encode('utf-8')
-            elif t == 'a': 
-                yield f'<td><a href="{c}">{c}</a></td>'.encode('utf-8')
-            else: yield f'<td><{t}>{c}</{t}></td>'.encode('utf-8')
+    if not rows: 
+        yield '<p>No data found.</p>'.encode('utf-8')
+    else:
+        yield b'<table><tr>'
+        for h in headers.keys(): yield f'<th>{h}</th>'.encode('utf-8')
         yield b'</tr>'
-    yield b'</table>'
+        for r in rows:
+            yield b'<tr>'
+            for c, t in zip(r, headers.values()):
+                if t is None: yield f'<td>{c}</td>'.encode('utf-8')
+                elif t == 'a': 
+                    yield f'<td><a href="{c}">{c}</a></td>'.encode('utf-8')
+                else: yield f'<td><{t}>{c}</{t}></td>'.encode('utf-8')
+            yield b'</tr>'
+        yield b'</table>'
 
 def format_python_line(line):
     line = html.escape(line)
