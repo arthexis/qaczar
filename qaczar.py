@@ -333,11 +333,8 @@ def article_combinator(articles):
     if not articles:
         # This is the overview page, when no topic is specified.
         th = {'Topic': 'a', 'Ver': None, 'Timestamp': 'time', 'Size': None, 'Type': 'q'}
-        # TODO: See if we can add a total for the bytes.
-        rows = palace_summary()
-        aside = f'{len(rows)} rows. Binary files not shown.'
-        g = (x for x in format_table(th, rows, 'Palace Summary'))
-        yield from hyper(g, wrap='article', aside=aside)
+        g = (x for x in format_table(th, palace_summary(), 'Palace Summary'))
+        yield from hyper(g, wrap='article')
         articles = {palace_recall('roadmap.txt')}
     for article in articles:
         # TODO: Find something more interesting for the combinator.
