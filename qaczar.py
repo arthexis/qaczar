@@ -393,7 +393,6 @@ class Unhandler(wsgiref.simple_server.WSGIRequestHandler):
     def log_request(self, *args, **kwargs): pass
 
 if __name__ == "__main__" and RUNLEVEL == 2:
-    # TODO: Check if palace needs to be upgraded before starting the server.
     PALACE =  sqlite3.connect('p.sqlite', isolation_level='IMMEDIATE')
     atexit.register(PALACE.close)
     HOST, PORT = sys.argv[1].split(':')
