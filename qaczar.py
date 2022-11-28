@@ -169,14 +169,14 @@ Article = collections.namedtuple('Article', 'topic ver ts content ctype')
 # All single-topic palace operations are performed by a single function.
 # This reduces the number of points of failure for the database layer.
 def palace_recall(topic, /, fetch=True, store=None):
+    # TODO: Consider the viability of an "append" mode.
     global PALACE, TOPICS, DIR
     assert topic, 'No topic provided.'
     table, ts, sql = 'top_' + topic.replace('.', '__'), isotime(), None
     if isinstance(store, str): store = store.encode('utf-8')
     c = PALACE.cursor()
     try:
-        if not TOPICS:
-            TOPICS = {t: guess_ctype(t) for t in sqlite_tableset('top')}
+        if not TOPICS: TOPICS = {t: guess_ctype(t) for t in sqlite_tableset('top')}
         if topic not in TOPICS:
             c.execute(sql := f'CREATE TABLE IF NOT EXISTS {table} ('
                     f'ver INTEGER PRIMARY KEY AUTOINCREMENT, '
@@ -223,8 +223,7 @@ def palace_summary(prefix=None):
             ctype = TOPICS.get(topic, "application/octet-stream")
             yield TopicSummary(topic, found[0], found[1], int(found[2]), ctype)
     c.close()
-    
-# TODO: Make temporal correlation of topics possible.
+
 
 # V.
 
@@ -233,8 +232,6 @@ import urllib.parse
 import wsgiref.simple_server 
 
 # Functions useful for sending binary data in HTTP responses.
-
-# TODO: Make AssertionError: write() error easier to debug.
 
 def format_table(headers, rows, title=None):
     assert isinstance(headers, dict) 
@@ -285,7 +282,6 @@ def format_article(article, aside=None):
             content = article.content.decode('utf-8').splitlines()
             if ctype == 'text/x-python': formatter = format_python_line
             yield from format_codelines(content, formater=formatter)
-    # TODO: Add links to navigate to the previous and next versions.
     if aside: yield f'<aside>{aside}</aside>'.encode('utf-8')
     yield b'</article>'
 
@@ -294,11 +290,9 @@ def format_stream(env, topic):
     if not topic or env['REQUEST_METHOD'] != 'GET': return None, None
     article = palace_recall(topic)
     if article and (content := article.content):
-        # Return the found article, and a generator that can be used for streaming.
+        # Return the found article and a generator that can be used for streaming.
         return article, (content[i:i+1024] for i in range(0, len(content), 1024))
     else: return None, None
-
-# TODO: Add a function that streams the entire contents of the palace.
 
 def process_forms(env, topic):
     # Returns the query form html, and redirect url if needed.
@@ -343,7 +337,6 @@ def hyper(content, wrap=None, iwrap=None, href=None):
 def article_combinator(articles):
     if not articles:
         # This is the overview page, when no topic is specified.
-        # TODO: Add a way to limit the number of lines shown in the overview.
         th = {'Topic': 'a', 'Ver': None, 'Timestamp': 'time', 'Size': None, 'Type': 'q'}
         g = (x for x in format_table(th, palace_summary(), 'Palace Summary'))
         yield from hyper(g, wrap='article')
@@ -354,6 +347,10 @@ def article_combinator(articles):
         if not article: continue
         if not article.content: 
             yield from hyper(f'No content found for {article.topic}.', wrap='p')
+        if article.ctype == 'application/octet-stream':
+            fname = article.topic.replace('__', '.')
+            yield from hyper(f'Unable to visualize {article.topic}.', wrap='p')
+            yield from hyper(f'<a href="{fname}">Download</a>', wrap='p')
         else: yield from format_article(article)
 
 # Main user interface, rendered dynamically based user input.
