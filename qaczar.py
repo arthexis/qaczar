@@ -544,5 +544,5 @@ def self_check():
 # TODO: Think about new ways to visualize the code.
 # TODO: Think about how to deploy to AWS after SSL is working.     
 # TODO: Consider using black to reduce the number of cache updates.       
-# TODO: Think of new functions to add to qaczar.
+# TODO: Think of ART or GAME FUNCTIONS to add to qaczar.
 
