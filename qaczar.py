@@ -405,7 +405,6 @@ def hyper(content, wrap=None, iwrap=None, href=None):
     if wrap: yield f'</{wrap}>'.encode('utf-8') 
 
 def facade_overview_prelude():
-    # TODO: Make sure this is the default page and does not show up at other paths.
     th = {'Topic': 'a', 'Ver': None, 'Timestamp': 'time', 'Size': None, 'Type': 'q'}
     g = (x for x in format_table(th, palace_summary(), 'Palace Summary'))
     yield from hyper(g, wrap='article')
@@ -453,9 +452,6 @@ ALLOWLIST = os.environ.get('ALLOWLIST', '').split()
 
 # Main entrypoint for the user AND delegates. UI == API.
 def facade_wsgi_responder(env, start_response):
-    # TODO: Check why test_urls__txt is not being served.
-    # NOTE: It looks like the test_urls.txt is being served, but test_urls__txt isn't
-    # served until test_urls.txt is requested at least once.
     global ALLOWLIST, FIRST_VISIT
     write, start = None, time.time()
     method, path, origin = env["REQUEST_METHOD"], env["PATH_INFO"], env["REMOTE_ADDR"]
