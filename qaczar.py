@@ -548,6 +548,7 @@ def self_check():
     emit(f'Pushed to {BRANCH=} {returncode=}.')
     emit(f'Validation and push completed.')
 
+# TODO: Create a delegate that replays requests from a visitor log.
 # TODO: New delegate to run a script in a virtual environment.
 # TODO: Prune unnecessary functions from delagates before running them.
 # TODO: Think about new ways to visualize the code.
