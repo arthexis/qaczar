@@ -343,10 +343,10 @@ def process_forms(env, topic):
             # TODO: Remove ! from the report name.
             if q.startswith('!'):
                 report = q[1:].replace(' ', '_') + '__html'
-                content, form, redirect = process_query(q[1:], topic)
+                content, form, redirect, msg = process_query(q[1:], topic)
                 if report and content: palace_recall(report, store=content, append=True)
                 if redirect: return None, redirect
-                msg = (f"Completed query='{q}' on {topic=}. "
+                msg = msg or (f"Completed query='{q}' on {topic=}. "
                     f"Report: <a href='{report}'>{report}</a>.")
             else:
                 report = q.replace(' ', '_') + '__html'
