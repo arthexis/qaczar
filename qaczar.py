@@ -419,7 +419,6 @@ def facade_wsgi_responder(env, start_response):
                 write = start_response('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
             yield from  html_doc_stream(articles, form)
     emit(f"Request completed at {round(time.time() - start, 2)} % capacity.")
-    # TODO: 
     palace_recall('visitors__txt', fetch=False, 
         store=f'<time>{isotime()}</time> {origin} {method} {path}\n', append=not FIRST_VISIT)
     FIRST_VISIT = False
@@ -433,7 +432,6 @@ if __name__ == "__main__" and RUNLEVEL == 2:
     HOST, PORT = sys.argv[1].split(':')
     PORT = int(PORT)
     palace_recall('qaczar.py', store=SOURCE)
-    # TODO: If the body changed, create a diff and store it.
     with wsgiref.simple_server.make_server(
             HOST, PORT, facade_wsgi_responder, handler_class=Unhandler) as s:
         emit(f'Facade ready. Serving on http://{HOST}:{PORT}/')
