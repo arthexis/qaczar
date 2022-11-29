@@ -27,7 +27,6 @@ RUNLEVEL = len(sys.argv)
 DIR = os.path.dirname(__file__)
 HOST = os.environ.get('QACZAR_HOSTNAME', 'localhost')
 PORT = int(os.environ.get('QACZAR_PORT', 8080)) 
-CORE_FUNCTIONS = {}
 
 # These utility functions are used everywhere, be careful when changing them.
 
@@ -240,6 +239,8 @@ def emit_report(verse, safe=False):
     if not safe:
         verse = '<code>' + html.escape(verse) + '</code>'
     REPORT.append(f'<li><time>{ts}</time> {verse}</li>')
+
+CORE_FUNCTIONS = {}
 
 def select_delegate_function(name):
     global CORE_FUNCTIONS
