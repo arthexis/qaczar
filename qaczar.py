@@ -170,7 +170,7 @@ Article = collections.namedtuple('Article', 'topic ver ts content ctype')
 # This reduces the number of points of failure for the database layer.
 def palace_recall(topic, /, fetch=True, store=None, append=False):
     global PALACE, TOPICS, DIR
-    assert topic and isinstance(topic, str), 'No topic provided.'
+    assert topic and isinstance(topic, str), f'Invalid topic {topic=}.'
     table, ts, sql = 'top_' + topic.replace('.', '__'), isotime(), None
     if isinstance(store, (tuple, list)): store = '\n'.join(store)
     if isinstance(store, str): store = store.encode('utf-8')
