@@ -298,7 +298,7 @@ def format_python_line(line):
     elif (cleaned.startswith('def') or cleaned.startswith('import') 
             or cleaned.startswith('from') or cleaned.startswith('if __name__')):
         yield f'<strong>{cleaned}</strong>'.encode('utf-8')
-    elif 'except' in cleaned or 'return' in cleaned or 'yield' in cleaned: 
+    elif 'raise' in cleaned or 'return' in cleaned or 'yield' in cleaned: 
         yield f'<mark>{cleaned}</mark>'.encode('utf-8')
     else: yield cleaned.encode('utf-8')
     yield b'</code>'
