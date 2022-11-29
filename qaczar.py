@@ -170,7 +170,7 @@ Article = collections.namedtuple('Article', 'topic ver ts content ctype')
 # This reduces the number of points of failure for the database layer.
 def palace_recall(topic, /, fetch=True, store=None, append=False):
     global PALACE, TOPICS, DIR
-    # TODO: Report who called the palace to help with debugging.
+    # TODO: Add a TTL column to the topic tables, and use it to expire old data.
     ts, sql = isotime(), None
     c = PALACE.cursor()
     try:
