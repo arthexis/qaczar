@@ -334,18 +334,21 @@ def process_forms(env, topic):
     elif method == 'GET': 
         if query := urllib.parse.unquote(env.get('QUERY_STRING', '')):
             vars = urllib.parse.parse_qs(query); q = vars["q"][0]
-            report = q.replace(' ', '_') + '__html'
-            msg = (f"Request received: {topic=} query='{q}'. "
-                f"Report: <a href='{report}'>{report}</a>.")
-            delegation = query.replace('+', '_')
+            # TODO: Remove ! from the report name.
             if q.startswith('!'):
+                report = q[1:].replace(' ', '_') + '__html'
                 content, form, redirect = process_query(q[1:], topic)
                 if report: palace_recall(report, store=content)
                 if redirect: return None, redirect
+                msg = (f"Completed query='{q}' on {topic=}. ")
             else:
+                report = q.replace(' ', '_') + '__html'
+                msg = (f"Delegated query='{q}' on {topic=}. ")
+                delegation = query.replace('+', '_')
                 palace_recall(report, store='<strong>Delegate in progress...</strong>')
                 create_fork(f'{HOST}:{PORT}', delegation)
             return None, report
+        msg += f"Report: <a href='{report}'>{report}</a>."
         return form or (f'<form id="query-form" method="get">'
                 f'<input type="text" id="query-field" name="q" accesskey="q">'
                 f'</form><span id="query-output">{msg}</span>'), False
