@@ -360,7 +360,6 @@ def process_forms(env, topic):
     elif method == 'GET': 
         if query := urllib.parse.unquote(env.get('QUERY_STRING', '')):
             vars = urllib.parse.parse_qs(query); q = vars["q"][0]
-            # TODO: Remove ! from the report name.
             if q.startswith('!'):
                 report = q[1:].replace(' ', '_') + '__html'
                 content, form, redirect, msg = process_query(q[1:], topic)
@@ -394,7 +393,7 @@ def hyper(content, wrap=None, iwrap=None, href=None):
     if href: yield b'</a>'
     if wrap: yield f'</{wrap}>'.encode('utf-8') 
 
-def facade_overview():
+def facade_overview_into():
     # TODO: Make sure this is the default page and does not show up at other paths.
     th = {'Topic': 'a', 'Ver': None, 'Timestamp': 'time', 'Size': None, 'Type': 'q'}
     g = (x for x in format_table(th, palace_summary(), 'Palace Summary'))
@@ -402,7 +401,7 @@ def facade_overview():
       
 def article_combinator(articles):
     if not articles:
-        yield from facade_overview()
+        yield from facade_overview_into()
         articles = {palace_recall('roadmap.txt')}
     for article in articles:
         # TODO: Find something more interesting for the combinator.
