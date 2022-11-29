@@ -325,6 +325,7 @@ def format_article(article, aside=None):
     # TODO: Display images and other media inlined.
     yield f'<article><h2>{article.topic}</h2><ol>'.encode('utf-8')
     ctype, formatter = article.ctype, None
+    fname = article.topic.replace('__', '.')
     if ctype.startswith('text/'):
         if ctype == 'text/html': yield article.content
         else:
@@ -333,9 +334,8 @@ def format_article(article, aside=None):
             if ctype == 'text/css': formatter = format_css_line
             yield from format_codelines(content, formater=formatter)
     elif article.ctype.startswith('image/'):
-        yield f'<img src="/{article.topic}">'.encode('utf-8')
+        yield f'<img src="/{fname}">'.encode('utf-8')
     else:  # This includes application/octet-stream.
-        fname = article.topic.replace('__', '.')
         yield (f'<p><strong>Unable to visualize content of type {article.ctype}</strong>.</p>'
             f'<p><a href="/{fname}">Click here to download {fname}</a></p>').encode('utf-8')
     if aside: yield f'<aside>{aside}</aside>'.encode('utf-8')
