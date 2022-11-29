@@ -470,7 +470,6 @@ def facade_wsgi_responder(env, start_response):
             yield from  html_doc_stream(articles, form)
     capacity = round(time.time() - start, 2)
     emit(f"Request completed at {capacity} % capacity.")
-    # TODO: Add performance information to the visit log.
     palace_recall('visitors__txt', fetch=False, 
         store=f'<time>{isotime()}</time> {origin} {method} {path} {capacity}\n', 
         append=not FIRST_VISIT)
