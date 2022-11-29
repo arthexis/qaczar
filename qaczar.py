@@ -322,7 +322,6 @@ def format_codelines(lines, formater=None):
     yield b'</ol>'
 
 def format_article(article, aside=None):
-    # TODO: Display images and other media inlined.
     yield f'<article><h2>{article.topic}</h2><ol>'.encode('utf-8')
     ctype, formatter = article.ctype, None
     fname = article.topic.replace('__', '.')
