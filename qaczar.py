@@ -212,7 +212,7 @@ def palace_recall(topic, /, fetch=True, store=None, append=False):
                         f'WHERE ver = ?', (found[2] + store, ts, store_md5, found[0]))
                 PALACE.commit()
             return Article(topic, found[0], found[1], found[2], ctype)
-    except sqlite3.Error as e:
+    except Exception as e:
         lineno = sys._getframe(1).f_lineno
         caller = sys._getframe(1).f_code.co_name
         emit(f'Palace error {e=} {caller=} {lineno=} {sql=}'); raise
