@@ -387,11 +387,12 @@ def http_headers(ctype='text/html; charset=utf-8', redirect=None, size=None):
     if size: headers.append(('Content-Length', str(size)))
     return headers
 
+FIRST_VISIT = True
 ALLOWLIST = os.environ.get('ALLOWLIST', '').split()
 
 # Main entrypoint for the user AND delegates. UI == API.
 def facade_wsgi_responder(env, start_response):
-    global ALLOWLIST
+    global ALLOWLIST, FIRST_VISIT
     write, start = None, time.time()
     method, path, origin = env["REQUEST_METHOD"], env["PATH_INFO"], env["REMOTE_ADDR"]
     emit(f'--*-- Incoming {method} {path} from {origin} --*--')
@@ -419,8 +420,8 @@ def facade_wsgi_responder(env, start_response):
             yield from  html_doc_stream(articles, form)
     emit(f"Request completed at {round(time.time() - start, 2)} % capacity.")
     palace_recall('visitors__txt', fetch=False, 
-        store=f'{origin} {method} {path} {isotime()}', append=True)
-
+        store=f'{origin} {method} {path} {isotime()}', append=not FIRST_VISIT)
+    FIRST_VISIT = False
 
 class Unhandler(wsgiref.simple_server.WSGIRequestHandler):
     def log_request(self, *args, **kwargs): pass
