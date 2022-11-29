@@ -294,7 +294,6 @@ def linkify_topics(text):
 def format_python_line(line):
     # TODO: Python line formatting still doesn't look right.
     line = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
-    line = line.replace('<', '&lt;').replace('>', '&gt;')
     line = linkify_topics(line)
     if line.strip().startswith('#') or line.strip().startswith('emit('):
         yield f'<q>{line}</q>'.encode('utf-8')
@@ -317,6 +316,7 @@ def format_css_line(line):
 def format_codelines(lines, formater=None):
     yield b'<ol>'
     for i, line in enumerate(lines):
+        line = line.replace('<', '&lt;').replace('>', '&gt;')
         yield b'<li>'
         if formater: yield from formater(line)
         else: yield line.encode('utf-8')
