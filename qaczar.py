@@ -332,7 +332,9 @@ def format_article(article, aside=None):
             if ctype == 'text/x-python': formatter = format_python_line
             if ctype == 'text/css': formatter = format_css_line
             yield from format_codelines(content, formater=formatter)
-    elif article.ctype == 'application/octet-stream':
+    elif article.ctype.startswith('image/'):
+        yield f'<img src="{article.topic}">'.encode('utf-8')
+    else:  # This includes application/octet-stream.
         fname = article.topic.replace('__', '.')
         yield (f'<p><strong>Unable to visualize content of type {article.ctype}</strong>.</p>'
             f'<p><a href="{fname}">Click here to download {fname}</a></p>').encode('utf-8')
