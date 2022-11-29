@@ -194,8 +194,8 @@ def palace_recall(topic, /, fetch=True, store=None, append=False):
     ts, sql = isotime(), None
     c = PALACE.cursor()
     try:
-        table, fname = 'top_' + topic.replace('.', '__'), topic.replace('__', '.')
         assert topic and isinstance(topic, str), f'Invalid topic {topic=}.'
+        fname, table = topic.replace('__', '.'), 'top_' + topic.replace('.', '__')
         if isinstance(store, (tuple, list)): store = '\n'.join(store)
         if isinstance(store, str): store = store.encode('utf-8')
         if not TOPICS: 
