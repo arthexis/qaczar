@@ -171,9 +171,9 @@ Article = collections.namedtuple('Article', 'topic ver ts content ctype')
 def palace_recall(topic, /, fetch=True, store=None, append=False):
     global PALACE, TOPICS, DIR
     assert topic, 'No topic provided.'
-    table, ts, sql = 'top_' + topic.replace('.', '__'), isotime(), None
     if isinstance(store, (tuple, list)): store = '\n'.join(store)
     if isinstance(store, str): store = store.encode('utf-8')
+    table, ts, sql = 'top_' + topic.replace('.', '__'), isotime(), None
     c = PALACE.cursor()
     try:
         if not TOPICS: TOPICS = {t: guess_ctype(t) for t in sqlite_tableset('top')}
