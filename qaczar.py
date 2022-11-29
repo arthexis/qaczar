@@ -393,14 +393,18 @@ def hyper(content, wrap=None, iwrap=None, href=None):
     else: yield b''
     if href: yield b'</a>'
     if wrap: yield f'</{wrap}>'.encode('utf-8') 
+
+def facade_overview():
+    # TODO: Make sure this is the default page and does not show up at other paths.
+    th = {'Topic': 'a', 'Ver': None, 'Timestamp': 'time', 'Size': None, 'Type': 'q'}
+    g = (x for x in format_table(th, palace_summary(), 'Palace Summary'))
+    yield from hyper(g, wrap='article')
+    articles = {palace_recall('roadmap.txt')}
+    return articles
       
 def article_combinator(articles):
     if not articles:
-        # This is the overview page, when no topic is specified.
-        th = {'Topic': 'a', 'Ver': None, 'Timestamp': 'time', 'Size': None, 'Type': 'q'}
-        g = (x for x in format_table(th, palace_summary(), 'Palace Summary'))
-        yield from hyper(g, wrap='article')
-        articles = {palace_recall('roadmap.txt')}
+        articles = facade_overview()
     for article in articles:
         # TODO: Find something more interesting for the combinator.
         if not article: continue
