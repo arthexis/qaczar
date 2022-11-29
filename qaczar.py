@@ -319,7 +319,7 @@ def format_stream(env, topic):
 
 def process_query(query, topic=None):
     assert query and isinstance(query, str), f'Invalid query {query=}'
-    form, redirect, content = None, None, None
+    content, form, redirect = None, None, None
     cmd, *params = query.split()
     if cmd == 'mix':
         if topic: redirect = '+'.join([topic, *params])
