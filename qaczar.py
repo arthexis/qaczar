@@ -583,9 +583,5 @@ def self_check(context=None):
 
 # TODO: Create a delegate that replays requests from a visitor log.
 # TODO: New delegate to run a script in a virtual environment.
-# TODO: Prune unnecessary functions from delagates before running them.
-# TODO: Think about new ways to visualize the code.
-# TODO: Think about how to deploy to AWS after SSL is working.     
-# TODO: Consider using black to reduce the number of cache updates.       
-# TODO: Think of ART or GAME FUNCTIONS to add to qaczar.
+# TODO: Make qaczar even more fun and useful.
 
