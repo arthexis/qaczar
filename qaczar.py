@@ -345,7 +345,7 @@ def process_query(query, topic=None):
     else:
         msg = f'Not implemented: {cmd}.'
     size = len(content) if content else 0
-    emit(f'Query: {query} + {topic} -> {redirect=}, {msg=} {size=}')
+    emit(f'Query: {query} + {topic or "_blank"} -> {redirect=}, {msg=} {size=}')
     return content, form, redirect, msg
 
 def process_forms(env, topic):
