@@ -170,12 +170,13 @@ Article = collections.namedtuple('Article', 'topic ver ts content ctype')
 # This reduces the number of points of failure for the database layer.
 def palace_recall(topic, /, fetch=True, store=None, append=False):
     global PALACE, TOPICS, DIR
-    assert topic and isinstance(topic, str), f'Invalid topic {topic=}.'
-    table, ts, sql = 'top_' + topic.replace('.', '__'), isotime(), None
-    if isinstance(store, (tuple, list)): store = '\n'.join(store)
-    if isinstance(store, str): store = store.encode('utf-8')
+    # TODO: Report who called the palace to help with debugging.
     c = PALACE.cursor()
     try:
+        assert topic and isinstance(topic, str), f'Invalid topic {topic=}.'
+        table, ts, sql = 'top_' + topic.replace('.', '__'), isotime(), None
+        if isinstance(store, (tuple, list)): store = '\n'.join(store)
+        if isinstance(store, str): store = store.encode('utf-8')
         if not TOPICS: TOPICS = {t: guess_ctype(t) for t in sqlite_tableset('top')}
         if topic not in TOPICS:
             c.execute(sql := f'CREATE TABLE IF NOT EXISTS {table} ('
@@ -212,7 +213,9 @@ def palace_recall(topic, /, fetch=True, store=None, append=False):
                 PALACE.commit()
             return Article(topic, found[0], found[1], found[2], ctype)
     except sqlite3.Error as e:
-        emit(f'Palace error {e=} {sql=}'); raise
+        lineno = sys._getframe(1).f_lineno
+        caller = sys._getframe(1).f_code.co_name
+        emit(f'Palace error {e=} {caller=} {lineno=} {sql=}'); raise
     c.close()
 
 TopicSummary = collections.namedtuple('TopicSummary', 'topic ver ts length ctype')
