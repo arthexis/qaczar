@@ -461,7 +461,8 @@ def facade_request(*args, upload=None):
     assert all(urllib.parse.quote(arg) == arg for arg in args), f"Invalid request {args=}"
     url = f'http://{HOST}:{PORT}/{"/".join(args)}'
     try:
-        upload = upload.encode('utf-8') if upload else None
+        if isinstance(upload, (list, tuple)): upload = '\n'.join(upload).encode('utf-8')	
+        if isinstance(upload, str): upload = upload.encode('utf-8')
         with urllib.request.urlopen(url, data=upload, timeout=6) as r:
             return r.status, r.read().decode('utf-8')
     except urllib.error.HTTPError as e:
@@ -497,9 +498,8 @@ def delegate_task():
     else: 
         if CONTEXT: emit(f'Context <{CONTEXT}> ignored for delegate <{DELEGATE}>.')
         delegate()
-    report = '\n'.join(REPORT)  
-    if report:
-        status, _ = facade_request(f'{DELEGATE}__html', upload=str(REPORT))
+    if REPORT:
+        status, _ = facade_request(f'{DELEGATE}__html', upload=REPORT)
         emit(f'Delegate "{DELEGATE}" completed and reported with {status=}.')
     else: emit(f'Delegate "{DELEGATE}" completed without reporting.')
 
