@@ -269,6 +269,13 @@ def format_python_line(line):
         yield f'<mark>{line}</mark>'.encode('utf-8')
     else: yield line.encode('utf-8')
     yield b'</code>'
+
+def format_css_line(line):
+    line = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
+    yield b'<code>'
+    if line.strip().startswith('/*'): yield f'<q>{line}</q>'.encode('utf-8')
+    else: yield line.encode('utf-8')
+    yield b'</code>'
     
 def format_codelines(lines, formater=None):
     yield b'<ol>'
@@ -324,7 +331,6 @@ def process_forms(env, topic):
             palace_recall(report, store=
                 '<strong>Delegation in progress...</strong>'.encode('utf-8'))
             create_fork(f'{HOST}:{PORT}', delegation)
-            # Redirect to the expected report.
             return None, report
         return (f'<form id="query-form" method="get">'
                 f'<input type="text" id="query-field" name="q" accesskey="q">'
