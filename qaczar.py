@@ -284,23 +284,21 @@ def format_table(headers, rows, title=None):
         yield b'</table>'
 
 def format_python_line(line):
-    line = html.escape(line)
-    line = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
+    cleaned = html.escape(line)
+    cleaned = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
     yield b'<code>'
     # Replace any topic names with links to the topic.
-    new_line = ''
-    for word in line.split():
+    for word in cleaned.split():
         if word in TOPICS: new_line += f'<a href="/{word}">{word}</a> '
         else: new_line += word + ' '
-    line = new_line
-    if line.strip().startswith('#') or line.strip().startswith('emit('):
-        yield f'<q>{line}</q>'.encode('utf-8')
-    elif (line.startswith('def') or line.startswith('import') 
-            or line.startswith('from') or line.startswith('if __name__')):
-        yield f'<strong>{line}</strong>'.encode('utf-8')
-    elif 'except' in line or 'return' in line or 'yield' in line: 
-        yield f'<mark>{line}</mark>'.encode('utf-8')
-    else: yield line.encode('utf-8')
+    if cleaned.strip().startswith('#') or line.strip().startswith('emit('):
+        yield f'<q>{cleaned}</q>'.encode('utf-8')
+    elif (cleaned.startswith('def') or cleaned.startswith('import') 
+            or cleaned.startswith('from') or cleaned.startswith('if __name__')):
+        yield f'<strong>{cleaned}</strong>'.encode('utf-8')
+    elif 'except' in cleaned or 'return' in cleaned or 'yield' in cleaned: 
+        yield f'<mark>{cleaned}</mark>'.encode('utf-8')
+    else: yield cleaned.encode('utf-8')
     yield b'</code>'
 
 def format_css_line(line):
