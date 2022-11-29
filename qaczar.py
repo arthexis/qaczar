@@ -284,11 +284,9 @@ def format_table(headers, rows, title=None):
         yield b'</table>'
 
 def format_python_line(line):
-    cleaned = html.escape(line)
+    cleaned, linked = html.escape(line), ''
     cleaned = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
     yield b'<code>'
-    # Replace any topic names with links to the topic.
-    linked = ''
     for word in cleaned.split():
         if word in TOPICS: new_line += f'<a href="/{word}">{word}</a> '
         else: linked += word + ' '
