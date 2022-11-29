@@ -293,7 +293,8 @@ def format_python_line(line):
         if word in TOPICS: new_line += f'<a href="/{word}">{word}</a> '
         else: new_line += word + ' '
     line = new_line
-    if line.strip().startswith('#'): yield f'<q>{line}</q>'.encode('utf-8')
+    if line.strip().startswith('#') or line.strip().startswith('emit('):
+        yield f'<q>{line}</q>'.encode('utf-8')
     elif (line.startswith('def') or line.startswith('import') 
             or line.startswith('from') or line.startswith('if __name__')):
         yield f'<strong>{line}</strong>'.encode('utf-8')
