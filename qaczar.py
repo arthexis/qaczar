@@ -152,9 +152,9 @@ def text_summary(content, length=54):
 REPORT = []    
 
 def emit_report(verse, safe=False):
-    global DELEGATE, REPORT, RUNLEVEL
-    ts = isotime()
-    print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{ts}] {DELEGATE}: {verse}')
+    global REPORT, RUNLEVEL
+    ts, f = isotime(), sys._getframe(1)
+    print(f'[{RUNLEVEL}:{f.f_lineno}] [{isotime()}] {f.f_code.co_name}: {verse}')
     if not safe:
         verse = '<code>' + html.escape(verse) + '</code>'
     REPORT.append(f'<li><time>{ts}</time> {verse}</li>')
