@@ -203,14 +203,13 @@ def palace_recall(topic, /, fetch=True, store=None, append=False):
                 c.execute(sql :=f'INSERT INTO {table} (ts, content, md5, mtime) '
                         f'VALUES (?, ?, ?, ?)', (ts, store, store_md5, 0))
                 emit(f'Insert commited {topic=} {len(store)=}.')
-            elif found:
-                # TODO: Test how palace_recall append works with binary data.
-                c.execute(sql := f'UPDATE {table} SET ts=?, content=?, md5=? '
-                        f'WHERE ver=?', (ts, found.store + store, store_md5, found[0]))
-                emit(f'Append commited {topic=} {len(store)=}.')
-            PALACE.commit()
+                PALACE.commit()
         if found: 
             ctype = TOPICS.get(topic, 'application/octet-stream')
+            if append and store:
+                c.execute(sql := f'UPDATE {table} SET content = ?, ts = ?, md5 = ? '
+                        f'WHERE ver = ?', (found.store + store, ts, store_md5, found[0]))
+                PALACE.commit()
             return Article(topic, found[0], found[1], found[2], ctype)
     except sqlite3.Error as e:
         emit(f'Palace error {e=} {sql=}'); raise
