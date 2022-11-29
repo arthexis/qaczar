@@ -292,8 +292,9 @@ def linkify_topics(text):
     return ''.join(result)
 
 def format_python_line(line):
-    line = linkify_topics(line)
+    # TODO: Python line formatting still doesn't look right.
     line = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
+    line = linkify_topics(line)
     if line.strip().startswith('#') or line.strip().startswith('emit('):
         yield f'<q>{line}</q>'.encode('utf-8')
     elif (line.startswith('def') or line.startswith('import') 
