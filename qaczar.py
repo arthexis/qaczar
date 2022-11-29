@@ -433,9 +433,11 @@ def facade_wsgi_responder(env, start_response):
             if not write: 
                 write = start_response('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
             yield from  html_doc_stream(articles, form)
-    emit(f"Request completed at {round(time.time() - start, 2)} % capacity.")
+    capacity = round(time.time() - start, 2)
+    emit(f"Request completed at {capacity} % capacity.")
+    # TODO: Add performance information to the visit log.
     palace_recall('visitors__txt', fetch=False, 
-        store=f'<time>{isotime()}</time> {origin} {method} {path}\n', append=not FIRST_VISIT)
+        store=f'<time>{isotime()}</time> {origin} {method} {path} {capacity}\n', append=not FIRST_VISIT)
     FIRST_VISIT = False
 
 class Unhandler(wsgiref.simple_server.WSGIRequestHandler):
