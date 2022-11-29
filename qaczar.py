@@ -417,7 +417,7 @@ def article_combinator(articles):
     for article in articles:
         # TODO: Find something more interesting for the combinator.
         if not article or not article.content: 
-            yield from hyper(f'No content found for {article.topic}.', wrap='p')
+            yield from hyper(f'No content found.', wrap='p')
         else: yield from format_article(article)
 
 # Main user interface, rendered dynamically based user input.
