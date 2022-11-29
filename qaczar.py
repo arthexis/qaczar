@@ -333,7 +333,7 @@ def format_article(article, aside=None):
             if ctype == 'text/css': formatter = format_css_line
             yield from format_codelines(content, formater=formatter)
     elif article.ctype.startswith('image/'):
-        yield f'<img src="{article.topic}">'.encode('utf-8')
+        yield f'<img src="/{article.topic}">'.encode('utf-8')
     else:  # This includes application/octet-stream.
         fname = article.topic.replace('__', '.')
         yield (f'<p><strong>Unable to visualize content of type {article.ctype}</strong>.</p>'
