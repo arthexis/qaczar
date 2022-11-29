@@ -292,17 +292,16 @@ def linkify_topics(text):
     return ''.join(result)
 
 def format_python_line(line):
-    cleaned, linked = html.escape(line), ''
-    cleaned = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
-    linked = linkify_topics(cleaned)
-    if cleaned.strip().startswith('#') or line.strip().startswith('emit('):
-        yield f'<q>{linked}</q>'.encode('utf-8')
-    elif (cleaned.startswith('def') or cleaned.startswith('import') 
-            or cleaned.startswith('from') or cleaned.startswith('if __name__')):
-        yield f'<strong>{linked}</strong>'.encode('utf-8')
-    elif 'except' in cleaned or 'return' in cleaned or 'yield' in cleaned or 'raise' in cleaned: 
-        yield f'<mark>{linked}</mark>'.encode('utf-8')
-    else: yield linked.encode('utf-8')
+    line = linkify_topics(line)
+    line = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
+    if line.strip().startswith('#') or line.strip().startswith('emit('):
+        yield f'<q>{line}</q>'.encode('utf-8')
+    elif (line.startswith('def') or line.startswith('import') 
+            or line.startswith('from') or line.startswith('if __name__')):
+        yield f'<strong>{line}</strong>'.encode('utf-8')
+    elif 'except' in line or 'return' in line or 'yield' in line or 'raise' in line: 
+        yield f'<mark>{line}</mark>'.encode('utf-8')
+    else: yield line.encode('utf-8')
     yield b'</code>'
 
 def format_css_line(line):
