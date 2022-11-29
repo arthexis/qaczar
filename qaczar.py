@@ -405,8 +405,7 @@ def article_combinator(articles):
         articles = {palace_recall('roadmap.txt')}
     for article in articles:
         # TODO: Find something more interesting for the combinator.
-        if not article: continue
-        if not article.content: 
+        if not article or not article.content: 
             yield from hyper(f'No content found for {article.topic}.', wrap='p')
         else: yield from format_article(article)
 
