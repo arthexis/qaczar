@@ -581,6 +581,19 @@ def self_check(context=None):
     emit(f'Pushed to {BRANCH=} {returncode=}.')
     emit(f'Validation and push completed.')
 
+# Delegate that queries an external source for data and uploads the result.
+def fetch_urls(context=None):
+    urls = set()
+    for line in context.splitlines():
+        urls.update(re.findall(r'https?://[^\s]+', line))
+    emit(f'Found {len(urls)} URLs in context.')
+    for url in urls:
+        emit(f'Fetching {url=}.')
+        status, data = facade_request(f'fetch_urls__html', upload=url)
+        emit(f'Upload {status=} {len(data)=} bytes.')
+        if status != 200: return status
+
+
 # TODO: Create a delegate that replays requests from a visitor log.
 # TODO: New delegate to run a script in a virtual environment.
 # TODO: Make qaczar even more fun and useful.
