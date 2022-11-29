@@ -430,7 +430,6 @@ def html_doc_stream(articles, form):
     # TODO: Use accesskey="#" and number the links.
     links = []  
     yield from hyper('<!DOCTYPE html><head><meta charset="utf-8"/>')
-    if not form: yield from hyper(f'<meta http-equiv="refresh" content="6"/>')
     yield from hyper(SITE, wrap='title')  
     if css: yield from hyper(css.content, 'style')  
     yield from hyper('</head><body><nav>')   
