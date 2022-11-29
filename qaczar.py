@@ -313,9 +313,14 @@ def format_stream(env, topic):
         return article, (content[i:i+1024] for i in range(0, len(content), 1024))
     else: return None, None
 
+def process_query(query, topic=None):
+    form, redirect = None, None
+    report = b'<h2>Inline query</h2>' + b'<p><strong>Not implemented yet.</strong></p>'
+    return report, form, redirect
+
 def process_forms(env, topic):
     # Returns the query form html, and redirect url if needed.
-    method, msg = env['REQUEST_METHOD'], ''
+    method, msg, form = env['REQUEST_METHOD'], '', None
     if method == 'POST':
         data = env['wsgi.input'].read(int(env.get('CONTENT_LENGTH', 0)))
         if topic:
@@ -329,12 +334,15 @@ def process_forms(env, topic):
             msg = (f"Request received: {topic=} query='{q}'. "
                 f"Report: <a href='{report}'>{report}</a>.")
             delegation = query.replace('+', '_')
-            # Avoid doing any work in the facade, always delegate to the backend. 
-            palace_recall(report, store=
-                '<strong>Delegation in progress...</strong>'.encode('utf-8'))
-            create_fork(f'{HOST}:{PORT}', delegation)
+            if q.startswith('!'):
+                report, form, redirect = process_query(q[1:], topic)
+                if report: palace_recall(report, store=report)
+                if redirect: return None, redirect
+            else:
+                palace_recall(report, store='<strong>Delegate in progress...</strong>')
+                create_fork(f'{HOST}:{PORT}', delegation)
             return None, report
-        return (f'<form id="query-form" method="get">'
+        return form is None or (f'<form id="query-form" method="get">'
                 f'<input type="text" id="query-field" name="q" accesskey="q">'
                 f'</form><div id="query-output">{msg}</div>'), False
 
