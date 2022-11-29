@@ -21,12 +21,14 @@ import subprocess
 # We don't import everything at the start to keep the runtime of 
 # the crown (watcher) as simple as possible. Later we can import more modules.
 
-# This is the name that will appear on the title of the website.
 SITE = 'QACZAR.COM'
 BRANCH = 'main'
-
 RUNLEVEL = len(sys.argv)
 DIR = os.path.dirname(__file__)
+DELEGATE = None
+HOST = os.environ.get('QACZAR_HOSTNAME', 'localhost')
+PORT = int(os.environ.get('QACZAR_PORT', 8080)) 
+CORE_FUNCTIONS = {}
 
 # These utility functions are used everywhere, be careful when changing them.
 
@@ -47,9 +49,6 @@ SOURCE = fread(__file__, decode='utf-8')
 
 
 # C.
-
-HOST = os.environ.get('QACZAR_HOSTNAME', 'localhost')
-PORT = int(os.environ.get('QACZAR_PORT', 8080)) 
 
 # Creates a running copy of ourselves with different arguments.
 # If an old process is provided, it will be terminated gently first.
@@ -232,6 +231,25 @@ def palace_summary(prefix=None):
             ctype = TOPICS.get(topic, "application/octet-stream")
             yield TopicSummary(topic, found[0], found[1], int(found[2]), ctype)
     c.close()
+
+REPORT = []    
+
+def emit_report(verse, safe=False):
+    global DELEGATE, REPORT, RUNLEVEL
+    ts = isotime()
+    print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{ts}] {DELEGATE}: {verse}')
+    if not safe:
+        verse = '<code>' + html.escape(verse) + '</code>'
+    REPORT.append(f'<li><time>{ts}</time> {verse}</li>')
+
+def select_delegate_function(name):
+    global CORE_FUNCTIONS
+    import qaczar
+    qaczar.emit = emit_report
+    delegate = getattr(qaczar, name, None)
+    assert callable(delegate), f'Invalid delegate {delegate=}.'
+    assert CORE_FUNCTIONS and delegate not in CORE_FUNCTIONS, f"Not allowed {delegate=}."
+    return delegate
 
 
 # V.
@@ -475,16 +493,7 @@ if __name__ == "__main__" and RUNLEVEL == 2:
 
 import urllib.request
 
-DELEGATE = None
-REPORT = []
-
-def emit(verse, safe=False):
-    global DELEGATE, REPORT
-    ts = isotime()
-    print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{ts}] {DELEGATE}: {verse}')
-    if not safe:
-        verse = '<code>' + html.escape(verse) + '</code>'
-    REPORT.append(f'<li><time>{ts}</time> {verse}</li>')
+FUNCTION, BASE_HOST, BASE_PORT = None, None, None
 
 def facade_request(*args, upload=None):
     assert all(urllib.parse.quote(arg) == arg for arg in args), f"Invalid request {args=}"
@@ -509,28 +518,10 @@ def chain_run(*cmds, s=None):
             return s.returncode if s else -1
     return s.returncode
 
-CORE_FUNCTIONS = {}
-
-def delegate_task():
-    global HOST, PORT, DELEGATE, CONTEXT, REPORT, CORE_FUNCTIONS
-    emit(f'Delegate "{DELEGATE}" of "{HOST}:{PORT}" starting.')
-    # Import qaczar itself to access functions from the future.
-    import qaczar
-    qaczar.emit = emit  
-    delegate = getattr(qaczar, DELEGATE, None)
-    assert callable(delegate), f'Invalid delegate {delegate=}.'
-    assert delegate not in CORE_FUNCTIONS, f"Core function {delegate=} not allowed."
-    if delegate.__code__.co_argcount: 
-        context = facade_request(CONTEXT) if context else None
-        emit(f'Received {len(context) + " bytes of" if context else "no"} context.')
-        delegate(context)  
-    else: 
-        if CONTEXT: emit(f'Context <{CONTEXT}> ignored for delegate <{DELEGATE}>.')
-        delegate()
-    if REPORT:
-        status, _ = facade_request(f'{DELEGATE}__html', upload=REPORT)
-        emit(f'Delegate "{DELEGATE}" completed and reported with {status=}.')
-    else: emit(f'Delegate "{DELEGATE}" completed without reporting.')
+def run_delegate_task(name, context=None):
+    global HOST, PORT, REPORT
+    
+    
 
 CORE_FUNCTIONS = {f for f in globals().values() if callable(f)}
 
@@ -542,13 +533,20 @@ if __name__ == "__main__" and RUNLEVEL in (3, 4):
     assert PALACE is None, 'Palace connected. Not good.'
     if HOST != BASE_HOST:
         PALACE =  sqlite3.connect('p.sqlite', isolation_level='IMMEDIATE')
-    delegate_task()
+    emit(f'Delegate "{DELEGATE}" of "{HOST}:{PORT}" starting.')
+    FUNCTION = select_delegate_function(DELEGATE)
+    context = facade_request(CONTEXT) if CONTEXT else None
+    emit(f'Received {len(context) + " bytes of" if context else "no"} context.')
+    if result := FUNCTION(context):
+        emit(f'Function {DELEGATE} returned: {result}.')
+    if REPORT: status, _ = facade_request(f'{DELEGATE}__html', upload=REPORT)
+    emit(f'Delegate "{DELEGATE}" completed. Terminating subprocess.')
 
 
 # --- Delegate-only functions go below this line. ---
 # Delegates can access core functions, but not other delegates.
     
-def self_check():
+def self_check(context=None):
     global BRANCH, SOURCE
     import platform
     emit(f'Validating build of {BRANCH=}.')
