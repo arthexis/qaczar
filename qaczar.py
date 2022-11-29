@@ -172,6 +172,7 @@ def palace_recall(topic, /, fetch=True, store=None, append=False):
     global PALACE, TOPICS, DIR
     assert topic, 'No topic provided.'
     table, ts, sql = 'top_' + topic.replace('.', '__'), isotime(), None
+    if isinstance(store, (tuple, list)): store = '\n'.join(store)
     if isinstance(store, str): store = store.encode('utf-8')
     c = PALACE.cursor()
     try:
@@ -496,9 +497,8 @@ def delegate_task():
     else: 
         if CONTEXT: emit(f'Context <{CONTEXT}> ignored for delegate <{DELEGATE}>.')
         delegate()
-    report = '\n'.join(REPORT)  
     if report:
-        status, _ = facade_request(f'{DELEGATE}__html', upload=str(report))
+        status, _ = facade_request(f'{DELEGATE}__html', upload=str(REPORT))
         emit(f'Delegate "{DELEGATE}" completed and reported with {status=}.')
     else: emit(f'Delegate "{DELEGATE}" completed without reporting.')
 
