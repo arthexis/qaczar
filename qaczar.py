@@ -423,19 +423,26 @@ def article_combinator(articles):
             yield from hyper(f'No content found.', wrap='p')
         else: yield from format_article(article)
 
+def alt_view_links(articles):
+    for article in articles:
+        prefix = article.topic.split('__')[0]
+        # Search for alternate topics in the palace.
+        for alt in palace_summary(prefix=prefix):
+            if alt.topic != article.topic:
+                yield from hyper(alt.topic.rsplit('__')[0], wrap='button', href=alt.topic)
+
 # Main user interface, rendered dynamically based user input.
 def html_doc_stream(articles, form):
     global SITE
     css = palace_recall('qaczar.css')
     # TODO: Links should be generated for alternate views (e.g. txt, json, etc.)
     # TODO: Use accesskey="#" and number the links.
-    links = []  
     yield from hyper('<!DOCTYPE html><head><meta charset="utf-8"/>')
     yield from hyper(SITE, wrap='title')  
     if css: yield from hyper(css.content, 'style')  
     yield from hyper('</head><body><nav>')   
     yield from hyper(SITE, wrap='h1', href='/')
-    if links: yield from hyper(links, wrap='ul', iwrap='li')
+    if articles: yield from alt_view_links(articles)
     if form: yield from hyper(form)
     yield from hyper('</nav><main>')
     yield from article_combinator(articles)
