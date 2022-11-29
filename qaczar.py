@@ -344,7 +344,7 @@ def process_forms(env, topic):
             return None, report
         return form or (f'<form id="query-form" method="get">'
                 f'<input type="text" id="query-field" name="q" accesskey="q">'
-                f'</form><div id="query-output">{msg}</div>'), False
+                f'</form><span id="query-output">{msg}</span>'), False
 
 def hyper(content, wrap=None, iwrap=None, href=None):
     if wrap: yield f'<{wrap}>'.encode('utf-8') 
