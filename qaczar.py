@@ -576,6 +576,7 @@ def self_check(context=None):
     status, _ = facade_request('roadmap.txt', upload=roadmap)
     emit(f'Roadmap uploaded {status=}.')
     if status != 200: return status
+    # TODO: Check that qaczar.py is rendered correctly.
     returncode = chain_run(
             ['git', 'add', '.'],
             ['git', 'commit', '-m', 'Commit by self_check.'],
