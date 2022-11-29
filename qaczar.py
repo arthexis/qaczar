@@ -326,7 +326,7 @@ def process_query(query, topic=None):
         else: redirect = '+'.join(params)
     else:
         msg = f'Not implemented: {cmd}.'
-    emit(f'Query: {query} -> {redirect=}, {msg=}')
+    emit(f'Query: {query} + {topic} -> {redirect=}, {msg=} {len(content)=}')
     return content, form, redirect, msg
 
 def process_forms(env, topic):
