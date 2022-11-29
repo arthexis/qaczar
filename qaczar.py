@@ -188,7 +188,7 @@ def palace_recall(topic, /, fetch=True, store=None, append=False):
                 PALACE.commit()
             TOPICS[topic] = guess_ctype(topic)
         found = c.execute(sql := f'SELECT ver, ts, content, md5, mtime FROM {table} '
-                f'ORDER BY ts DESC LIMIT 1').fetchone() if fetch else None
+                f'ORDER BY ts DESC LIMIT 1').fetchone() if fetch or append else None
         if found and found[4]:
             mtime, seed = seed_mtime(topic, found[4])
             if seed and (new_seed_md5 := md5_digest(seed)) != found[3]:
