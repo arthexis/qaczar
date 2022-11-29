@@ -171,9 +171,9 @@ Article = collections.namedtuple('Article', 'topic ver ts content ctype')
 def palace_recall(topic, /, fetch=True, store=None, append=False):
     global PALACE, TOPICS, DIR
     # TODO: Report who called the palace to help with debugging.
+    ts, sql = isotime(), None
     c = PALACE.cursor()
     try:
-        ts, sql = isotime(), None
         table = 'top_' + topic.replace('.', '__')
         assert topic and isinstance(topic, str), f'Invalid topic {topic=}.'
         if isinstance(store, (tuple, list)): store = '\n'.join(store)
