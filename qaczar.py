@@ -194,26 +194,27 @@ def palace_recall(topic, /, fetch=True, store=None, append=False):
     ts, sql = isotime(), None
     c = PALACE.cursor()
     try:
-        table = 'top_' + topic.replace('.', '__')
+        table, fname = 'top_' + topic.replace('.', '__'), topic.replace('__', '.')
         assert topic and isinstance(topic, str), f'Invalid topic {topic=}.'
         if isinstance(store, (tuple, list)): store = '\n'.join(store)
         if isinstance(store, str): store = store.encode('utf-8')
-        if not TOPICS: TOPICS = {t: guess_ctype(t) for t in sqlite_tableset('top')}
+        if not TOPICS: 
+            TOPICS = {t: guess_ctype(t.replace('__', '.')) for t in sqlite_tableset('top')}
         if topic not in TOPICS:
             # TODO: Add a TTL column to the topic tables, and use it to prune old data.
             c.execute(sql := f'CREATE TABLE IF NOT EXISTS {table} ('
                     f'ver INTEGER PRIMARY KEY AUTOINCREMENT, '
                     f'ts TEXT, content BLOB, md5 TEXT, mtime INTEGER)')
-            mtime, seed = seed_mtime(topic)
+            mtime, seed = seed_mtime(fname)
             if seed:
                 c.execute(sql := f'INSERT INTO {table} (ts, content, md5, mtime) '
                         f'VALUES (?, ?, ?, ?)', (ts, seed, md5_digest(seed), mtime))
                 PALACE.commit()
-            TOPICS[topic] = guess_ctype(topic)
+            TOPICS[topic] = guess_ctype(fname)
         found = c.execute(sql := f'SELECT ver, ts, content, md5, mtime FROM {table} '
                 f'ORDER BY ts DESC LIMIT 1').fetchone() if fetch or append else None
         if found and found[4]:
-            mtime, seed = seed_mtime(topic, found[4])
+            mtime, seed = seed_mtime(fname, found[4])
             if seed and (new_seed_md5 := md5_digest(seed)) != found[3]:
                 c.execute(sql := f'INSERT INTO {table} (ts, content, md5, mtime) '
                         f'VALUES (?, ?, ?, ?)', (ts, seed, new_seed_md5, mtime))
@@ -453,7 +454,8 @@ ALLOWLIST = os.environ.get('ALLOWLIST', '').split()
 # Main entrypoint for the user AND delegates. UI == API.
 def facade_wsgi_responder(env, start_response):
     # TODO: Check why test_urls__txt is not being served.
-    # NOTE: It looks like the test_urls.txt is being served, but the test_urls__txt isn't.
+    # NOTE: It looks like the test_urls.txt is being served, but test_urls__txt isn't
+    # served until test_urls.txt is requested at least once.
     global ALLOWLIST, FIRST_VISIT
     write, start = None, time.time()
     method, path, origin = env["REQUEST_METHOD"], env["PATH_INFO"], env["REMOTE_ADDR"]
