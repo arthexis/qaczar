@@ -242,7 +242,7 @@ def emit_report(verse, safe=False):
 
 CORE_FUNCTIONS = {}
 
-def select_delegate_function(name):
+def pick_delegate_function(name):
     global CORE_FUNCTIONS
     import qaczar
     qaczar.emit = emit_report
@@ -472,7 +472,8 @@ def facade_wsgi_responder(env, start_response):
     emit(f"Request completed at {capacity} % capacity.")
     # TODO: Add performance information to the visit log.
     palace_recall('visitors__txt', fetch=False, 
-        store=f'<time>{isotime()}</time> {origin} {method} {path} {capacity}\n', append=not FIRST_VISIT)
+        store=f'<time>{isotime()}</time> {origin} {method} {path} {capacity}\n', 
+        append=not FIRST_VISIT)
     FIRST_VISIT = False
 
 class Unhandler(wsgiref.simple_server.WSGIRequestHandler):
@@ -531,7 +532,7 @@ if __name__ == "__main__" and RUNLEVEL in (3, 4):
     if HOST != BASE_HOST:
         PALACE =  sqlite3.connect('p.sqlite', isolation_level='IMMEDIATE')
     emit(f'Delegate "{DELEGATE}" of "{HOST}:{PORT}" starting.')
-    FUNCTION = select_delegate_function(DELEGATE)
+    FUNCTION = pick_delegate_function(DELEGATE)
     context = facade_request(CONTEXT) if CONTEXT else None
     emit(f'Received {len(context) + " bytes of" if context else "no"} context.')
     if result := FUNCTION(context):
