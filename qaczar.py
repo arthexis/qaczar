@@ -288,7 +288,8 @@ def format_python_line(line):
     line = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
     yield b'<code>'
     if line.strip().startswith('#'): yield f'<q>{line}</q>'.encode('utf-8')
-    elif line.startswith('def') or line.startswith('import'):
+    elif (line.startswith('def') or line.startswith('import') 
+            or line.startswith('from') or line.startswith('if __name__')):
         yield f'<strong>{line}</strong>'.encode('utf-8')
     elif 'except' in line or 'return' in line or 'yield' in line: 
         yield f'<mark>{line}</mark>'.encode('utf-8')
