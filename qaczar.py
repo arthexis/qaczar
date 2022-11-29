@@ -173,8 +173,9 @@ def palace_recall(topic, /, fetch=True, store=None, append=False):
     # TODO: Report who called the palace to help with debugging.
     c = PALACE.cursor()
     try:
+        ts, sql = isotime(), None
+        table = 'top_' + topic.replace('.', '__')
         assert topic and isinstance(topic, str), f'Invalid topic {topic=}.'
-        table, ts, sql = 'top_' + topic.replace('.', '__'), isotime(), None
         if isinstance(store, (tuple, list)): store = '\n'.join(store)
         if isinstance(store, str): store = store.encode('utf-8')
         if not TOPICS: TOPICS = {t: guess_ctype(t) for t in sqlite_tableset('top')}
