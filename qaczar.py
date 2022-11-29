@@ -528,10 +528,13 @@ def delegate_task():
 CORE_FUNCTIONS = {f for f in globals().values() if callable(f)}
 
 if __name__ == "__main__" and RUNLEVEL in (3, 4):
+    BASE_HOST, BASE_PORT = sys.argv[1].split(':')
+    BASE_PORT = int(BASE_PORT)
     DELEGATE = sys.argv[2].lower()
     CONTEXT = sys.argv[3] if len(sys.argv) > 3 else None
-    # Delegates should not have access to the palace directly, use the facade.
     assert PALACE is None, 'Palace connected. Not good.'
+    if HOST != BASE_HOST:
+        PALACE =  sqlite3.connect('p.sqlite', isolation_level='IMMEDIATE')
     delegate_task()
 
 
