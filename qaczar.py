@@ -399,12 +399,11 @@ def facade_overview():
     th = {'Topic': 'a', 'Ver': None, 'Timestamp': 'time', 'Size': None, 'Type': 'q'}
     g = (x for x in format_table(th, palace_summary(), 'Palace Summary'))
     yield from hyper(g, wrap='article')
-    articles = {palace_recall('roadmap.txt')}
-    return articles
       
 def article_combinator(articles):
     if not articles:
-        articles = facade_overview()
+        yield from facade_overview()
+        articles = {palace_recall('roadmap.txt')}
     for article in articles:
         # TODO: Find something more interesting for the combinator.
         if not article: continue
