@@ -429,7 +429,8 @@ def alt_view_links(articles):
         # Search for alternate topics in the palace.
         for alt in palace_summary(prefix=prefix):
             if alt.topic != article.topic:
-                yield from hyper('.' + alt.topic.split('__')[1], wrap='button', href=alt.topic)
+                yield from hyper('.' + 
+                    alt.topic.split('__')[1], wrap='button', href=alt.topic)
 
 # Main user interface, rendered dynamically based user input.
 def html_doc_stream(articles, form):
