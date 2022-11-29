@@ -25,7 +25,6 @@ SITE = 'QACZAR.COM'
 BRANCH = 'main'
 RUNLEVEL = len(sys.argv)
 DIR = os.path.dirname(__file__)
-DELEGATE = None
 HOST = os.environ.get('QACZAR_HOSTNAME', 'localhost')
 PORT = int(os.environ.get('QACZAR_PORT', 8080)) 
 CORE_FUNCTIONS = {}
@@ -519,11 +518,6 @@ def chain_run(*cmds, s=None):
             emit(f'Command failed with error: {e=}.')
             return s.returncode if s else -1
     return s.returncode
-
-def run_delegate_task(name, context=None):
-    global HOST, PORT, REPORT
-    
-    
 
 CORE_FUNCTIONS = {f for f in globals().values() if callable(f)}
 
