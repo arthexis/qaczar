@@ -274,6 +274,7 @@ def format_css_line(line):
     line = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
     yield b'<code>'
     if line.strip().startswith('/*'): yield f'<q>{line}</q>'.encode('utf-8')
+    elif line.strip().endswith('{'): yield f'<mark>{line}</mark>'.encode('utf-8')
     else: yield line.encode('utf-8')
     yield b'</code>'
     
