@@ -325,7 +325,7 @@ def process_query(query, topic=None):
         if topic: redirect = '+'.join([topic, *params])
         else: redirect = '+'.join(params)
     else:
-        msg = f'<p><strong>Not implemented: {cmd}</strong></p>'
+        msg = f'Not implemented: {cmd}.'
     return content, form, redirect, msg
 
 def process_forms(env, topic):
