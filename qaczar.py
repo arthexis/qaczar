@@ -319,8 +319,8 @@ def format_stream(env, topic):
 
 def process_query(query, topic=None):
     form, redirect = None, None
-    report = b'<h2>Inline query</h2>' + b'<p><strong>Not implemented yet.</strong></p>'
-    return report, form, redirect
+    content = b'<h2>Inline query</h2>' + b'<p><strong>Not implemented yet.</strong></p>'
+    return content, form, redirect
 
 def process_forms(env, topic):
     # Returns the query form html, and redirect url if needed.
@@ -339,8 +339,8 @@ def process_forms(env, topic):
                 f"Report: <a href='{report}'>{report}</a>.")
             delegation = query.replace('+', '_')
             if q.startswith('!'):
-                report, form, redirect = process_query(q[1:], topic)
-                if report: palace_recall(report, store=report)
+                content, form, redirect = process_query(q[1:], topic)
+                if report: palace_recall(report, store=content)
                 if redirect: return None, redirect
             else:
                 palace_recall(report, store='<strong>Delegate in progress...</strong>')
