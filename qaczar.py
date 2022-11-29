@@ -147,6 +147,29 @@ def text_summary(content, length=54):
     if not content or not isinstance(content, str): return 'N/A'
     return re.sub(r'\s+', ' ', content)[:length] if content else 'N/A'
 
+# Delegates store their reports temporarily in this variable.
+REPORT = []    
+
+def emit_report(verse, safe=False):
+    global DELEGATE, REPORT, RUNLEVEL
+    ts = isotime()
+    print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{ts}] {DELEGATE}: {verse}')
+    if not safe:
+        verse = '<code>' + html.escape(verse) + '</code>'
+    REPORT.append(f'<li><time>{ts}</time> {verse}</li>')
+
+# This variable is later used to prevent invalid delegates from being called.
+CORE_FUNCTIONS = {}
+
+def pick_delegate_function(name):
+    global CORE_FUNCTIONS
+    import qaczar
+    qaczar.emit = emit_report
+    delegate = getattr(qaczar, name, None)
+    assert callable(delegate), f'Invalid delegate {delegate=}.'
+    assert CORE_FUNCTIONS and delegate not in CORE_FUNCTIONS, f"Not allowed {delegate=}."
+    return delegate
+
 def sqlite_tableset(prefix=None):
     global PALACE
     c = PALACE.cursor()
@@ -167,7 +190,6 @@ Article = collections.namedtuple('Article', 'topic ver ts content ctype')
 # This reduces the number of points of failure for the database layer.
 def palace_recall(topic, /, fetch=True, store=None, append=False):
     global PALACE, TOPICS, DIR
-    # TODO: Add a TTL column to the topic tables, and use it to prune old data.
     ts, sql = isotime(), None
     c = PALACE.cursor()
     try:
@@ -177,6 +199,7 @@ def palace_recall(topic, /, fetch=True, store=None, append=False):
         if isinstance(store, str): store = store.encode('utf-8')
         if not TOPICS: TOPICS = {t: guess_ctype(t) for t in sqlite_tableset('top')}
         if topic not in TOPICS:
+            # TODO: Add a TTL column to the topic tables, and use it to prune old data.
             c.execute(sql := f'CREATE TABLE IF NOT EXISTS {table} ('
                     f'ver INTEGER PRIMARY KEY AUTOINCREMENT, '
                     f'ts TEXT, content BLOB, md5 TEXT, mtime INTEGER)')
@@ -229,27 +252,6 @@ def palace_summary(prefix=None):
             ctype = TOPICS.get(topic, "application/octet-stream")
             yield TopicSummary(topic, found[0], found[1], int(found[2]), ctype)
     c.close()
-
-REPORT = []    
-
-def emit_report(verse, safe=False):
-    global DELEGATE, REPORT, RUNLEVEL
-    ts = isotime()
-    print(f'[{RUNLEVEL}:{sys._getframe(1).f_lineno}] [{ts}] {DELEGATE}: {verse}')
-    if not safe:
-        verse = '<code>' + html.escape(verse) + '</code>'
-    REPORT.append(f'<li><time>{ts}</time> {verse}</li>')
-
-CORE_FUNCTIONS = {}
-
-def pick_delegate_function(name):
-    global CORE_FUNCTIONS
-    import qaczar
-    qaczar.emit = emit_report
-    delegate = getattr(qaczar, name, None)
-    assert callable(delegate), f'Invalid delegate {delegate=}.'
-    assert CORE_FUNCTIONS and delegate not in CORE_FUNCTIONS, f"Not allowed {delegate=}."
-    return delegate
 
 
 # V.
