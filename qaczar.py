@@ -366,7 +366,6 @@ def html_doc_stream(articles, form):
     # TODO: Use accesskey="#" and number the links.
     links = []  
     yield from hyper('<!DOCTYPE html><head><meta charset="utf-8"/>')
-    # Only refresh if there is no form, otherwise the form data will be lost.
     if not form: yield from hyper(f'<meta http-equiv="refresh" content="6"/>')
     yield from hyper(SITE, wrap='title')  
     if css: yield from hyper(css.content, 'style')  
@@ -378,7 +377,7 @@ def html_doc_stream(articles, form):
     yield from article_combinator(articles)
     yield from hyper('</main><footer>')
     yield from hyper(f'An hypertext grimoire. Served on {isotime()}.', wrap='p')
-    # TODO: Add suggested navigation links at the bottom.
+    # TODO: Add suggested navigation links (maybe to other sites).
     yield from hyper('</footer></body></html>')
 
 def http_headers(ctype='text/html; charset=utf-8', redirect=None, size=None):
