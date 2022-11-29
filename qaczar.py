@@ -289,7 +289,7 @@ def linkify_topics(text):
     for word in text.split():
         if word in TOPICS: result.append(f'<a href="/{word}">{word}</a> ')
         else: result.append(f'{word} ')
-    return result
+    return ''.join(result)
 
 def format_python_line(line):
     cleaned, linked = html.escape(line), ''
