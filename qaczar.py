@@ -294,6 +294,7 @@ def format_article(article, aside=None):
         else:
             content = article.content.decode('utf-8').splitlines()
             if ctype == 'text/x-python': formatter = format_python_line
+            if ctype == 'text/css': formatter = format_css_line
             yield from format_codelines(content, formater=formatter)
     elif article.ctype == 'application/octet-stream':
         fname = article.topic.replace('__', '.')
