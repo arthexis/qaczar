@@ -208,7 +208,7 @@ def palace_recall(topic, /, fetch=True, store=None, append=False):
             ctype = TOPICS.get(topic, 'application/octet-stream')
             if append and store:
                 c.execute(sql := f'UPDATE {table} SET content = ?, ts = ?, md5 = ? '
-                        f'WHERE ver = ?', (found.store + store, ts, store_md5, found[0]))
+                        f'WHERE ver = ?', (found[2] + store, ts, store_md5, found[0]))
                 PALACE.commit()
             return Article(topic, found[0], found[1], found[2], ctype)
     except sqlite3.Error as e:
