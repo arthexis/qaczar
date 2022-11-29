@@ -288,10 +288,11 @@ def format_python_line(line):
     line = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
     yield b'<code>'
     # Replace any topic names with links to the topic.
+    new_line = ''
     for word in line.split():
-        if word in TOPICS:
-            yield f'<a href="/{word}">{word}</a>'.encode('utf-8')
-        else: yield word.encode('utf-8')
+        if word in TOPICS: new_line += f'<a href="/{word}">{word}</a> '
+        else: new_line += word + ' '
+    line = new_line
     if line.strip().startswith('#'): yield f'<q>{line}</q>'.encode('utf-8')
     elif (line.startswith('def') or line.startswith('import') 
             or line.startswith('from') or line.startswith('if __name__')):
