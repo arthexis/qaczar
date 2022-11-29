@@ -208,7 +208,7 @@ def palace_recall(topic, /, fetch=True, store=None, append=False):
             ctype = TOPICS.get(topic, 'application/octet-stream')
             if append and store:
                 c.execute(sql := f'UPDATE {table} SET content = ?, ts = ?, md5 = ? '
-                        f'WHERE ver = ?', (found[2] + b'\n' + store, ts, store_md5, found[0]))
+                        f'WHERE ver = ?', (found[2] + store, ts, store_md5, found[0]))
                 PALACE.commit()
             return Article(topic, found[0], found[1], found[2], ctype)
     except sqlite3.Error as e:
@@ -419,8 +419,9 @@ def facade_wsgi_responder(env, start_response):
                 write = start_response('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
             yield from  html_doc_stream(articles, form)
     emit(f"Request completed at {round(time.time() - start, 2)} % capacity.")
+    # TODO: 
     palace_recall('visitors__txt', fetch=False, 
-        store=f'{origin} {method} {path} {isotime()}', append=not FIRST_VISIT)
+        store=f'<time>{isotime()}</time> {origin} {method} {path}\n', append=not FIRST_VISIT)
     FIRST_VISIT = False
 
 class Unhandler(wsgiref.simple_server.WSGIRequestHandler):
@@ -443,7 +444,6 @@ if __name__ == "__main__" and RUNLEVEL == 2:
 # H.
 
 import urllib.request
-
 
 DELEGATE = None
 REPORT = []
