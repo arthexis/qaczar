@@ -337,7 +337,7 @@ def format_article(article, aside=None):
     else:  # This includes application/octet-stream.
         fname = article.topic.replace('__', '.')
         yield (f'<p><strong>Unable to visualize content of type {article.ctype}</strong>.</p>'
-            f'<p><a href="{fname}">Click here to download {fname}</a></p>').encode('utf-8')
+            f'<p><a href="/{fname}">Click here to download {fname}</a></p>').encode('utf-8')
     if aside: yield f'<aside>{aside}</aside>'.encode('utf-8')
     yield b'</article>'
 
