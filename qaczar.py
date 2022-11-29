@@ -452,7 +452,8 @@ ALLOWLIST = os.environ.get('ALLOWLIST', '').split()
 
 # Main entrypoint for the user AND delegates. UI == API.
 def facade_wsgi_responder(env, start_response):
-    # TODO: Check why test_urls.txt is not being served.
+    # TODO: Check why test_urls__txt is not being served.
+    # NOTE: It looks like the test_urls.txt is being served, but the test_urls__txt isn't.
     global ALLOWLIST, FIRST_VISIT
     write, start = None, time.time()
     method, path, origin = env["REQUEST_METHOD"], env["PATH_INFO"], env["REMOTE_ADDR"]
