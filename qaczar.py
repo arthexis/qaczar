@@ -342,7 +342,7 @@ def process_forms(env, topic):
                 palace_recall(report, store='<strong>Delegate in progress...</strong>')
                 create_fork(f'{HOST}:{PORT}', delegation)
             return None, report
-        return form is None or (f'<form id="query-form" method="get">'
+        return form or (f'<form id="query-form" method="get">'
                 f'<input type="text" id="query-field" name="q" accesskey="q">'
                 f'</form><div id="query-output">{msg}</div>'), False
 
