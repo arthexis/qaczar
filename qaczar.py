@@ -284,22 +284,25 @@ def format_table(headers, rows, title=None):
             yield b'</tr>'
         yield b'</table>'
 
+def linkify_topics(text):
+    result = []
+    for word in text.split():
+        if word in TOPICS: result.append(f'<a href="/{word}">{word}</a> ')
+        else: result.append(f'{word} ')
+    return result
+
 def format_python_line(line):
     cleaned, linked = html.escape(line), ''
     cleaned = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
-    yield b'<code>'
-    for word in cleaned.split():
-        if word in TOPICS: new_line += f'<a href="/{word}">{word}</a> '
-        else: linked += word + ' '
-    cleaned = linked
+    linked = linkify_topics(cleaned)
     if cleaned.strip().startswith('#') or line.strip().startswith('emit('):
-        yield f'<q>{cleaned}</q>'.encode('utf-8')
+        yield f'<q>{linked}</q>'.encode('utf-8')
     elif (cleaned.startswith('def') or cleaned.startswith('import') 
             or cleaned.startswith('from') or cleaned.startswith('if __name__')):
-        yield f'<strong>{cleaned}</strong>'.encode('utf-8')
+        yield f'<strong>{linked}</strong>'.encode('utf-8')
     elif 'except' in cleaned or 'return' in cleaned or 'yield' in cleaned or 'raise' in cleaned: 
-        yield f'<mark>{cleaned}</mark>'.encode('utf-8')
-    else: yield cleaned.encode('utf-8')
+        yield f'<mark>{linked}</mark>'.encode('utf-8')
+    else: yield linked.encode('utf-8')
     yield b'</code>'
 
 def format_css_line(line):
