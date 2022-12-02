@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# A Python script that does everything by itself.
-# (aka. one night a mysterious cosmic voice told me to create an ark and here it is)
+# A Python script designed to experiment with rapid application development.
 # H. V. D. C. by Rafa Guillén (arthexis@gmail.com) 2022-2023
 
 # 1. Keep the line width to less than 100 characters.
@@ -10,6 +9,8 @@
 # 3. Functions should not reference functions or globals from later in the script.
 # 4. The system must respond to all requests in 1 second or less.
 # 5. Don't overdesign, wait until the opportunity for reuse arises and take it.
+# 6. Accomplish everything in under 4000 lines of code.
+# 7. Prioritize stability over features.
 
 
 import os
@@ -17,27 +18,20 @@ import sys
 import time
 import atexit
 import subprocess
+import typing as t
 
-# We don't import everything at the start to keep the runtime of 
-# the crown (watcher) as simple as possible. Later we can import more modules.
 
-SITE = 'QACZAR.COM'
-BRANCH = 'main'
+MAIN = 'smoke_test'
 RUNLEVEL = len(sys.argv)
-DIR = os.path.dirname(__file__)
-HOST = os.environ.get('QACZAR_HOSTNAME', 'localhost')
-PORT = int(os.environ.get('QACZAR_PORT', 8080)) 
 
-# These utility functions are used everywhere, be careful when changing them.
+def isotime() -> str: 
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
 
-def isotime(t=None): 
-    return time.strftime('%Y-%m-%d %H:%M:%S', t or time.gmtime())
-
-def emit(verse): 
+def emit(msg: str) -> None: 
     f = sys._getframe(1)
-    print(f'[{RUNLEVEL}:{f.f_lineno}] [{isotime()}] {f.f_code.co_name}: {verse}')
+    print(f'[{RUNLEVEL}:{f.f_lineno}] [{isotime()}] {f.f_code.co_name}: {msg}')
 
-def fread(fn, decode=None):
+def fread(fn: str, decode: str = None) -> bytes:
     try: 
         with open(fn, 'r' if decode else 'rb', encoding=decode) as f:  
             return f.read()
@@ -46,16 +40,12 @@ def fread(fn, decode=None):
 
 SOURCE = fread(__file__, decode='utf-8')
 
-
-# C.
-
-# Creates a running copy of ourselves with different arguments.
-# If an old process is provided, it will be terminated gently first.
-# This keeps the crown stable, since it never has to deal with a dead fork.
-def create_fork(*args, old=None):
+# Create a running copy of ourselves with extra arguments.
+def create_fork(*args: list[str], old: subprocess.Popen = None) -> subprocess.Popen:
     assert len(args) > 0, 'No args provided to create_fork.'
     if old is not None:
-        old.terminate(); old.wait()
+        old.terminate()
+        old.wait()
         atexit.unregister(old.terminate)
     s = subprocess.Popen([sys.executable, __file__, *[str(a) for a in args]])
     if not s:
@@ -67,546 +57,83 @@ def create_fork(*args, old=None):
 
 # aka. The Crown
 # Watch over s to ensure it never dies. If it does, create a new one.
-# If the source changes, kill s and start a new one with the same params.
-# If the new copy fails, abort and investigate the error.
-def watch_over(s):  
+def watch_over(s: subprocess.Popen) -> t.NoReturn:  
     global SOURCE
     while True:
         stable, mtime = True, os.path.getmtime(__file__)
         while True:
-            time.sleep(2.6)  # A reasonable time for take backs.
+            time.sleep(1)
             if os.path.getmtime(__file__) != mtime:
                 mutation, mtime = fread(__file__), os.path.getmtime(__file__)
                 if mutation != SOURCE:
                     emit(f"Mutation detected {len(mutation)=} {len(SOURCE)=}. Restarting.")
+                    # Make the new mutation start with a new main.
                     s, stable = create_fork(*s.args, old=s), False
                 continue
             if s.poll() is not None:
+                if s.returncode == 0:
+                    emit(f"Process {s.pid} exited normally. Terminating.")
+                    sys.exit(0)
                 if stable:
                     emit(f"Fork died {s.args=} {s.pid=}. Restarting.")
                     s, stable = create_fork(*s.args, old=s), False
                     continue
-                emit(f"Unstable crown, aborting. Check {__file__} for errors.")
-                sys.exit(1)
+                mutation = fread(__file__, decode='utf-8')
+                if mutation != SOURCE:
+                    emit(f"Rolling back mutation {len(mutation)=} {len(SOURCE)=}.")
+                    # Overwrite the mutation with the original source.
+                    with open(__file__, 'w', encoding='utf-8') as f:
+                        f.write(SOURCE)
+                    s, stable = create_fork(*s.args, old=s), False
+                    continue
+                else:
+                    # This prevents an infinite loop if the fork keeps dying.
+                    emit(f"Unstable crown, aborting. Check {__file__} for errors.")
+                    sys.exit(1)
+            if not stable:
+                emit(f"Stabilized {s.pid=}.")
+                SOURCE = fread(__file__, decode='utf-8')
             stable = True
 
+# Get constant values from the source code even if it's been mutated.
+def get_const(name: t.LiteralString) -> str:
+    global SOURCE
+    for line in SOURCE.splitlines():
+        if line.startswith(f'{name} = '):
+            return line.split(' = ')[1].strip("'")
+    return None
+            
+def smoke_test():
+    emit('Hello world!')
+    try:
+        while True:
+            time.sleep(1)
+            emit('Still alive.')
+    except KeyboardInterrupt:
+        emit('Goodbye world!')
+        sys.exit(0)
+
+def another_function():
+    emit('Another function.')
+    sys.exit(1)
+        
+    
 # RUNLEVEL will only be greater than 0 when qaczar.py is executing.
-# (ie. not when it is being imported by another script).
-# Each subsequent runlevel represents a deeper level of fork recursion.
-if __name__ == "__main__" and RUNLEVEL == 1:
+if __name__ == "__main__":
     emit('----------------------------------------')
     try:    
         # We copy ourselves and put the crown on the copy.
-        watch_over(create_fork(f'{HOST}:{PORT}'))
+        SOURCE = fread(__file__, decode='utf-8')
+        if RUNLEVEL == 1:
+            watch_over(create_fork(__file__))
+        elif RUNLEVEL == 2:
+            main_function = globals().get(MAIN, None)
+            if main_function is None:
+                emit(f"Invalid function {MAIN=}. DNR.")
+                sys.exit(0)
+            main_function()
+            
     except KeyboardInterrupt:
         emit(f"Keyboard interrupt {RUNLEVEL=}"); raise
     except RuntimeError:
         emit(f'Crown failure, unable to start.'); raise
-
-# D.
-
-import re
-import hashlib
-import sqlite3
-import mimetypes
-import collections
-
-# This global will hold the database connection.
-# Instead of using it directly, use palace_store() and palace_fetch().
-# If you need a direct access cursor, get one with palace_cursor().
-PALACE = None
-
-# Map of known topics to their content types.
-# This map is always acurrate at RUNLEVEL 2, but not above.
-TOPICS = {}
-
-# These are generic functions that can be used to manipulate arbitrary
-# text and files, and are useful for interacting with palace data.
-
-def seed_mtime(topic, old_mtime=0):
-    global DIR
-    try:
-        path = f'{DIR}/seeds/{topic.replace("__", ".")}'
-        new_mtime = int(os.path.getmtime(path))
-        if new_mtime > old_mtime: return new_mtime, fread(path)
-        else: return old_mtime, None
-    except FileNotFoundError: 
-        return 0, None
-
-def guess_ctype(topic):
-    try:
-        return (mimetypes.guess_type(topic.replace('__', '.'))[0]
-            or 'application/octet-stream')
-    except (FileNotFoundError, TypeError): 
-        return 'application/octet-stream'
-
-def md5_digest(content):
-    if content := (content.encode('utf-8') if isinstance(content, str) else content):
-        return hashlib.md5(content).hexdigest()
-
-def text_summary(content, length=54):
-    if not content or not isinstance(content, str): return 'N/A'
-    return re.sub(r'\s+', ' ', content)[:length] if content else 'N/A'
-
-# Delegates store their reports temporarily in this variable.
-REPORT = []    
-
-def emit_report(verse, safe=False):
-    global REPORT, RUNLEVEL
-    ts, f = isotime(), sys._getframe(1)
-    print(f'[{RUNLEVEL}:{f.f_lineno}] [{isotime()}] {f.f_code.co_name}: {verse}')
-    if not safe:
-        verse = '<code>' + html.escape(verse) + '</code>'
-    REPORT.append(f'<li><time>{ts}</time> {verse}</li>')
-
-# This variable is later used to prevent invalid delegates from being called.
-CORE_FUNCTIONS = {}
-
-def pick_delegate_function(name):
-    global CORE_FUNCTIONS
-    import qaczar
-    qaczar.emit = emit_report
-    delegate = getattr(qaczar, name, None)
-    assert callable(delegate), f'Invalid delegate {delegate=}.'
-    assert CORE_FUNCTIONS and delegate not in CORE_FUNCTIONS, f"Not allowed {delegate=}."
-    return delegate
-
-def sqlite_tableset(prefix=None):
-    global PALACE
-    c = PALACE.cursor()
-    if prefix:
-        c.execute(f'SELECT name FROM sqlite_master WHERE type="table" '
-                f'AND name LIKE "{prefix}_%" and name NOT LIKE "sqlite_%";')
-    else:
-        c.execute('SELECT name FROM sqlite_master '
-            'WHERE type="table" and name NOT LIKE "sqlite_%";')
-    offset = len(prefix) + 1 if prefix else 0
-    for t in c.fetchall():
-        yield t[0][offset:]
-    c.close()
-
-Article = collections.namedtuple('Article', 'topic ver ts content ctype')
-
-# All single-topic palace operations are performed by a single function.
-# This reduces the number of points of failure for the database layer.
-def palace_recall(topic, /, fetch=True, store=None, append=False):
-    global PALACE, TOPICS, DIR
-    ts, sql = isotime(), None
-    c = PALACE.cursor()
-    try:
-        assert topic and isinstance(topic, str), f'Invalid topic {topic=}.'
-        fname, table = topic.replace('__', '.'), 'top_' + topic.replace('.', '__')
-        if isinstance(store, (tuple, list)): store = '\n'.join(store)
-        if isinstance(store, str): store = store.encode('utf-8')
-        if not TOPICS: 
-            TOPICS = {t: guess_ctype(t.replace('__', '.')) for t in sqlite_tableset('top')}
-        if topic not in TOPICS:
-            # TODO: Add a TTL column to the topic tables, and use it to prune old data.
-            c.execute(sql := f'CREATE TABLE IF NOT EXISTS {table} ('
-                    f'ver INTEGER PRIMARY KEY AUTOINCREMENT, '
-                    f'ts TEXT, content BLOB, md5 TEXT, mtime INTEGER)')
-            mtime, seed = seed_mtime(fname)
-            if seed:
-                c.execute(sql := f'INSERT INTO {table} (ts, content, md5, mtime) '
-                        f'VALUES (?, ?, ?, ?)', (ts, seed, md5_digest(seed), mtime))
-                PALACE.commit()
-            TOPICS[topic] = guess_ctype(fname)
-        found = c.execute(sql := f'SELECT ver, ts, content, md5, mtime FROM {table} '
-                f'ORDER BY ts DESC LIMIT 1').fetchone() if fetch or append else None
-        if found and found[4]:
-            mtime, seed = seed_mtime(fname, found[4])
-            if seed and (new_seed_md5 := md5_digest(seed)) != found[3]:
-                c.execute(sql := f'INSERT INTO {table} (ts, content, md5, mtime) '
-                        f'VALUES (?, ?, ?, ?)', (ts, seed, new_seed_md5, mtime))
-                PALACE.commit()
-                found = c.execute(sql := f'SELECT ver, ts, content, md5, mtime FROM {table} '
-                        f'ORDER BY ts DESC LIMIT 1').fetchone()
-        store_md5 = md5_digest(store)
-        if store and (not found or found[3] != store_md5):
-            if not append or not found:
-                c.execute(sql :=f'INSERT INTO {table} (ts, content, md5, mtime) '
-                        f'VALUES (?, ?, ?, ?)', (ts, store, store_md5, 0))
-                emit(f'Insert commited {topic=} {len(store)=}.')
-                PALACE.commit()
-        if found: 
-            ctype = TOPICS.get(topic, 'application/octet-stream')
-            if append and store:
-                c.execute(sql := f'UPDATE {table} SET content = ?, ts = ?, md5 = ? '
-                        f'WHERE ver = ?', (found[2] + store, ts, store_md5, found[0]))
-                PALACE.commit()
-            return Article(topic, found[0], found[1], found[2], ctype)
-    except Exception as e:
-        lineno = sys._getframe(1).f_lineno
-        caller = sys._getframe(1).f_code.co_name
-        emit(f'Palace error {e=} {caller=} {lineno=} {sql=}'); raise
-    c.close()
-
-TopicSummary = collections.namedtuple('TopicSummary', 'topic ver ts length ctype')
-
-def palace_summary(prefix=None):
-    global PALACE
-    c = PALACE.cursor()
-    for topic in sqlite_tableset('top'):
-        if prefix and not topic.startswith(prefix): continue
-        found = c.execute(f"SELECT MAX(ver), MAX(ts), length(content) "
-            f'FROM top_{topic} GROUP BY ts ORDER BY ts DESC ').fetchone()
-        if found: 
-            ctype = TOPICS.get(topic, "application/octet-stream")
-            yield TopicSummary(topic, found[0], found[1], int(found[2]), ctype)
-    c.close()
-
-
-# V.
-
-import html
-import urllib.parse
-import wsgiref.simple_server 
-
-# Functions useful for sending binary data in HTTP responses.
-
-def format_table(headers, rows, title=None):
-    assert isinstance(headers, dict) 
-    # The output should already be binary encoded for performance.
-    if title: yield f'<h2>{title}</h2>'.encode('utf-8')
-    if not rows: 
-        yield '<p><strong>No data found.</strong></p>'.encode('utf-8')
-    else:
-        yield b'<table><tr>'
-        for h in headers.keys(): yield f'<th>{h}</th>'.encode('utf-8')
-        yield b'</tr>'
-        for r in rows:
-            yield b'<tr>'
-            for c, t in zip(r, headers.values()):
-                if t is None: yield f'<td>{c}</td>'.encode('utf-8')
-                elif t == 'a': 
-                    yield f'<td><a href="{c}">{c}</a></td>'.encode('utf-8')
-                else: yield f'<td><{t}>{c}</{t}></td>'.encode('utf-8')
-            yield b'</tr>'
-        yield b'</table>'
-
-def linkify_topics(text):
-    result = []
-    for word in text.split():
-        if word in TOPICS: result.append(f'<a href="/{word}">{word}</a> ')
-        else: result.append(f'{word} ')
-    return ''.join(result)
-
-def format_python_line(line):
-    line = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
-    line = linkify_topics(line)
-    if line.strip().startswith('#') or line.strip().startswith('emit('):
-        yield f'<q>{line}</q>'.encode('utf-8')
-    elif (line.startswith('def') or line.startswith('import') 
-            or line.startswith('from') or line.startswith('if __name__')):
-        yield f'<strong>{line}</strong>'.encode('utf-8')
-    elif 'except' in line or 'return' in line or 'yield' in line or 'raise' in line: 
-        yield f'<mark>{line}</mark>'.encode('utf-8')
-    else: yield line.encode('utf-8')
-    yield b'</code>'
-
-def format_css_line(line):
-    line = line.replace('  ', '&nbsp;').replace('\t', '&nbsp;&nbsp;')
-    yield b'<code>'
-    if line.strip().startswith('/*'): yield f'<q>{line}</q>'.encode('utf-8')
-    elif line.strip().endswith('{'): yield f'<mark>{line}</mark>'.encode('utf-8')
-    else: yield line.encode('utf-8')
-    yield b'</code>'
-    
-def format_codelines(lines, formater=None):
-    yield b'<ol>'
-    for i, line in enumerate(lines):
-        line = line.replace('<', '&lt;').replace('>', '&gt;')
-        yield b'<li>'
-        if formater: yield from formater(line)
-        else: yield line.encode('utf-8')
-        yield b'</li>'
-    yield b'</ol>'
-
-def format_article(article, aside=None):
-    yield f'<article><h2>{article.topic}</h2><ol>'.encode('utf-8')
-    ctype, formatter = article.ctype, None
-    fname = article.topic.replace('__', '.')
-    if ctype.startswith('text/'):
-        if ctype == 'text/html': yield article.content
-        else:
-            content = article.content.decode('utf-8').splitlines()
-            if ctype == 'text/x-python': formatter = format_python_line
-            if ctype == 'text/css': formatter = format_css_line
-            yield from format_codelines(content, formater=formatter)
-    elif article.ctype.startswith('image/'):
-        yield f'<img src="/{fname}">'.encode('utf-8')
-    else:  # This includes application/octet-stream.
-        yield (f'<p><strong>Unable to visualize content of type {article.ctype}</strong>.</p>'
-            f'<p><a href="/{fname}">Click here to download {fname}</a></p>').encode('utf-8')
-    if aside: yield f'<aside>{aside}</aside>'.encode('utf-8')
-    yield b'</article>'
-
-def format_stream(env, topic):
-    # This is necesary to avoid the browser from buffering the entire response.
-    if not topic or env['REQUEST_METHOD'] != 'GET': return None, None
-    article = palace_recall(topic)
-    if article and (content := article.content):
-        # Return the found article and a generator that can be used for streaming.
-        return article, (content[i:i+1024] for i in range(0, len(content), 1024))
-    else: return None, None
-
-def process_query(query, topic=None):
-    assert query and isinstance(query, str), f'Invalid query {query=}'
-    content, form, redirect, msg = None, None, None, None
-    cmd, *params = query.split()
-    if cmd == 'mix':
-        if topic: redirect = '+'.join([topic, *params])
-        else: redirect = '+'.join(params)
-    else:
-        msg = f'Not implemented: {cmd}.'
-    size = len(content) if content else 0
-    emit(f'Query: {query} + {topic or "_blank"} -> {redirect=}, {msg=} {size=}')
-    return content, form, redirect, msg
-
-def process_forms(env, topic):
-    # Returns the query form html, and redirect url if needed.
-    method, msg, form = env['REQUEST_METHOD'], '', None
-    if method == 'POST':
-        data = env['wsgi.input'].read(int(env.get('CONTENT_LENGTH', 0)))
-        if topic:
-            emit(f'Data received: {topic=} {len(data)=}')
-            palace_recall(topic, store=data)
-        return None, False
-    elif method == 'GET': 
-        if query := urllib.parse.unquote(env.get('QUERY_STRING', '')):
-            vars = urllib.parse.parse_qs(query); q = vars["q"][0]
-            if q.startswith('!'):
-                report = q[1:].replace(' ', '_') + '__html'
-                content, form, redirect, msg = process_query(q[1:], topic)
-                if report and content: palace_recall(report, store=content, append=True)
-                if redirect: return None, redirect
-                msg = msg or (f"Completed query='{q}' on {topic=}. "
-                    f"Report: <a href='{report}'>{report}</a>.")
-            else:
-                report = q.replace(' ', '_') + '__html'
-                msg = (f"Delegated query='{q}' on {topic=}. "
-                    f"Report: <a href='{report}'>{report}</a>.")
-                delegation = query.replace('+', '_')
-                palace_recall(report, store='<strong>Delegate in progress...</strong>')
-                create_fork(f'{HOST}:{PORT}', delegation)
-            return None, report
-        return form or (f'<form id="query-form" method="get">'
-                f'<input type="text" id="query-field" name="q" accesskey="q">'
-                f'</form><span id="query-output">{msg}</span>'), False
-
-def hyper(content, wrap=None, iwrap=None, href=None):
-    if wrap: yield f'<{wrap}>'.encode('utf-8') 
-    if href: yield f'<a href="{href}">'.encode('utf-8')
-    if content:
-        if isinstance(content, bytes): yield content
-        elif isinstance(content, str): yield content.encode('utf-8')
-        elif isinstance(content, Article): yield from hyper(content.content)
-        elif isinstance(content, (list, tuple, collections.abc.Generator)): 
-            for c in content: yield from hyper(c, wrap=iwrap)
-        else: emit(f'Unable to encode {type(content)=} {content=}.')
-    else: yield b''
-    if href: yield b'</a>'
-    if wrap: yield f'</{wrap}>'.encode('utf-8') 
-
-def facade_overview_prelude():
-    th = {'Topic': 'a', 'Ver': None, 'Timestamp': 'time', 'Size': None, 'Type': 'q'}
-    g = (x for x in format_table(th, palace_summary(), 'Palace Summary'))
-    yield from hyper(g, wrap='article')
-      
-def article_combinator(articles):
-    if not articles:
-        yield from facade_overview_prelude()
-        articles = {palace_recall('roadmap.txt')}
-    for article in articles:
-        # TODO: Find something more interesting for the combinator.
-        if not article or not article.content: 
-            yield from hyper(f'No content found.', wrap='p')
-        else: yield from format_article(article)
-
-def alt_view_links(articles):
-    for article in articles:
-        prefix = article.topic.split('__')[0]
-        # Search for alternate topics in the palace.
-        for alt in palace_summary(prefix=prefix):
-            if alt.topic != article.topic:
-                yield from hyper('.' + 
-                    alt.topic.split('__')[1], wrap='button', href=alt.topic)
-
-# Main user interface, rendered dynamically based user input.
-def html_doc_stream(articles, form):
-    global SITE
-    css = palace_recall('qaczar.css')
-    # TODO: Links should be generated for alternate views (e.g. txt, json, etc.)
-    # TODO: Use accesskey="#" and number the links.
-    yield from hyper('<!DOCTYPE html><head><meta charset="utf-8"/>')
-    yield from hyper(SITE, wrap='title')  
-    if css: yield from hyper(css.content, 'style')  
-    yield from hyper('</head><body><nav>')   
-    yield from hyper(SITE, wrap='h1', href='/')
-    if articles: yield from alt_view_links(articles)
-    if form: yield from hyper(form)
-    yield from hyper('</nav><main>')
-    yield from article_combinator(articles)
-    yield from hyper('</main><footer>')
-    yield from hyper(f'An hypertext grimoire. Served on {isotime()}.', wrap='p')
-    # TODO: Add suggested navigation links (maybe to other sites).
-    yield from hyper('</footer></body></html>')
-
-def http_headers(ctype='text/html; charset=utf-8', redirect=None, size=None):
-    if redirect: return [('Location', redirect)]
-    headers = [('Content-Type', ctype or 'application/octet-stream')] 
-    if size: headers.append(('Content-Length', str(size)))
-    return headers
-
-FIRST_VISIT = True
-ALLOWLIST = os.environ.get('ALLOWLIST', '').split()
-
-# Main entrypoint for the user AND delegates. UI == API.
-def facade_wsgi_responder(env, start_response):
-    global ALLOWLIST, FIRST_VISIT
-    write, start = None, time.time()
-    method, path, origin = env["REQUEST_METHOD"], env["PATH_INFO"], env["REMOTE_ADDR"]
-    emit(f'--*-- Incoming {method} {path} from {origin} --*--')
-    if origin != '127.0.0.1' and origin not in ALLOWLIST:
-        write = start_response('403 Forbidden', http_headers())
-    else:
-        topics, _ = path[1:].split('?', 1) if '?' in path else (path[1:], '')
-        topics, articles, form = topics.split('/'), set(), None
-        for i, topic in enumerate(topics):
-            topic = topic.replace('-', '_')
-            article, stream = format_stream(env, topic)
-            if i == 0:
-                if article and len(topics) == 1 and '.' in topic:
-                    size = len(article.content)
-                    write = start_response('200 OK', http_headers(article.ctype, size=size))
-                    yield from stream
-                else:
-                    form, redirect = process_forms(env, topic)
-                    if redirect:
-                        write = start_response('303 See Other', http_headers(redirect=redirect))
-            if article: articles.add(article)
-        else:  # Actual use case for the else clause of a for loop.
-            if not write: 
-                write = start_response('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
-            yield from  html_doc_stream(articles, form)
-    capacity = round(time.time() - start, 2)
-    emit(f"Request completed at {capacity} % capacity.")
-    palace_recall('visitors__txt', fetch=False, 
-        store=f'<time>{isotime()}</time> {origin} {method} {path} {capacity}\n', 
-        append=not FIRST_VISIT)
-    FIRST_VISIT = False
-
-class Unhandler(wsgiref.simple_server.WSGIRequestHandler):
-    def log_request(self, *args, **kwargs): pass
-
-if __name__ == "__main__" and RUNLEVEL == 2:
-    PALACE =  sqlite3.connect('p.sqlite', isolation_level='IMMEDIATE')
-    atexit.register(PALACE.close)
-    HOST, PORT = sys.argv[1].split(':')
-    PORT = int(PORT)
-    palace_recall('qaczar.py', store=SOURCE)
-    with wsgiref.simple_server.make_server(
-            HOST, PORT, facade_wsgi_responder, handler_class=Unhandler) as s:
-        emit(f'Facade ready. Serving on http://{HOST}:{PORT}/')
-        create_fork(sys.argv[1], 'self_check')
-        s.serve_forever(poll_interval=6)
-
-
-# H.
-
-import urllib.request
-
-FUNCTION, BASE_HOST, BASE_PORT = None, None, None
-
-def facade_request(*args, upload=None):
-    assert all(urllib.parse.quote(arg) == arg for arg in args), f"Invalid request {args=}"
-    url = f'http://{HOST}:{PORT}/{"/".join(args)}'
-    try:
-        if isinstance(upload, (list, tuple)): upload = '\n'.join(upload).encode('utf-8')	
-        if isinstance(upload, str): upload = upload.encode('utf-8')
-        with urllib.request.urlopen(url, data=upload, timeout=6) as r:
-            return r.status, r.read().decode('utf-8')
-    except urllib.error.HTTPError as e:
-        emit(f'HTTPError: {e.code}'); raise e
-    
-# TODO: New function to download data from an external source.
-
-def chain_run(*cmds, s=None):
-    for cmd in cmds:
-        try:
-            if s is not None and s.returncode != 0: return s.returncode
-            s = subprocess.run(cmd, shell=True, check=True, capture_output=True)
-        except (subprocess.CalledProcessError, RuntimeError) as e:
-            emit(f'Command failed with error: {e=}.')
-            return s.returncode if s else -1
-    return s.returncode
-
-CORE_FUNCTIONS = {f for f in globals().values() if callable(f)}
-
-if __name__ == "__main__" and RUNLEVEL in (3, 4):
-    BASE_HOST, BASE_PORT = sys.argv[1].split(':')
-    BASE_PORT = int(BASE_PORT)
-    DELEGATE = sys.argv[2].lower()
-    CONTEXT = sys.argv[3] if len(sys.argv) > 3 else None
-    assert PALACE is None, 'Palace connected. Not good.'
-    if HOST != BASE_HOST:
-        PALACE =  sqlite3.connect('p.sqlite', isolation_level='IMMEDIATE')
-    emit(f'Delegate "{DELEGATE}" of "{HOST}:{PORT}" starting.')
-    FUNCTION = pick_delegate_function(DELEGATE)
-    context = facade_request(CONTEXT) if CONTEXT else None
-    emit(f'Received {len(context) + " bytes of" if context else "no"} context.')
-    if result := FUNCTION(context):
-        emit(f'Function {DELEGATE} returned: {result}.')
-    if REPORT: status, _ = facade_request(f'{DELEGATE}__html', upload=REPORT)
-    emit(f'Delegate "{DELEGATE}" completed. Terminating subprocess.')
-
-
-# --- Delegate-only functions go below this line. ---
-# Delegates can access core functions, but not other delegates.
-    
-def self_check(context=None):
-    global BRANCH, SOURCE
-    import platform
-    emit(f'Validating build of {BRANCH=}.')
-    facade_request('platform.txt', upload=(
-        f'{platform.node()=}\n'
-        f'{platform.machine()=}\n'
-        f'{platform.platform()=}\n'
-        f'{platform.python_version()=}\n'
-        f'{sys.executable=}\n'
-        f'{DIR=}\n'
-        f'{BRANCH=}\n'
-    ))
-    roadmap = []
-    for ln, line in enumerate(SOURCE.splitlines()):
-        if line.strip().startswith('# TODO:'):
-            roadmap.append(f'@{ln+1:04d} {line.strip()[7:]}')
-    roadmap = '\n'.join(roadmap)
-    status, _ = facade_request('roadmap.txt', upload=roadmap)
-    emit(f'Roadmap uploaded {status=}.')
-    if status != 200: return status
-    # TODO: Check that qaczar.py is rendered correctly in self_check().
-    returncode = chain_run(
-            ['git', 'add', '.'],
-            ['git', 'commit', '-m', 'Commit by self_check.'],
-            ['git', 'push', 'origin', BRANCH])
-    emit(f'Pushed to {BRANCH=} {returncode=}.')
-    emit(f'Validation and push completed.')
-
-# Delegate that queries an external source for data and uploads the result.
-def fetch_urls(context=None):
-    urls = set()
-    for line in context.splitlines():
-        urls.update(re.findall(r'https?://[^\s]+', line))
-    emit(f'Found {len(urls)} URLs in context.')
-    for url in urls:
-        emit(f'Fetching {url=}.')
-        status, data = facade_request(f'fetch_urls__html', upload=url)
-        emit(f'Upload {status=} {len(data)=} bytes.')
-        if status != 200: return status
-
-
-# TODO: Create a delegate that replays requests from a visitor log.
-# TODO: New delegate to run a script in a virtual environment.
-# TODO: Make qaczar even more fun and useful.
-
