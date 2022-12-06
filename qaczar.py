@@ -12,17 +12,19 @@
 # 6. Accomplish everything in under 4000 lines of code.
 # 7. Prioritize stability over features.
 
-
 import os
 import sys
 import time
+import socket
 import atexit
-import subprocess
 import typing as t
+import subprocess as sp
 
 
-MAIN = 'smoke_test'
-RUNLEVEL = len(sys.argv)
+RUNLEVEL = 0
+
+
+# General purpose functions.
 
 def isotime() -> str: 
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
@@ -31,109 +33,92 @@ def emit(msg: str) -> None:
     f = sys._getframe(1)
     print(f'[{RUNLEVEL}:{f.f_lineno}] [{isotime()}] {f.f_code.co_name}: {msg}')
 
-def fread(fn: str, decode: str = None) -> bytes:
-    try: 
-        with open(fn, 'r' if decode else 'rb', encoding=decode) as f:  
-            return f.read()
-    except FileNotFoundError: 
-        return None 
+def terminate(msg: str, code: int=1) -> t.NoReturn:
+    emit(msg + " Terminating."); sys.exit(code)
 
-SOURCE = fread(__file__, decode='utf-8')
+def read_bytes(fname: str) -> bytes:
+    with open(fname, 'rb') as f: return f.read()
+    
+def write_bytes(fname: str, data: bytes) -> None:
+    with open(fname, 'wb') as f: f.write(data)
 
-# Create a running copy of ourselves with extra arguments.
-def create_fork(*args: list[str], old: subprocess.Popen = None) -> subprocess.Popen:
-    assert len(args) > 0, 'No args provided to create_fork.'
-    if old is not None:
-        old.terminate()
-        old.wait()
-        atexit.unregister(old.terminate)
-    s = subprocess.Popen([sys.executable, __file__, *[str(a) for a in args]])
-    if not s:
-        raise RuntimeError('Failed to create fork.')
+def start_script(*args: list[str]) -> sp.Popen:
+    s = sp.Popen([sys.executable, *[str(a) for a in args]])
     s.stdout, s.stderr, s.args = sys.stdout, sys.stderr, args
     atexit.register(s.terminate)
-    emit(f"Created fork {' '.join(str(a) for a in args)} {s.pid=}.")
+    emit(f"{s.args=} {s.pid=}.")
     return s
 
-# aka. The Crown
+def restart_script(s: sp.Popen = None) -> sp.Popen:
+    s.terminate(); s.wait()
+    atexit.unregister(s.terminate)
+    args = s.args + (os.getpid(),) if s.args[0] == __file__ else args
+    return start_script(*args)
+
 # Watch over s to ensure it never dies. If it does, create a new one.
-def watch_over(s: subprocess.Popen) -> t.NoReturn:  
-    global SOURCE
+def watch_over(s: sp.Popen, fname: str) -> t.NoReturn:  
+    source, mtime, stable = read_bytes(fname), os.path.getmtime(fname), True
     while True:
-        stable, mtime = True, os.path.getmtime(__file__)
-        while True:
-            time.sleep(1)
-            if os.path.getmtime(__file__) != mtime:
-                mutation, mtime = fread(__file__), os.path.getmtime(__file__)
-                if mutation != SOURCE:
-                    emit(f"Mutation detected {len(mutation)=} {len(SOURCE)=}. Restarting.")
-                    # Make the new mutation start with a new main.
-                    s, stable = create_fork(*s.args, old=s), False
+        time.sleep(2.6)
+        if os.path.getmtime(fname) != mtime:
+            mutation, mtime = read_bytes(fname), os.path.getmtime(fname)
+            if mutation != source:
+                emit(f"Mutation detected. Restart {fname=}.")
+                # Make the new mutation start with a new main.
+                s, stable = restart_script(s), False
+            continue
+        if s.poll() is not None:
+            if s.returncode == 0:
+                terminate(f"Process {s.pid} exited normally.")
+            if stable:
+                emit(f"Fork died {s.args=} {s.pid=}. Restarting.")
+                s, stable = restart_script(s), False
                 continue
-            if s.poll() is not None:
-                if s.returncode == 0:
-                    emit(f"Process {s.pid} exited normally. Terminating.")
-                    sys.exit(0)
-                if stable:
-                    emit(f"Fork died {s.args=} {s.pid=}. Restarting.")
-                    s, stable = create_fork(*s.args, old=s), False
-                    continue
-                mutation = fread(__file__, decode='utf-8')
-                if mutation != SOURCE:
-                    emit(f"Rolling back mutation {len(mutation)=} {len(SOURCE)=}.")
-                    # Overwrite the mutation with the original source.
-                    with open(__file__, 'w', encoding='utf-8') as f:
-                        f.write(SOURCE)
-                    s, stable = create_fork(*s.args, old=s), False
-                    continue
-                else:
-                    # This prevents an infinite loop if the fork keeps dying.
-                    emit(f"Unstable crown, aborting. Check {__file__} for errors.")
-                    sys.exit(1)
-            if not stable:
-                emit(f"Stabilized {s.pid=}.")
-                SOURCE = fread(__file__, decode='utf-8')
-            stable = True
+            if (mutation := read_bytes(fname)) != source:
+                emit(f"Rolling back {fname=}.")
+                write_bytes(fname, source)
+                s, stable = restart_script(s), False
+                continue
+            else:
+                if mutation != source: write_bytes(fname, mutation)
+                terminate(f"Unstable {fname=}. Check source for errors.")
+        if not stable:
+            emit(f"Stabilizing {s.pid=}.")
+            source, stable = read_bytes(fname), True
 
-# Get constant values from the source code even if it's been mutated.
-def get_const(name: t.LiteralString) -> str:
-    global SOURCE
-    for line in SOURCE.splitlines():
-        if line.startswith(f'{name} = '):
-            return line.split(' = ')[1].strip("'")
-    return None
-            
-def smoke_test():
-    emit('Hello world!')
-    try:
-        while True:
-            time.sleep(1)
-            emit('Still alive.')
-    except KeyboardInterrupt:
-        emit('Goodbye world!')
-        sys.exit(0)
+def watch_self(watcher=None):
+    if watcher: os.kill(int(watcher), 9)
+    watch_over(start_script(__file__, __file__), __file__)
 
-def another_function():
-    emit('Another function.')
-    sys.exit(1)
-        
-    
-# RUNLEVEL will only be greater than 0 when qaczar.py is executing.
+def list_files():
+    return [f for f in os.listdir() if not f.startswith(('__', '.'))]
+
+def main_loop(pid=None, *args: list[str]) -> t.NoReturn:
+    emit(f"Starting {pid=} {args=}.")
+    if pid is not None: 
+        emit(f"Kill watcher {pid=}. Activate self watch.")
+        watch_self(watcher=pid)
+    while True:
+        # TODO: Decide what to do here.
+        emit(f"Looping {pid=} {args=}.")
+        # Get a list of all the files in the current directory.
+        # Exclude files that start with __ or .
+        files = [f for f in os.listdir() if not f.startswith(('__', '.'))]
+        emit(f"Files: {files}")
+        time.sleep(6.0)
+
+# Start a wsgi server that serves the current directory.
+def start_server():
+    pass
+
+# Begin script execution in watch mode.
 if __name__ == "__main__":
-    emit('----------------------------------------')
-    try:    
-        # We copy ourselves and put the crown on the copy.
-        SOURCE = fread(__file__, decode='utf-8')
-        if RUNLEVEL == 1:
-            watch_over(create_fork(__file__))
-        elif RUNLEVEL == 2:
-            main_function = globals().get(MAIN, None)
-            if main_function is None:
-                emit(f"Invalid function {MAIN=}. DNR.")
-                sys.exit(0)
-            main_function()
-            
-    except KeyboardInterrupt:
-        emit(f"Keyboard interrupt {RUNLEVEL=}"); raise
-    except RuntimeError:
-        emit(f'Crown failure, unable to start.'); raise
+    RUNLEVEL = 1
+    if len(sys.argv) == 1:
+        watch_self()
+    elif sys.argv[1] == __file__:
+        RUNLEVEL = 2
+        main_loop(*sys.argv[2:])
+    watch_over(start_script(*sys.argv[1:]), sys.argv[1])
+
+        
