@@ -1,14 +1,21 @@
-<!DOCTYPE html>
-<html>
+<?xml version="1.0" ?><!DOCTYPE html><html lang="en">
     <head>
-        <meta charset="UTF-8">
-        <link rel="stylesheet" href="qaczar.css">
-        <title>QACZAR</title>
+        <meta charset="utf-8"/>
+        <meta http-equiv="refresh" content="6"/>
+        <link rel="stylesheet" href="qaczar.css" type="text/css"/>
+        <title>QACZAR</title>    
+        <script type="text/python">
+            # This is actually Python code, not JavaScript
+            emit("Hello, World!")
+            target = document.getElementsByTagName("p")[0].firstChild
+            if target:
+                target.data = "We did it guys!!"
+        </script>
     </head>
     <body>
-        <main>
-            <h1>QACZAR</h1>
-            <p>Welcome to my web page.</p>
-            <p>My objective is to experiment with rapid web development.</p>
-        </main>
+        <h1>QACZAR</h1>
+        <p id="target">
+            Hello, World!
+        </p>
+    </body>
 </html>
