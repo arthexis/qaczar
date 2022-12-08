@@ -1,21 +1,54 @@
 <?xml version="1.0" ?><!DOCTYPE html><html lang="en">
     <head>
         <meta charset="utf-8"/>
-        <meta http-equiv="refresh" content="6"/>
         <link rel="stylesheet" href="qaczar.css" type="text/css"/>
         <title>QACZAR</title>    
         <script type="text/python">
             # This is actually Python code, not JavaScript
             emit("Hello, World!")
             target = document.getElementsByTagName("p")[0].firstChild
-            if target:
-                target.data = "We did it guys!!"
+            if target and post:
+                target.data = f"Hello world, {post['name'][0]}!"
         </script>
     </head>
     <body>
-        <h1>QACZAR</h1>
+        <h1><a href="qaczar.html">QACZAR</a></h1>
         <p id="target">
             Hello, World!
         </p>
+
+        <!-- Include a variety of example html tags to test varios functionality, such as forms, tables, etc. -->
+        <form action="qaczar.html" method="post">
+            <input type="text" name="name" value="Name"/>
+            <input type="text" name="email" value="Email"/>
+            <input type="submit" value="Submit"/>
+        </form>
+
+        <br/>
+
+
+        <table border="1">
+            <tr>
+                <th>Header 1</th>
+                <th>Header 2</th>
+                <th>Header 3</th>
+            </tr>
+            <tr>
+                <td>Cell 1</td>
+                <td>Cell 2</td>
+                <td>Cell 3</td>
+            </tr>
+            <tr>
+                <td>Cell 4</td>
+                <td>Cell 5</td>
+                <td>Cell 6</td>
+            </tr>
+
+        </table>
+
+        <p>
+            <a href="http://www.google.com">Google</a>
+        </p>
+        
     </body>
 </html>
