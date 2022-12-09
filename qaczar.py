@@ -28,6 +28,7 @@ import xml.dom.minidom as md
 
 RUNLEVEL = 0
 HOST, PORT = 'localhost', 8080
+SITE = 'qaczar.com'
 HOME = '/qaczar.html'
 
 
@@ -149,6 +150,11 @@ def process_python(fname: str, context: dict) -> str:
                 return module.receive_post(context['post'])
         emit(f"Serving {fname=} as-is.")
         return f'/{fname}'
+    
+def process_file(fname: str, context: dict) -> str:
+    if fname.endswith('.html'): return process_html(fname, context)
+    if fname.endswith('.py'): return process_python(fname, context)
+    return f'/{fname}'
 
 def receive_post(data: dict) -> str:
     emit(f"Received {data=}.")
@@ -178,11 +184,12 @@ def imports(*modules: tuple[str]) -> t.Callable:
     'cryptography.x509',
     'cryptography.hazmat.primitives.hashes')
 def generate_certs(serialization, rsa, x509, hashes, /, keyname: str, certname: str) -> None:
+    global SITE
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     write_file(keyname, key.private_bytes(encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
             encryption_algorithm=serialization.NoEncryption()))
-    name = x509.Name([x509.NameAttribute(x509.NameOID.COMMON_NAME, 'qaczar.com')])
+    name = x509.Name([x509.NameAttribute(x509.NameOID.COMMON_NAME, SITE)])
     cert = x509.CertificateBuilder() \
             .subject_name(name) \
             .issuer_name(name) \
@@ -191,12 +198,13 @@ def generate_certs(serialization, rsa, x509, hashes, /, keyname: str, certname: 
             .not_valid_before(dt.datetime.utcnow()) \
             .not_valid_after(dt.datetime.utcnow() + dt.timedelta(days=3)) \
             .add_extension( 
-                x509.SubjectAlternativeName([x509.DNSName('qaczar.com')]), critical=False) \
+                x509.SubjectAlternativeName([x509.DNSName(SITE)]), critical=False) \
             .add_extension(
                 x509.BasicConstraints(ca=False, path_length=None), critical=True) \
             .sign(key, hashes.SHA256())
     write_file(certname, cert.public_bytes(serialization.Encoding.PEM))
 
+@timed
 def setup_files():
     if not os.path.exists('.work'): os.mkdir('.work')
     if not os.path.exists('.ssl'): os.mkdir('.ssl')
@@ -206,6 +214,7 @@ def setup_files():
 
 @imports('ssl', 'http.server', 'socketserver', 'urllib.parse')
 def build_server(ssl, hs, ss, up) -> tuple:
+    global HOME
     ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     ssl_context.load_cert_chain('.ssl/cert.pem', '.ssl/key.pem')
     
@@ -231,10 +240,7 @@ def build_server(ssl, hs, ss, up) -> tuple:
         def build_response(self, method: str = None) -> bool:
             path = HOME if self.path == '/' else self.path
             context = self.build_context(path, method)
-            if path.endswith('.html'):
-                self.path = process_html(path[1:], context)
-            elif path.endswith('.py'):
-                self.path = process_python(path[1:], context)
+            self.path = process_file(path[1:], context)
 
         def do_HEAD(self) -> None:
             self.build_response('HEAD'); return super().do_HEAD()
