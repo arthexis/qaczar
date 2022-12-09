@@ -27,8 +27,6 @@ import xml.dom.minidom as md
 
 
 RUNLEVEL = 0
-HOST, PORT = 'localhost', 8080
-SITE = 'qaczar.com'
 HOME = '/qaczar.html'
 
 
@@ -124,15 +122,28 @@ def timed(f) -> t.Callable:
 def write_work_file(fname: str, data: bytes | str, encoding='utf-8') -> None:
     write_file(os.path.join('.work', fname), data, encoding=encoding)
 
+def extract_todos(fname: str) -> list[str]:
+    # TODO: Generalize to extract any comments.
+    todos = []
+    for line in read_file(fname, encoding='utf-8').splitlines():
+        if (todo := line.lstrip().split('#', 1)[0].strip()) and todo.startswith('TODO:'):
+            # Remove TODO and any trailing punctuation.
+            todos.append(todo[5:].strip())
+    return todos
+
 @timed
 def process_html(fname: str, context: dict) -> str:
+    # TODO: Fix error handling.
     document = md.parseString(read_file(fname, encoding='utf-8'))
     context['document'] = document
     for node in document.getElementsByTagName('script'):
         if node.getAttribute('type') == 'text/python':
-            exec(dedent(node.firstChild.data), None, context)
-            node.parentNode.removeChild(node)
-    write_work_file(fname, document.toxml())
+            source = dedent(node.firstChild.data)
+            with contextlib.redirect_stdout(io.StringIO()) as stdout:
+                exec(source, None, context)
+                node.parentNode.replaceChild(md.parseString(stdout.getvalue()).firstChild, node)            
+    xml = document.toxml()
+    write_work_file(fname, xml[xml.index('?>') + 2:], encoding='utf-8')
     return f'/.work/{fname}'
 
 @timed
@@ -277,7 +288,7 @@ if __name__ == "__main__":
         watch_under()
     elif sys.argv[1] == __file__:
         RUNLEVEL = 2
-        main_loop(*sys.argv[2:], address=f'{HOST}:{PORT}')
+        main_loop(*sys.argv[2:], address=f'localhost:9443')
     watch_over(run(*sys.argv[1:]), sys.argv[1])
 
 __all__ = ['emit', 'now', 'EPOCH']

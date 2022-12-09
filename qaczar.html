@@ -1,4 +1,3 @@
-<?xml version="1.0" ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,30 +5,16 @@
     <meta charset="utf-8" />
     <link rel="stylesheet" href="qaczar.css" type="text/css" />
     <title>QACZAR</title>
-    <script type="text/python">
-        # This is actually Python code (not JavaScript!)
-        # using the xml.dom module to manipulate the DOM
-        # https://docs.python.org/3/library/xml.dom.html
-
-        emit("Hello, World!")
-        target = document.getElementsByTagName("p")[0].firstChild
-        if target and post:
-            target.data = f"Hello world, {post['name'][0]}!"
-
-        # Create a new p tag after the h1 tag
-
-        h1 = document.getElementsByTagName("h1")[0]
-        p = document.createElement("p")
-        p.appendChild(document.createTextNode("This is a new paragraph"))
-        h1.parentNode.insertBefore(p, h1.nextSibling)
-    </script>
 </head>
 
 <body>
     <h1><a href="qaczar.html">QACZAR</a></h1>
-    <p id="target">
-        Hello, World!
-    </p>
+    <p id="target"> Hello, World!</p>
+    <div>
+        <ol id="ls">
+
+        </ol>
+    </div>
     <div>
         <form action="qaczar.py" method="post">
             <input type="text" name="name" value="Name" />
