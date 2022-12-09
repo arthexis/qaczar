@@ -27,6 +27,7 @@ import xml.dom.minidom as md
 
 
 RUNLEVEL = 0
+HOST, PORT = 'localhost', 8080
 HOME = '/qaczar.html'
 
 
@@ -164,49 +165,47 @@ def pip_import(module: str) -> t.Any:
         if '.' in module: module = module.split('.')[0]
         sp.run([sys.executable, '-m', 'pip', 'install', module])
         return importlib.import_module(module)
-
-def generate_certs(cert_fname: str, key_fname: str) -> None:
-    serialization = pip_import('cryptography.hazmat.primitives.serialization')
-    rsa = pip_import('cryptography.hazmat.primitives.asymmetric.rsa')
-    x509 = pip_import('cryptography.x509')
-    hashes = pip_import('cryptography.hazmat.primitives.hashes')
+    
+def imports(*modules: tuple[str]) -> t.Callable:
+    def decorator(f):
+        def wrapper(*args, **kwargs):
+            return f(*(pip_import(module) for module in modules), *args, **kwargs)
+        return wrapper
+    return decorator
+    
+@imports('cryptography.hazmat.primitives.serialization',
+    'cryptography.hazmat.primitives.asymmetric.rsa',
+    'cryptography.x509',
+    'cryptography.hazmat.primitives.hashes')
+def generate_certs(serialization, rsa, x509, hashes, /, keyname: str, certname: str) -> None:
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    with open(key_fname, 'wb') as f: 
-        f.write(key.private_bytes(encoding=serialization.Encoding.PEM,
-                format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=serialization.NoEncryption()))
+    write_file(keyname, key.private_bytes(encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()))
     name = x509.Name([x509.NameAttribute(x509.NameOID.COMMON_NAME, 'qaczar.com')])
-    cert = x509.CertificateBuilder()
-    cert = cert.subject_name(name)
-    cert = cert.issuer_name(name)
-    cert = cert.public_key(key.public_key())
-    cert = cert.serial_number(x509.random_serial_number())
-    cert = cert.not_valid_before(dt.datetime.utcnow())
-    cert = cert.not_valid_after(dt.datetime.utcnow() + dt.timedelta(days=3))
-    cert = cert.add_extension(
-            x509.SubjectAlternativeName([x509.DNSName('localhost')]), critical=False)
-    cert = cert.add_extension(
-            x509.BasicConstraints(ca=False, path_length=None), critical=True)
-    cert = cert.sign(key, hashes.SHA256())
-    with open(cert_fname, 'wb') as f:
-        f.write(cert.public_bytes(serialization.Encoding.PEM))
+    cert = x509.CertificateBuilder() \
+            .subject_name(name) \
+            .issuer_name(name) \
+            .public_key(key.public_key()) \
+            .serial_number(x509.random_serial_number()) \
+            .not_valid_before(dt.datetime.utcnow()) \
+            .not_valid_after(dt.datetime.utcnow() + dt.timedelta(days=3)) \
+            .add_extension( 
+                x509.SubjectAlternativeName([x509.DNSName('qaczar.com')]), critical=False) \
+            .add_extension(
+                x509.BasicConstraints(ca=False, path_length=None), critical=True) \
+            .sign(key, hashes.SHA256())
+    write_file(certname, cert.public_bytes(serialization.Encoding.PEM))
 
 def setup_files():
     if not os.path.exists('.work'): os.mkdir('.work')
     if not os.path.exists('.ssl'): os.mkdir('.ssl')
     if not os.path.exists('.ssl/cert.pem') or not os.path.exists('.ssl/key.pem'):
         emit("Generating SSL certificates.")
-        generate_certs('.ssl/cert.pem', '.ssl/key.pem')
+        generate_certs(keyname='.ssl/key.pem', certname='.ssl/cert.pem',)
 
-# Start a wsgi server that serves the current directory.
-def serve_forever(host, port) -> t.NoReturn:
-    global HOME
-    import ssl
-    import http.server as hs
-    import socketserver as ss
-    from urllib.parse import parse_qs
-
-    # Start the ssl_context for localhost.
+@imports('ssl', 'http.server', 'socketserver', 'urllib.parse')
+def build_server(ssl, hs, ss, up) -> tuple:
     ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     ssl_context.load_cert_chain('.ssl/cert.pem', '.ssl/key.pem')
     
@@ -222,10 +221,10 @@ def serve_forever(host, port) -> t.NoReturn:
         def build_context(self, path:str, method: str = None) -> dict:
             if '?' in path: path, qs = path.split('?', 1)
             else: qs = ''
-            context = {'get': parse_qs(qs), 'ip': self.client_address[0], 'ts': now()}
+            context = {'get': up.parse_qs(qs), 'ip': self.client_address[0], 'ts': now()}
             if method == 'POST':
                 length = int(self.headers.get('content-length', 0))
-                context['post'] = parse_qs(self.rfile.read(length).decode('utf-8'))
+                context['post'] = up.parse_qs(self.rfile.read(length).decode('utf-8'))
             else: context['post'] = {}
             return context
 
@@ -245,11 +244,14 @@ def serve_forever(host, port) -> t.NoReturn:
         
         def do_POST(self) -> None:
             self.build_response('POST'); return super().do_GET()
-        
-    protocol = 'https' if os.path.exists('.ssl/key.pem') else 'http'
-    server_cls = SSLServer if protocol == 'https' else ss.TCPServer
-    with server_cls((host, int(port)), Handler) as httpd:
-        emit(f"Serving at {protocol}://{host}:{port}")
+
+    return SSLServer, Handler
+
+def serve_forever(host: str, port: int) -> t.NoReturn:
+    global HOME
+    server_cls, handler_cls = build_server()
+    with server_cls((host, port), handler_cls) as httpd:
+        emit(f"Serving at https://{host}:{port}")
         httpd.serve_forever()
 
 def main_loop(pid:str=None, address:str=None, *args: list[str]) -> t.NoReturn:
@@ -258,11 +260,10 @@ def main_loop(pid:str=None, address:str=None, *args: list[str]) -> t.NoReturn:
         emit(f"Kill watcher {pid=}. As above so below.")
         watch_under(watcher=pid)
     if address is not None and ':' in address:
-        emit(f"Start server mode {address=}.")
         host, port = address.split(':')
-        serve_forever(host, port)
+        serve_forever(host, int(port))
 
-# Begin script execution in watch mode.
+# Begin script execution in self-watch mode by default.
 if __name__ == "__main__":
     RUNLEVEL = 1
     setup_files()
@@ -270,8 +271,8 @@ if __name__ == "__main__":
         watch_under()
     elif sys.argv[1] == __file__:
         RUNLEVEL = 2
-        main_loop(*sys.argv[2:], address='localhost:8080')
+        main_loop(*sys.argv[2:], address=f'{HOST}:{PORT}')
     watch_over(run(*sys.argv[1:]), sys.argv[1])
 
-__all__ = ['emit', 'halt', 'write_work_file', 'now', 'EPOCH']
+__all__ = ['emit', 'now', 'EPOCH']
 
