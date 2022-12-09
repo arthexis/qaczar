@@ -1,32 +1,44 @@
-<?xml version="1.0" ?><!DOCTYPE html><html lang="en">
-    <head>
-        <meta charset="utf-8"/>
-        <link rel="stylesheet" href="qaczar.css" type="text/css"/>
-        <title>QACZAR</title>    
-        <script type="text/python">
-            # This is actually Python code, not JavaScript
-            emit("Hello, World!")
-            target = document.getElementsByTagName("p")[0].firstChild
-            if target and post:
-                target.data = f"Hello world, {post['name'][0]}!"
-        </script>
-    </head>
-    <body>
-        <h1><a href="qaczar.html">QACZAR</a></h1>
-        <p id="target">
-            Hello, World!
-        </p>
+<?xml version="1.0" ?>
+<!DOCTYPE html>
+<html lang="en">
 
-        <!-- Include a variety of example html tags to test varios functionality, such as forms, tables, etc. -->
-        <form action="qaczar.html" method="post">
-            <input type="text" name="name" value="Name"/>
-            <input type="text" name="email" value="Email"/>
-            <input type="submit" value="Submit"/>
+<head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="qaczar.css" type="text/css" />
+    <title>QACZAR</title>
+    <script type="text/python">
+        # This is actually Python code (not JavaScript!)
+        # using the xml.dom module to manipulate the DOM
+        # https://docs.python.org/3/library/xml.dom.html
+
+        emit("Hello, World!")
+        target = document.getElementsByTagName("p")[0].firstChild
+        if target and post:
+            target.data = f"Hello world, {post['name'][0]}!"
+
+        # Create a new p tag after the h1 tag
+
+        h1 = document.getElementsByTagName("h1")[0]
+        p = document.createElement("p")
+        p.appendChild(document.createTextNode("This is a new paragraph"))
+        h1.parentNode.insertBefore(p, h1.nextSibling)
+    </script>
+</head>
+
+<body>
+    <h1><a href="qaczar.html">QACZAR</a></h1>
+    <p id="target">
+        Hello, World!
+    </p>
+    <div>
+        <form action="qaczar.py" method="post">
+            <input type="text" name="name" value="Name" />
+            <input type="text" name="email" value="Email" />
+            <input type="submit" value="Submit" />
         </form>
-
-        <br/>
-
-
+        <br />
+    </div>
+    <div>
         <table border="1">
             <tr>
                 <th>Header 1</th>
@@ -43,12 +55,16 @@
                 <td>Cell 5</td>
                 <td>Cell 6</td>
             </tr>
-
         </table>
 
-        <p>
-            <a href="http://www.google.com">Google</a>
-        </p>
-        
-    </body>
+    </div>
+    <br />
+    <p>
+        Download the source code for this project <a href="qaczar.py">here</a>.
+    </p>
+    <p>
+        <a href="http://www.google.com">Google</a>
+    </p>
+</body>
+
 </html>

@@ -8,14 +8,22 @@
 # - Use functions, not classes, for modularity, composability and encapsulation.
 # - Functions should not reference functions or globals from later in the script.
 # - Prioritize stability and clarity over features.
+# - Sometimes its ok to break the rules, take advantage of the language.
+
 
 import os
+import io
 import sys
 import time
 import atexit
+import doctest
+import secrets
+import importlib
+import contextlib
 import typing as t
+import datetime as dt
 import subprocess as sp
-import xml.dom.minidom as dom
+import xml.dom.minidom as md
 
 
 RUNLEVEL = 0
@@ -23,19 +31,29 @@ HOME = '/qaczar.html'
 
 
 def now() -> str:  # Time in UTC ISO format.
+    """Ensure time is not running backwards.
+
+    >>> import qaczar, time
+    >>> qaczar.now() >= qaczar.EPOCH
+    True
+
+    """
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
 
+EPOCH = now()  # Time when this instance was started or loaded.
+
 def emit(msg: str) -> None: 
-    f = sys._getframe(1)  # Caller's frame.
-    print(f'[{RUNLEVEL}:{f.f_lineno}] [{now()}] {f.f_code.co_name}: {msg}')
+    f = sys._getframe(1)  # Caller's frame (could break in future Python versions)
+    print(f'[{RUNLEVEL}:{f.f_lineno}] [{now()}] {f.f_code.co_name}: {msg}', file=sys.stderr)
 
 def halt(msg: str, code: int=1) -> t.NoReturn:
     emit(msg + " Halting."); sys.exit(code)
 
-def read(fname: str, encoding=None) -> bytes:
+def read_file(fname: str, encoding=None) -> bytes:
     with open(fname, 'rb' if not encoding else 'r', encoding=encoding) as f: return f.read()
     
-def write(fname: str, data: bytes | str, encoding=None) -> None:
+def write_file(fname: str, data: bytes | str, encoding=None) -> None:
+    if encoding and not isinstance(data, str): data = str(data)
     with open(fname, 'wb' if not encoding else 'w', encoding=encoding) as f: f.write(data)
 
 def mtime(fname: str) -> float:
@@ -56,33 +74,36 @@ def restart(s: sp.Popen = None) -> sp.Popen:
 
 # Watch over s to ensure it never dies. If it does, create a new one.
 def watch_over(s: sp.Popen, fname: str) -> t.NoReturn:  
-    source, old_mtime, stable = read(fname), mtime(fname), True
+    delay, stable = 2, True
+    source, old_mtime = read_file(fname), mtime(fname)
     while True:
-        time.sleep(2.6)
+        time.sleep(delay)
         if (new_mtime := mtime(fname)) != old_mtime:
-            mutation, old_mtime = read(fname), new_mtime
+            mutation, old_mtime = read_file(fname), new_mtime
             if mutation != source:
                 emit(f"Mutation detected. Restart {fname=}.")
-                s, stable = restart(s), False
+                s, stable, delay = restart(s), False, delay * 2
             continue
         if s.poll() is not None:
             if s.returncode == 0:
                 halt(f"Process {s.pid} exited normally.")
             if stable:
                 emit(f"Script died {s.args=} {s.pid=}. Restarting.")
-                s, stable = restart(s), False
+                s, stable, delay = restart(s), False, delay * 2
                 continue
-            if (mutation := read(fname)) != source:
+            if (mutation := read_file(fname)) != source:
                 emit(f"Rolling back {fname=}.")
-                write(fname, source)
+                write_file(fname, source)
                 s = restart(s)
                 continue
             halt(f"Unstable {fname=}. Check source.")
         if not stable:
             emit(f"Stabilizing {s.pid=}.")
-            source, stable = read(fname), True
+            source, stable = read_file(fname), True
+            continue
+        delay = delay // 2 if delay > 2 else 2
             
-def watch_self(watcher=None):
+def watch_under(watcher=None) -> t.NoReturn:
     if watcher: os.kill(int(watcher), 9)
     watch_over(run(__file__, __file__), __file__)
 
@@ -90,82 +111,167 @@ def dedent(code: str) -> str:
     indent = len(code) - len(code.lstrip()) - 1
     return '\n'.join(line[indent:] for line in code.splitlines())
 
-def timed(f):
+def timed(f) -> t.Callable:
     def timed(*args, **kwargs):
         start = time.time()
         result = f(*args, **kwargs)
-        emit(f"{f.__name__} took {time.time() - start:.2f} seconds.")
+        emit(f"{f.__name__} {args=} {kwargs=} took {time.time() - start:.4f} seconds.")
         return result
     return timed
 
+def write_work_file(fname: str, data: bytes | str, encoding='utf-8') -> None:
+    write_file(os.path.join('.work', fname), data, encoding=encoding)
+
 @timed
-def process_html(fname: str, context: dict) -> None:
-    # TODO: Handle form submissions.
-    document = dom.parseString(read(fname, encoding='utf-8'))
+def process_html(fname: str, context: dict) -> str:
+    document = md.parseString(read_file(fname, encoding='utf-8'))
     context['document'] = document
     for node in document.getElementsByTagName('script'):
         if node.getAttribute('type') == 'text/python':
-            code = dedent(node.firstChild.data)
-            exec(code, None, context)
+            exec(dedent(node.firstChild.data), None, context)
             node.parentNode.removeChild(node)
-    write(os.path.join('.work', fname), document.toxml(), encoding='utf-8')
+    write_work_file(fname, document.toxml())
+    return f'/.work/{fname}'
+
+@timed
+def process_python(fname: str, context: dict) -> str:
+    emit(f"Test {fname=} {context=}.")
+    with contextlib.redirect_stdout(io.StringIO()) as stdout:
+        result = doctest.testfile(fname, optionflags=doctest.ELLIPSIS)
+        if result.failed:
+            fname = fname[:-2] + 'html'
+            write_work_file(fname, stdout.getvalue())
+            return f'/.work/{fname}'
+        if context.get('post'):
+            module = importlib.import_module(fname[:-3])
+            if hasattr(module, 'receive_post'):
+                return module.receive_post(context['post'])
+        emit(f"Serving {fname=} as-is.")
+        return f'/{fname}'
+
+def receive_post(data: dict) -> str:
+    emit(f"Received {data=}.")
+    fname = secrets.token_hex(8) + '.txt'
+    # Convert data to string before writing.
+    write_work_file(fname, data)
+    return f'/.work/{fname}'
+
+def pip_import(module: str) -> t.Any:
+    try:
+        return importlib.import_module(module)
+    except ModuleNotFoundError:
+        emit(f"Installing {module=}.")
+        if '.' in module: module = module.split('.')[0]
+        sp.run([sys.executable, '-m', 'pip', 'install', module])
+        return importlib.import_module(module)
+
+def generate_certs(cert_fname: str, key_fname: str) -> None:
+    serialization = pip_import('cryptography.hazmat.primitives.serialization')
+    rsa = pip_import('cryptography.hazmat.primitives.asymmetric.rsa')
+    x509 = pip_import('cryptography.x509')
+    hashes = pip_import('cryptography.hazmat.primitives.hashes')
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    with open(key_fname, 'wb') as f: 
+        f.write(key.private_bytes(encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=serialization.NoEncryption()))
+    name = x509.Name([x509.NameAttribute(x509.NameOID.COMMON_NAME, 'qaczar.com')])
+    cert = x509.CertificateBuilder()
+    cert = cert.subject_name(name)
+    cert = cert.issuer_name(name)
+    cert = cert.public_key(key.public_key())
+    cert = cert.serial_number(x509.random_serial_number())
+    cert = cert.not_valid_before(dt.datetime.utcnow())
+    cert = cert.not_valid_after(dt.datetime.utcnow() + dt.timedelta(days=3))
+    cert = cert.add_extension(
+            x509.SubjectAlternativeName([x509.DNSName('localhost')]), critical=False)
+    cert = cert.add_extension(
+            x509.BasicConstraints(ca=False, path_length=None), critical=True)
+    cert = cert.sign(key, hashes.SHA256())
+    with open(cert_fname, 'wb') as f:
+        f.write(cert.public_bytes(serialization.Encoding.PEM))
+
+def setup_files():
+    if not os.path.exists('.work'): os.mkdir('.work')
+    if not os.path.exists('.ssl'): os.mkdir('.ssl')
+    if not os.path.exists('.ssl/cert.pem') or not os.path.exists('.ssl/key.pem'):
+        emit("Generating SSL certificates.")
+        generate_certs('.ssl/cert.pem', '.ssl/key.pem')
 
 # Start a wsgi server that serves the current directory.
 def serve_forever(host, port) -> t.NoReturn:
     global HOME
+    import ssl
     import http.server as hs
     import socketserver as ss
     from urllib.parse import parse_qs
-    if not os.path.exists('.work'): os.mkdir('.work')
+
+    # Start the ssl_context for localhost.
+    ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+    ssl_context.load_cert_chain('.ssl/cert.pem', '.ssl/key.pem')
+    
+    class SSLServer(ss.TCPServer):
+        def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True):
+            ss.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate)
+            self.socket = ssl_context.wrap_socket(self.socket, server_side=True)
 
     class Handler(hs.SimpleHTTPRequestHandler):
         def log_message(self, format, *args):
             emit(f"{self.address_string()} {format % args}")
 
-        def specialize(self, method: str = None):
-            path = HOME if self.path == '/' else self.path
+        def build_context(self, path:str, method: str = None) -> dict:
             if '?' in path: path, qs = path.split('?', 1)
             else: qs = ''
+            context = {'get': parse_qs(qs), 'ip': self.client_address[0], 'ts': now()}
+            if method == 'POST':
+                length = int(self.headers.get('content-length', 0))
+                context['post'] = parse_qs(self.rfile.read(length).decode('utf-8'))
+            else: context['post'] = {}
+            return context
+
+        def build_response(self, method: str = None) -> bool:
+            path = HOME if self.path == '/' else self.path
+            context = self.build_context(path, method)
             if path.endswith('.html'):
-                context = {'get': parse_qs(qs)}
-                if method == 'POST':
-                    length = int(self.headers.get('content-length', 0))
-                    context['post'] = parse_qs(self.rfile.read(length).decode('utf-8'))
-                else: context['post'] = {}
-                process_html(path[1:], context)
-                self.path = f'/.work{path}'
+                self.path = process_html(path[1:], context)
             elif path.endswith('.py'):
-                # TODO: Ponder what to do with requested py files.
-                # Maybe run a checksum to make sure they are legit?
-                # Should we somehow import them?
-                pass
+                self.path = process_python(path[1:], context)
 
         def do_HEAD(self) -> None:
-            self.specialize('HEAD'); return super().do_HEAD()
+            self.build_response('HEAD'); return super().do_HEAD()
             
         def do_GET(self) -> None:
-            self.specialize('GET'); return super().do_GET()
+            self.build_response('GET'); return super().do_GET()
         
         def do_POST(self) -> None:
-            self.specialize('POST'); return super().do_GET()
+            self.build_response('POST'); return super().do_GET()
         
-    with ss.TCPServer((host, int(port)), Handler) as httpd:
-        emit(f"Serving at http://{host}:{port}")
+    protocol = 'https' if os.path.exists('.ssl/key.pem') else 'http'
+    server_cls = SSLServer if protocol == 'https' else ss.TCPServer
+    with server_cls((host, int(port)), Handler) as httpd:
+        emit(f"Serving at {protocol}://{host}:{port}")
         httpd.serve_forever()
 
-def main_loop(pid:str=None, server:str=None, *args: list[str]) -> t.NoReturn:
+def main_loop(pid:str=None, address:str=None, *args: list[str]) -> t.NoReturn:
     emit(f"Starting {pid=} {args=}.")
     if pid is not None:
-        emit(f"Kill watcher {pid=}. Become our own watcher.")
-        watch_self(watcher=pid)
-    serve_forever('localhost', 8080)
+        emit(f"Kill watcher {pid=}. As above so below.")
+        watch_under(watcher=pid)
+    if address is not None and ':' in address:
+        emit(f"Start server mode {address=}.")
+        host, port = address.split(':')
+        serve_forever(host, port)
 
 # Begin script execution in watch mode.
 if __name__ == "__main__":
     RUNLEVEL = 1
+    setup_files()
     if len(sys.argv) == 1:
-        watch_self()
+        watch_under()
     elif sys.argv[1] == __file__:
         RUNLEVEL = 2
-        main_loop(*sys.argv[2:])
+        main_loop(*sys.argv[2:], address='localhost:8080')
     watch_over(run(*sys.argv[1:]), sys.argv[1])
+
+__all__ = ['emit', 'halt', 'write_work_file', 'now', 'EPOCH']
+
