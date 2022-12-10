@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # A Python script that experiments with rapid application development.
-# by machinemade@hotmail.com 2022
+# by R.J. Guillén (rjguillen [at] qaczar.com) 2022
 
 #   GUIDELINES
 # - Keep the line width to less than 100 characters.
@@ -16,7 +16,7 @@
 # - In case of doubt, just run the script and see what happens.
 
 
-#@# 1. LOCAL IMAGE
+#@# 1. LOCAL PLATFORM
 
 import os
 import sys
@@ -54,78 +54,9 @@ def mtime_file(fn: str) -> float:
     return os.path.getmtime(fn)
 
 
-#@# 2. SUBPROCESSING
+#@# 2. META-PROGRAMMING
 
-import atexit
-import subprocess as sp
-
-def arg_line(*args: tuple[str], **kwargs: dict) -> tuple[str]:
-    for k, v in kwargs.items(): args += (f'--{k}={str(v)}', )
-    return args
-
-def split_arg_line(args: list[str]) -> tuple[tuple, dict]:
-    largs, kwargs = [], {}
-    for arg in args:
-        if '=' in arg: 
-            __key, __value = arg[2:].split('='); kwargs[__key] = __value
-        else: largs.append(arg)
-    return tuple(largs), kwargs
-
-def start_python(script: str, *args: list[str], **kwargs: dict) -> sp.Popen:
-    if script == __file__: kwargs['opid'] = os.getpid()
-    proc = sp.Popen([sys.executable, script, *[str(a) for a in arg_line(*args, **kwargs)]])
-    proc.stdout, proc.stderr = sys.stdout, sys.stderr, 
-    proc._args, proc._kwargs = args, kwargs  # Magic for restart_python.
-    atexit.register(proc.terminate)
-    emit(f"Started script {proc.args=} {proc.pid=}.")
-    return proc
-
-def terminate_python(proc: sp.Popen) -> tuple[tuple, dict]:
-    proc.terminate(); proc.wait()
-    # TODO: Check if the process is still alive.
-    atexit.unregister(proc.terminate)
-    emit(f"Terminated {proc.args=} {proc.pid=}.")
-    return proc._args, proc._kwargs
-
-def restart_python(proc: sp.Popen = None, opid=PID) -> sp.Popen:
-    if proc: args, kwargs = terminate_python(proc)
-    else: args, kwargs = [], {}
-    kwargs['opid'] = opid
-    return start_python(__file__, *args, **kwargs)
-
-def watch_over(proc: sp.Popen, fn: str) -> t.NoReturn:  
-    # TODO: Restart the watcher after it has restarted the server.
-    source, old_mtime, stable = read_file(fn), mtime_file(fn), True
-    while True:
-        time.sleep(2.6)
-        if (new_mtime := mtime_file(fn)) != old_mtime:
-            mutation, old_mtime = read_file(fn), new_mtime
-            if mutation != source:
-                emit(f"Mutation detected. Restart {fn=}.")
-                proc, stable = restart_python(proc), False
-            continue
-        if proc.poll() is not None:
-            if proc.returncode == 0:
-                sys.exit(0)
-            if stable:
-                emit(f"Script died {proc.args=} {proc.pid=}. Restarting.")
-                proc, stable = restart_python(proc), False
-                continue
-            if (mutation := read_file(fn)) != source:
-                emit(f"Rolling back {fn=}.")
-                write_file(fn, source)
-                proc = restart_python(proc)
-                continue
-            halt(f"Unstable {fn=}. Check source.")
-        if not stable:
-            emit(f"Stabilizing {proc.pid=}.")
-            source, stable = read_file(fn), True
-            continue
-            
-
-#@# 3. META-PROGRAMMING
-
-import inspect
+import importlib
 import functools
 
 def dedent(code: str) -> str:
@@ -134,7 +65,7 @@ def dedent(code: str) -> str:
     return '\n'.join(line[indent:] for line in code.splitlines())
 
 def timed(f: t.Callable) -> t.Callable:
-    # TODO: Extract timed results from the log.
+    # TODO: Extract timed results from the log during testing?
     # TODO: Think about something to keep track of decorators.
     @functools.wraps(f)
     def timed(*args, **kwargs):
@@ -154,7 +85,89 @@ def extract_todos(fname: str) -> list[str]:
     return todos
 
 
-#@# 4. CONTENT PRODUCTION
+#@# 2. SUBPROCESSING
+
+import atexit
+import subprocess as sp
+
+def arg_line(*args: tuple[str], **kwargs: dict) -> tuple[str]:
+    for k, v in kwargs.items(): args += (f'--{k}={str(v)}', )
+    return args
+
+def split_arg_line(args: list[str]) -> tuple[tuple, dict]:
+    largs, kwargs = [], {}
+    for arg in args:
+        if '=' in arg: 
+            __key, __value = arg[2:].split('='); kwargs[__key] = __value
+        else: largs.append(arg)
+    return tuple(largs), kwargs
+
+def start_python(script: str, *args: list[str], **kwargs: dict) -> sp.Popen:
+    if script == __file__: kwargs['opid'] = os.getpid()
+    line_args = [str(a) for a in arg_line(*args, **kwargs)]
+    proc = sp.Popen([sys.executable, script, *line_args], daemon=True)
+    proc.stdout, proc.stderr = sys.stdout, sys.stderr, 
+    proc._args, proc._kwargs = args, kwargs  # Magic for restart_python.
+    atexit.register(proc.terminate)
+    emit(f"Started python {script=} {proc.pid=}.")
+    return proc
+
+def terminate_python(proc: sp.Popen) -> tuple[tuple, dict]:
+    proc.terminate(); proc.wait()
+    # TODO: Check if the process is still alive.
+    atexit.unregister(proc.terminate)
+    emit(f"Terminated {proc.args=} {proc.pid=}.")
+    return proc._args, proc._kwargs
+
+def restart_python(proc: sp.Popen = None, opid=PID) -> sp.Popen:
+    if proc: args, kwargs = terminate_python(proc)
+    else: args, kwargs = [], {}
+    kwargs['opid'] = opid
+    return start_python(__file__, *args, **kwargs)
+
+def linear_distance(source: str, mutation: str) -> int:
+    distance = 0
+    for line in source.splitlines():
+        if line not in mutation: distance += 1
+        else: mutation = mutation.replace(line, '', 1)
+    return distance - len(mutation)
+
+def watch_over(proc: sp.Popen, fn: str) -> t.NoReturn:  
+    # TODO: Restart the watcher after it has restarted the server.
+    source, old_mtime, stable = read_file(fn), mtime_file(fn), True
+    while True:
+        time.sleep(2.6)
+        if (new_mtime := mtime_file(fn)) != old_mtime:
+            mutation, old_mtime = read_file(fn), new_mtime
+            if mutation != source:
+                emit(f"Mutation detected. Restart {fn=}.")
+                proc, stable = restart_python(proc), False
+            continue
+        if proc.poll() is not None:
+            if proc.returncode == 0:
+                sys.exit(0)
+            if stable:
+                emit(f"Script died {proc.args=} {proc.pid=}. Restarting.")
+                proc, stable = restart_python(proc), False
+                continue
+            if (mutation := read_file(fn)) != source :
+                # TODO: Consider using a more sophisticated algorithm.
+                if linear_distance(source, mutation) == 0:
+                    emit(f"No mutation detected. Restart {fn=}. Mark unstable.")
+                    proc, stable = restart_python(proc), False
+                    continue
+                else:
+                    emit(f"Mutation detected. Restart {fn=}.")
+                    proc, stable = restart_python(proc), True
+                    continue
+            halt(f"Unstable {fn=}. Check source.")
+        if not stable:
+            emit(f"Stabilizing {proc.pid=}.")
+            source, stable = read_file(fn), True
+            continue    
+    
+
+#@# 4. CONTENT GENERATION
 
 import io
 import xml.dom.minidom as dom
@@ -184,7 +197,6 @@ def exec_inline(source: str, *, context: dict) -> str:
         return stdout.getvalue()
 
 def process_html(fname: str, context: dict) -> str:
-    # TODO: Fix error handling.
     # TODO: New function to automatically create a form from a function.
     document = dom.parseString(read_file(fname, encoding='utf-8'))
     context['document'] = document
@@ -196,7 +208,7 @@ def process_html(fname: str, context: dict) -> str:
     return wp
     
 @timed
-def dispatch_process(fname: str, context: dict) -> str:
+def dispatch_processor(fname: str, context: dict) -> str:
     if (processor := globals().get(f'process_{fname.split(".")[-1]}')):
         emit(f"Processing {fname=} with <{processor.__name__}>.")
         processor(fname, context)
@@ -212,7 +224,6 @@ import datetime as dt
 import http.server as hs
 import socketserver as ss
 import urllib.parse as parse
-import urllib.request as request
 
 HOST, PORT, SITE = 'localhost', 9443, 'qaczar.com'
 
@@ -307,7 +318,7 @@ def build_https_server() -> tuple:
             # TODO: Change default response depending on the next role of the server.
             path = '/qaczar.html' if self.path == '/' else self.path
             context = self.build_context(path, method)
-            self.path = dispatch_process(path[1:], context)
+            self.path = dispatch_processor(path[1:], context)
 
         def do_HEAD(self) -> None:
             self.build_response('HEAD'); return super().do_HEAD()
@@ -320,10 +331,9 @@ def build_https_server() -> tuple:
 
     return SSLServer, EmitHandler
 
-# Assume POST if data is not None, otherwise assume GET.
-# Use the default HOST and PORT if not specified.
-# Return the status and body of the response.
-def client_request(path: str, data: dict = None, host: str = HOST, port: int = PORT) -> tuple[str, str]:
+def client_request(
+        path: str, data: dict = None, host: str = HOST, port: int = PORT) -> tuple:
+    # TODO: Test this.
     if path[0] != '/': path = '/' + path
     method = 'POST' if data is not None else 'GET'
     with ss.create_connection((host, port)) as sock:
@@ -345,13 +355,13 @@ def client_request(path: str, data: dict = None, host: str = HOST, port: int = P
 # NOTE: All <role>_loop functions must have *args and **kwargs as parameters.
 
 def watcher_loop(*args, next: str = None, opid: str =None, **kwargs) -> t.NoReturn:
-    # TODO: Catch errors and run some recovery.
-    emit(f"Watch over role {next=} {opid=}.")
-    kwargs['role'] = next
+    # TODO: Include a mode to watch external processes.
+    role = kwargs['role'] = next
+    emit(f"Watching over {role=} {opid=} forever.")
     watch_over(start_python(__file__, *args, **kwargs), __file__)
 
 def server_loop(*args, host='localhost', port='9443', **kwargs) -> t.NoReturn:
-    # TODO: Launch a delegate to perform smoke tests and github actions.
+    # TODO: After the server is ready, figure out what to start next (not the tester).
     # TODO: See if we can use doctest to test the code of _loop functions.
     # TODO: Should we pass extra arguments to the server?
     server_cls, handler_cls = build_https_server()
@@ -360,13 +370,14 @@ def server_loop(*args, host='localhost', port='9443', **kwargs) -> t.NoReturn:
         atexit.register(httpd.shutdown)
         httpd.serve_forever()
 
-def tester_loop(*args, **kwargs) -> t.NoReturn:
+def tester_loop(*args, role: str = None, **kwargs) -> t.NoReturn:
     # doctest.testmod(verbose=True)
     emit(f"Tester done.")
-    # TODO: Commit and push the changes to github.
+    
 
-def ssl_loop(*args, **kwargs: dict) -> t.NoReturn:
-    # TODO: Launch a CA if needed.
+def relay_loop(*args, **kwargs: dict) -> t.NoReturn:
+    # TODO: Listener that queues requests and forwards them to the server.
+    # TODO: Multiple input channels should be supported.
     raise NotImplementedError
 
 
@@ -376,19 +387,34 @@ if __name__ == "__main__":
     else:
         __args, __kwargs = split_arg_line(sys.argv[1:])
         __role = __kwargs.pop('role')  # This should never fail.
-    emit(f"In watched subprocess {__role=} {__args=} {__kwargs=}")
+    emit(f"In watched subprocess role='{__role}' args={__args} kwargs={__kwargs}")
     # TODO: Roles with __ prefix are reserved for internal use.
-    # TODO: See what is the proper way to kick off tests.
+    # TODO: If the launched role has a test_<role> function, run it.
     set_workdir(__role)
-    locals()[f"{__role}_loop"](*__args, **__kwargs)
+    try:
+        locals()[f"{__role}_loop"](*__args, **__kwargs)
+    except Exception as e:
+        emit(f"Exception in role '{__role}': {e}")
+        # Start a tester role to test the code.
+        # TODO: See if we should start the tester in a separate process.
+        tester_loop(role=__role, args=__args, kwargs=__kwargs)
 
 
 #@# 7. TESTS
+# NOTE: All test_<role> functions must have *args and **kwargs as parameters.
 
-@imports('requests')
-def test_https_server(requests, *args, **kwargs) -> t.NoReturn:
-    # TODO: Get the server address from kwargs.
+# TODO: Implement our own blockchain for versioning and testing.
+
+def test_server_loop(requests, *args, **kwargs) -> t.NoReturn:
     # See if we can reach the server.
-    requests.get('https://localhost:9443')
-
-
+    status, body = client_request('/')
+    assert status == 'HTTP/1.0 200 OK'
+    # See if we can reach the server with a query string.
+    status, body = client_request('/?a=1&b=2')
+    assert status == 'HTTP/1.0 200 OK'
+    # See if we can reach the server with a POST request.
+    status, body = client_request('/', {'a': 1, 'b': 2})
+    assert status == 'HTTP/1.0 200 OK'
+    # See if we can reach the server with a POST request and a query string.
+    status, body = client_request('/?a=1&b=2', {'a': 1, 'b': 2})
+    assert status == 'HTTP/1.0 200 OK'
