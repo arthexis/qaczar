@@ -8,13 +8,15 @@
 # - Keep the line width to less than 100 characters.
 # - Use functions, not classes, for modularity, composability and encapsulation.
 # - Functions should not reference functions or globals from later in the script.
-# - Prioritize stability and clarity over features.
-# - Avoid using asynchrony, concurrency, multiprocessing, multithreading, etc. Use RPC instead.
+# - TODO items should be encapsulated in functions to simplify refactoring.
+# - Prioritize stability and clarity over new features.
+# - Avoid using asynchrony, concurrency, multiprocessing, multithreading, etc. Use HTTPS for RPC.
 # - Use the standard library, not third-party libraries. Seriously.
 # - Sometimes its ok to break the rules, take advantage of the language.
+# - In case of doubt, just run the script and see what happens.
 
 
-#@# 1. LOCAL SYSTEM
+#@# 1. LOCAL IMAGE
 
 import os
 import sys
@@ -40,6 +42,7 @@ def halt(msg: str) -> t.NoReturn:
     sys.exit(0)
 
 def read_file(fn: str, encoding=None) -> bytes:
+    # TODO: See if we need to standardize on UTF-8.
     with open(fn, 'rb' if not encoding else 'r', encoding=encoding) as f: return f.read()
     
 def write_file(fn: str, data: bytes | str, encoding=None) -> None:
@@ -47,7 +50,7 @@ def write_file(fn: str, data: bytes | str, encoding=None) -> None:
     with open(fn, 'wb' if not encoding else 'w', encoding=encoding) as f: f.write(data)
 
 def mtime_file(fn: str) -> float:
-    if not os.path.isfile(fn): return 0
+    if not os.path.isfile(fn): return 0.0
     return os.path.getmtime(fn)
 
 
@@ -60,30 +63,38 @@ def arg_line(*args: tuple[str], **kwargs: dict) -> tuple[str]:
     for k, v in kwargs.items(): args += (f'--{k}={str(v)}', )
     return args
 
-def start_python(*args: list[str], **kwargs: dict) -> sp.Popen:
-    args = arg_line(*args, **kwargs)
-    if args[0] == __file__: 
-        # Update the parent pid to the current pid.
-        args += (f'--pid={os.getpid()}', )
-    s = sp.Popen([sys.executable, *[str(a) for a in args]])
-    s.stdout, s.stderr, s.args = sys.stdout, sys.stderr, args
-    atexit.register(s.terminate)
-    emit(f"Started script {s.args=} {s.pid=}.")
-    return s
+def split_arg_line(args: list[str]) -> tuple[tuple, dict]:
+    largs, kwargs = [], {}
+    for arg in args:
+        if '=' in arg: 
+            __key, __value = arg[2:].split('='); kwargs[__key] = __value
+        else: largs.append(arg)
+    return tuple(largs), kwargs
 
-def restart_python(proc: sp.Popen = None) -> sp.Popen:
-    proc.terminate(); proc.wait()
-    atexit.unregister(proc.terminate)
-    args = proc.args + (os.getpid(),) if proc.args[0] == __file__ else args
-    return start_python(*args)
+def start_python(script: str, *args: list[str], **kwargs: dict) -> sp.Popen:
+    if script == __file__: kwargs['opid'] = os.getpid()
+    proc = sp.Popen([sys.executable, script, *[str(a) for a in arg_line(*args, **kwargs)]])
+    proc.stdout, proc.stderr = sys.stdout, sys.stderr, 
+    proc._args, proc._kwargs = args, kwargs  # Magic for restart_python.
+    atexit.register(proc.terminate)
+    emit(f"Started script {proc.args=} {proc.pid=}.")
+    return proc
 
-def terminate_python(proc: sp.Popen) -> None:
+def terminate_python(proc: sp.Popen) -> tuple[tuple, dict]:
     proc.terminate(); proc.wait()
+    # TODO: Check if the process is still alive.
     atexit.unregister(proc.terminate)
     emit(f"Terminated {proc.args=} {proc.pid=}.")
+    return proc._args, proc._kwargs
+
+def restart_python(proc: sp.Popen = None, opid=PID) -> sp.Popen:
+    if proc: args, kwargs = terminate_python(proc)
+    else: args, kwargs = [], {}
+    kwargs['opid'] = opid
+    return start_python(__file__, *args, **kwargs)
 
 def watch_over(proc: sp.Popen, fn: str) -> t.NoReturn:  
-    # TODO: Figure out to send the parent pid to the child.
+    # TODO: Restart the watcher after it has restarted the server.
     source, old_mtime, stable = read_file(fn), mtime_file(fn), True
     while True:
         time.sleep(2.6)
@@ -111,18 +122,10 @@ def watch_over(proc: sp.Popen, fn: str) -> t.NoReturn:
             source, stable = read_file(fn), True
             continue
             
-def watch_self(role: str, pid: str = None, **kwargs: dict) -> t.NoReturn:
-    if pid is not None: 
-        emit(f"Kill obsolete watcher {pid=}.")
-        os.kill(int(pid), 9)
-    emit(f"Watch over {__file__} as {role=}.")
-    kwargs['role'] = role
-    # TODO: Catch errors and restart or apply other remediation.
-    watch_over(start_python(__file__, **kwargs), __file__)
-
 
 #@# 3. META-PROGRAMMING
 
+import inspect
 import functools
 
 def dedent(code: str) -> str:
@@ -151,65 +154,56 @@ def extract_todos(fname: str) -> list[str]:
     return todos
 
 
-#@# 4. CONTENT MANAGEMENT
+#@# 4. CONTENT PRODUCTION
 
 import io
-import doctest
 import xml.dom.minidom as dom
 from contextlib import redirect_stdout
 
 WORKDIR = os.path.join(os.path.dirname(__file__), '.work')
 
+def set_workdir(role: str='work') -> None:
+    global WORKDIR
+    WORKDIR = os.path.join(os.path.dirname(__file__), f'.{role}')
+
 def work_path(fname: str) -> str:
     global WORKDIR
+    if not os.path.isdir(WORKDIR): os.mkdir(WORKDIR)
     return os.path.join(WORKDIR, fname)
 
-def write_work_file(fname: str, data: bytes | str, encoding='utf-8') -> None:
-    # TODO: Test -> Make it choose the work directory automatically.
-    global WORKDIR
-    if not os.path.isdir(WORKDIR): os.mkdir(WORKDIR)
-    write_file(work_path(fname), data, encoding)
+def replace_node(*, old: dom.Node, new: str) -> None:
+    old.parentNode.replaceChild(dom.parseString(new).firstChild, old)
 
-@timed
+def iter_scripts(document: dom.Document) -> t.Iterator[dom.Node]:
+    for node in document.getElementsByTagName('script'):
+        if node.getAttribute('type') == 'text/python': yield node
+
+def exec_inline(source: str, *, context: dict) -> str:
+    with redirect_stdout(io.StringIO()) as stdout:
+        exec(source, None, context)
+        return stdout.getvalue()
+
 def process_html(fname: str, context: dict) -> str:
     # TODO: Fix error handling.
+    # TODO: New function to automatically create a form from a function.
     document = dom.parseString(read_file(fname, encoding='utf-8'))
     context['document'] = document
-    for node in document.getElementsByTagName('script'):
-        if node.getAttribute('type') == 'text/python':
-            source = dedent(node.firstChild.data)
-            with redirect_stdout(io.StringIO()) as stdout:
-                exec(source, None, context)
-                node.parentNode.replaceChild(dom.parseString(stdout.getvalue()).firstChild, node)            
+    for node in iter_scripts(document):
+        new_html = exec_inline(dedent(node.firstChild.data), context=context)
+        replace_node(old=node, new=new_html)
     xml = document.toxml()
-    write_work_file(fname, xml[xml.index('?>') + 2:], encoding='utf-8')
-    return f'/.work/{fname}'
-
-@timed
-def process_python(fname: str, context: dict) -> str:
-    emit(f"Test {fname=} {context=}.")
-    with redirect_stdout(io.StringIO()) as stdout:
-        result = doctest.testfile(fname, optionflags=doctest.ELLIPSIS)
-        # TODO: Add more tests and error handling.
-        if result.failed:
-            fname = fname[:-2] + 'html'
-            write_work_file(fname, stdout.getvalue())
-            return f'/.work/{fname}'
-        if context.get('post'):
-            module = importlib.import_module(fname[:-3])
-            if hasattr(module, 'receive_post'):
-                return module.receive_post(context['post'])
-        emit(f"Serving {fname=} as-is.")
-        return f'/{fname}'
+    write_file(wp := work_path(fname), xml[xml.index('?>') + 2:], encoding='utf-8')
+    return wp
     
-def process_file(fname: str, context: dict) -> str:
-    # TODO: Single dispatch? Add more file types.
-    if fname.endswith('.html'): return process_html(fname, context)
-    if fname.endswith('.py'): return process_python(fname, context)
+@timed
+def dispatch_process(fname: str, context: dict) -> str:
+    if (processor := globals().get(f'process_{fname.split(".")[-1]}')):
+        emit(f"Processing {fname=} with <{processor.__name__}>.")
+        processor(fname, context)
     return f'/{fname}'
 
 
-#@# 5. COMMUNICATION
+#@# 5. COMMUNICATION 
 
 import ssl
 import secrets
@@ -218,17 +212,22 @@ import datetime as dt
 import http.server as hs
 import socketserver as ss
 import urllib.parse as parse
+import urllib.request as request
+
+HOST, PORT, SITE = 'localhost', 9443, 'qaczar.com'
 
 def receive_post(data: dict) -> str:
     # TODO: Figure out a more robust way to handle post data.
-    # TODO: Consider using a database (sqlite3?)
+    # TODO: Consider using a database (sqlite3?).
+    # TODO: Investigate using blockchain to resolve authority clashes.
     emit(f"Received {data=}.")
     fname = secrets.token_hex(8) + '.txt'
-    write_work_file(fname, data)
-    return f'/.work/{fname}'
+    write_file(wp := work_path(fname), data)
+    return wp
 
 def pip_import(module: str) -> t.Any:
-    # TODO: Add option to import from a local directory, or specify a version.
+    # TODO: Add option to import from a local directory, or specify a version?
+    # TODO: Keep a dynamic deny list of modules that are not allowed to be imported.
     try:
         return importlib.import_module(module)
     except ModuleNotFoundError:
@@ -239,57 +238,54 @@ def pip_import(module: str) -> t.Any:
     
 def imports(*modules: tuple[str]) -> t.Callable:
     def decorator(f):
+        @functools.wraps(f)
         def wrapper(*args, **kwargs):
             return f(*(pip_import(module) for module in modules), *args, **kwargs)
         return wrapper
     return decorator
-    
+
 @imports('cryptography.hazmat.primitives.serialization',
     'cryptography.hazmat.primitives.asymmetric.rsa',
     'cryptography.x509',
     'cryptography.hazmat.primitives.hashes')
-def generate_certs(ser, rsa, x509, hashes, /, keyname: str, certname: str) -> None:
-    # TODO: Use a CA if available.
+def get_ssl_certs(ser, rsa, x509, hashes, site=SITE) -> tuple[str, str]:
     # TODO: Figure out if we are the CA.
-    site = 'qaczar.com'
-    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    write_file(keyname, key.private_bytes(
-            encoding=ser.Encoding.PEM,
-            format=ser.PrivateFormat.PKCS8,
-            encryption_algorithm=ser.NoEncryption()))
-    name = x509.Name([x509.NameAttribute(x509.NameOID.COMMON_NAME, site)])
-    cert = x509.CertificateBuilder() \
-            .subject_name(name) \
-            .issuer_name(name) \
-            .public_key(key.public_key()) \
-            .serial_number(x509.random_serial_number()) \
-            .not_valid_before(dt.datetime.utcnow()) \
-            .not_valid_after(dt.datetime.utcnow() + dt.timedelta(days=3)) \
-            .add_extension(x509.SubjectAlternativeName([x509.DNSName(site)]), critical=False) \
-            .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True) \
-            .sign(key, hashes.SHA256())
-    write_file(certname, cert.public_bytes(ser.Encoding.PEM))
-
-@timed
-def setup_files():
-    if not os.path.exists('.work'): os.mkdir('.work')
     if not os.path.exists('.ssl'): os.mkdir('.ssl')
-    if not os.path.exists('.ssl/cert.pem') or not os.path.exists('.ssl/key.pem'):
+    certname, keyname = '.ssl/cert.pem', '.ssl/key.pem'
+    if not os.path.exists(certname) or not os.path.exists(keyname):
         emit("Generating SSL certificates for localhost.")
-        generate_certs(keyname='.ssl/key.pem', certname='.ssl/cert.pem',)
+        # TODO: Use a CA if available.
+        key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        write_file(keyname, key.private_bytes(
+                encoding=ser.Encoding.PEM,
+                format=ser.PrivateFormat.PKCS8,
+                encryption_algorithm=ser.NoEncryption()))
+        name = x509.Name([x509.NameAttribute(x509.NameOID.COMMON_NAME, site)])
+        cert = x509.CertificateBuilder() \
+                .subject_name(name) \
+                .issuer_name(name) \
+                .public_key(key.public_key()) \
+                .serial_number(x509.random_serial_number()) \
+                .not_valid_before(dt.datetime.utcnow()) \
+                .not_valid_after(dt.datetime.utcnow() + dt.timedelta(days=3)) \
+                .add_extension(x509.SubjectAlternativeName([x509.DNSName(site)]), critical=False) \
+                .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True) \
+                .sign(key, hashes.SHA256())
+        write_file(certname, cert.public_bytes(ser.Encoding.PEM))
+    return certname, keyname
 
-def build_server() -> tuple:
+def build_https_server() -> tuple:
     ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    ssl_ctx.load_cert_chain('.ssl/cert.pem', '.ssl/key.pem')
+    ssl_ctx.load_cert_chain(*get_ssl_certs())
     
     class SSLServer(ss.TCPServer):
         def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True):
             ss.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate)
             self.socket = ssl_ctx.wrap_socket(self.socket, server_side=True) 
 
-    class Handler(hs.SimpleHTTPRequestHandler):
+    class EmitHandler(hs.SimpleHTTPRequestHandler):
         def log_message(self, format, *args):
-            emit(f"{self.address_string()} {format % args}")
+            emit(f"Access from {self.address_string()} {format % args}")
 
         @property
         def content_length(self) -> int:
@@ -303,15 +299,15 @@ def build_server() -> tuple:
             else: path, qs = path.split('?', 1)
             context = {'ip': self.client_address[0], 'ts': iso8601()}
             context['qs'] = parse.parse_qs(qs)
-            if method == 'POST':
-                context['post'] = parse.parse_qs(self.rfile_read())
+            if method == 'POST': context['post'] = parse.parse_qs(self.rfile_read())
             else: context['post'] = {}
             return context
 
         def build_response(self, method: str = None) -> bool:
+            # TODO: Change default response depending on the next role of the server.
             path = '/qaczar.html' if self.path == '/' else self.path
             context = self.build_context(path, method)
-            self.path = process_file(path[1:], context)
+            self.path = dispatch_process(path[1:], context)
 
         def do_HEAD(self) -> None:
             self.build_response('HEAD'); return super().do_HEAD()
@@ -322,55 +318,77 @@ def build_server() -> tuple:
         def do_POST(self) -> None:
             self.build_response('POST'); return super().do_GET()
 
-    return SSLServer, Handler
+    return SSLServer, EmitHandler
 
-def server_loop(address:str=None, **kwargs) -> t.NoReturn:
+# Assume POST if data is not None, otherwise assume GET.
+# Use the default HOST and PORT if not specified.
+# Return the status and body of the response.
+def client_request(path: str, data: dict = None, host: str = HOST, port: int = PORT) -> tuple[str, str]:
+    if path[0] != '/': path = '/' + path
+    method = 'POST' if data is not None else 'GET'
+    with ss.create_connection((host, port)) as sock:
+        with ss.SSLContext().wrap_socket(sock, server_hostname=host) as ssock:
+            ssock.sendall(f"{method} {path} HTTP/1.1\r\n".encode())
+            ssock.sendall(f"Host: {host}:{port}\r\n".encode())
+            if data is not None:
+                ssock.sendall("Content-Type: application/x-www-form-urlencoded\r\n".encode())
+                ssock.sendall(f"Content-Length: {len(data)}\r\n".encode())
+                ssock.sendall("\r\n".encode())
+                ssock.sendall(parse.urlencode(data).encode())
+            ssock.sendall("\r\n".encode())
+            response = ssock.recv(4096).decode()
+            status, body = response.split('\r\n\r\n', 1)
+            return status, body
+
+
+#@# 6. COMMON ROLES
+# NOTE: All <role>_loop functions must have *args and **kwargs as parameters.
+
+def watcher_loop(*args, next: str = None, opid: str =None, **kwargs) -> t.NoReturn:
+    # TODO: Catch errors and run some recovery.
+    emit(f"Watch over role {next=} {opid=}.")
+    kwargs['role'] = next
+    watch_over(start_python(__file__, *args, **kwargs), __file__)
+
+def server_loop(*args, host='localhost', port='9443', **kwargs) -> t.NoReturn:
     # TODO: Launch a delegate to perform smoke tests and github actions.
-    if address is not None and ':' in address:
-        host, port = address.split(':')
-        server_cls, handler_cls = build_server()
-        with server_cls((host, int(port)), handler_cls) as httpd:
-            emit(f"Serving at https://{host}:{port}")
-            atexit.register(httpd.shutdown)
-            httpd.serve_forever()
+    # TODO: See if we can use doctest to test the code of _loop functions.
+    # TODO: Should we pass extra arguments to the server?
+    server_cls, handler_cls = build_https_server()
+    with server_cls((host, int(port)), handler_cls) as httpd:
+        emit(f"Server ready at https://{host}:{port}")
+        atexit.register(httpd.shutdown)
+        httpd.serve_forever()
 
-def split_args(args: list[str]) -> tuple[tuple, dict]:
-    # TODO: Could fail if args are out of order? See if it matters.
-    largs, kwargs = [], {}
-    for arg in args:
-        if '=' in arg: 
-            __key, __value = arg[2:].split('=')
-            kwargs[__key] = __value
-        else: largs.append(arg)
-    emit(f"Split args {kwargs=}")
-    return tuple(largs), kwargs
+def tester_loop(*args, **kwargs) -> t.NoReturn:
+    # doctest.testmod(verbose=True)
+    emit(f"Tester done.")
+    # TODO: Commit and push the changes to github.
 
+def ssl_loop(*args, **kwargs: dict) -> t.NoReturn:
+    # TODO: Launch a CA if needed.
+    raise NotImplementedError
 
-
-#@# 6. MAIN DISPATCHER
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        # In this case we know we always want to start as a watcher.
-        setup_files()
-        watch_self(role='watcher')
+        __role, __args, __kwargs = 'watcher', [], {'next': 'server'}
     else:
-        __args, __kwargs = split_args(sys.argv[1:])
-        __role = __kwargs.pop('role')
-        WORKDIR = os.path.join(os.path.dirname(__file__), f'.{__role}')
-        emit(f"In watched subprocess {__role=} {__args=} {__kwargs=} ({WORKDIR=})")
-        # Determine what to do next based on the role.
-        if __role == 'server':
-            __kwargs['address'] = __kwargs.get('address', 'localhost:9443')
-            server_loop(**__kwargs)
-        if __role == 'watcher':
-            __target = __kwargs.pop('target', 'server')
-            watch_self(__target, *__args, **__kwargs)
-        halt(f"Not implemented {__role=}")
+        __args, __kwargs = split_arg_line(sys.argv[1:])
+        __role = __kwargs.pop('role')  # This should never fail.
+    emit(f"In watched subprocess {__role=} {__args=} {__kwargs=}")
+    # TODO: Roles with __ prefix are reserved for internal use.
+    # TODO: See what is the proper way to kick off tests.
+    set_workdir(__role)
+    locals()[f"{__role}_loop"](*__args, **__kwargs)
 
 
-__all__ = ['emit', 'iso8601', 'EPOCH']
+#@# 7. TESTS
 
+@imports('requests')
+def test_https_server(requests, *args, **kwargs) -> t.NoReturn:
+    # TODO: Get the server address from kwargs.
+    # See if we can reach the server.
+    requests.get('https://localhost:9443')
 
-#@# 7. TESTING
 
