@@ -105,22 +105,22 @@ def split_arg_line(args: list[str]) -> tuple[tuple, dict]:
 def start_python(script: str, *args: list[str], **kwargs: dict) -> sp.Popen:
     if script == __file__: kwargs['opid'] = os.getpid()
     line_args = [str(a) for a in arg_line(*args, **kwargs)]
-    proc = sp.Popen([sys.executable, script, *line_args], daemon=True)
+    proc = sp.Popen([sys.executable, script, *line_args])
     proc.stdout, proc.stderr = sys.stdout, sys.stderr, 
     proc._args, proc._kwargs = args, kwargs  # Magic for restart_python.
     atexit.register(proc.terminate)
-    emit(f"Started python {script=} {proc.pid=}.")
+    emit(f"Started python script='{os.path.basename(script)}' {proc.pid=}.")
     return proc
 
-def terminate_python(proc: sp.Popen) -> tuple[tuple, dict]:
+def stop_python(proc: sp.Popen) -> tuple[tuple, dict]:
+    # TODO: Check if the process is still alive?
+    emit(f"Stopping {proc.pid=}.")
     proc.terminate(); proc.wait()
-    # TODO: Check if the process is still alive.
     atexit.unregister(proc.terminate)
-    emit(f"Terminated {proc.args=} {proc.pid=}.")
     return proc._args, proc._kwargs
 
 def restart_python(proc: sp.Popen = None, opid=PID) -> sp.Popen:
-    if proc: args, kwargs = terminate_python(proc)
+    if proc: args, kwargs = stop_python(proc)
     else: args, kwargs = [], {}
     kwargs['opid'] = opid
     return start_python(__file__, *args, **kwargs)
@@ -140,32 +140,33 @@ def watch_over(proc: sp.Popen, fn: str) -> t.NoReturn:
         if (new_mtime := mtime_file(fn)) != old_mtime:
             mutation, old_mtime = read_file(fn), new_mtime
             if mutation != source:
-                emit(f"Mutation detected. Restart {fn=}.")
+                emit(f"Mutation detected. Optimistic restart.")
                 proc, stable = restart_python(proc), False
             continue
         if proc.poll() is not None:
             if proc.returncode == 0:
                 sys.exit(0)
             if stable:
-                emit(f"Script died {proc.args=} {proc.pid=}. Restarting.")
+                emit(f"Script died {proc.returncode=}. Restart and mark unstable.")
                 proc, stable = restart_python(proc), False
                 continue
             if (mutation := read_file(fn)) != source :
                 # TODO: Consider using a more sophisticated algorithm.
                 if linear_distance(source, mutation) == 0:
-                    emit(f"No mutation detected. Restart {fn=}. Mark unstable.")
+                    # Get the filename of the script.
+                    emit(f"No mutation detected. Optimistic restart.")
                     proc, stable = restart_python(proc), False
                     continue
                 else:
-                    emit(f"Mutation detected. Restart {fn=}.")
+                    emit(f"Mutation detected. Restart and mark unstable.")
                     proc, stable = restart_python(proc), True
                     continue
-            halt(f"Unstable {fn=}. Check source.")
+            halt(f"Unstability detected. Please check source.")
         if not stable:
             emit(f"Stabilizing {proc.pid=}.")
             source, stable = read_file(fn), True
             continue    
-    
+
 
 #@# 4. CONTENT GENERATION
 
@@ -218,6 +219,7 @@ def dispatch_processor(fname: str, context: dict) -> str:
 #@# 5. COMMUNICATION 
 
 import ssl
+import signal
 import secrets
 import importlib
 import datetime as dt
@@ -354,16 +356,15 @@ def client_request(
 #@# 6. COMMON ROLES
 # NOTE: All <role>_loop functions must have *args and **kwargs as parameters.
 
-def watcher_loop(*args, next: str = None, opid: str =None, **kwargs) -> t.NoReturn:
+def watcher_loop(*args, next: str = None, **kwargs) -> t.NoReturn:
     # TODO: Include a mode to watch external processes.
     role = kwargs['role'] = next
-    emit(f"Watching over {role=} {opid=} forever.")
     watch_over(start_python(__file__, *args, **kwargs), __file__)
 
 def server_loop(*args, host='localhost', port='9443', **kwargs) -> t.NoReturn:
     # TODO: After the server is ready, figure out what to start next (not the tester).
     # TODO: See if we can use doctest to test the code of _loop functions.
-    # TODO: Should we pass extra arguments to the server?
+    # TODO: Should we pass extra arguments to the server? (e.g. for the relay)
     server_cls, handler_cls = build_https_server()
     with server_cls((host, int(port)), handler_cls) as httpd:
         emit(f"Server ready at https://{host}:{port}")
@@ -371,13 +372,16 @@ def server_loop(*args, host='localhost', port='9443', **kwargs) -> t.NoReturn:
         httpd.serve_forever()
 
 def tester_loop(*args, role: str = None, **kwargs) -> t.NoReturn:
+    # TODO: After tests are completed successfully, restart the opid watcher.
     # doctest.testmod(verbose=True)
     emit(f"Tester done.")
     
-
 def relay_loop(*args, **kwargs: dict) -> t.NoReturn:
     # TODO: Listener that queues requests and forwards them to the server.
     # TODO: Multiple input channels should be supported.
+    raise NotImplementedError
+
+def chaos_loop(*args, **kwargs: dict) -> t.NoReturn:
     raise NotImplementedError
 
 
@@ -387,7 +391,7 @@ if __name__ == "__main__":
     else:
         __args, __kwargs = split_arg_line(sys.argv[1:])
         __role = __kwargs.pop('role')  # This should never fail.
-    emit(f"In watched subprocess role='{__role}' args={__args} kwargs={__kwargs}")
+    emit(f"In subprocess role='{__role}' args={__args} kwargs={__kwargs}")
     # TODO: Roles with __ prefix are reserved for internal use.
     # TODO: If the launched role has a test_<role> function, run it.
     set_workdir(__role)
@@ -395,8 +399,7 @@ if __name__ == "__main__":
         locals()[f"{__role}_loop"](*__args, **__kwargs)
     except Exception as e:
         emit(f"Exception in role '{__role}': {e}")
-        # Start a tester role to test the code.
-        # TODO: See if we should start the tester in a separate process.
+        # TODO: Make sure we don't get stuck in an infinite loop.
         tester_loop(role=__role, args=__args, kwargs=__kwargs)
 
 
