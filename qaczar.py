@@ -59,14 +59,18 @@ def mtime_file(fn: str) -> float:
 import importlib
 import functools
 
+DEBUG = False
+
 def dedent(code: str) -> str:
     # TODO: Make it work with tabs.
     indent = len(code) - len(code.lstrip()) - 1
     return '\n'.join(line[indent:] for line in code.splitlines())
 
 def timed(f: t.Callable) -> t.Callable:
+    global DEBUG
     # TODO: Extract timed results from the log during testing?
     # TODO: Think about something to keep track of decorators.
+    if not DEBUG: return f
     @functools.wraps(f)
     def timed(*args, **kwargs):
         start = time.time(); elapsed = time.time() - start
@@ -88,7 +92,7 @@ def extract_todos(fname: str) -> list[str]:
 #@# 2. SUBPROCESSING
 
 import atexit
-import subprocess as sp
+import subprocess 
 
 def arg_line(*args: tuple[str], **kwargs: dict) -> tuple[str]:
     for k, v in kwargs.items(): args += (f'--{k}={str(v)}', )
@@ -102,28 +106,30 @@ def split_arg_line(args: list[str]) -> tuple[tuple, dict]:
         else: largs.append(arg)
     return tuple(largs), kwargs
 
-def start_python(script: str, *args: list[str], **kwargs: dict) -> sp.Popen:
-    if script == __file__: kwargs['opid'] = os.getpid()
+def start_py(script: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
     line_args = [str(a) for a in arg_line(*args, **kwargs)]
-    proc = sp.Popen([sys.executable, script, *line_args])
-    proc.stdout, proc.stderr = sys.stdout, sys.stderr, 
+    emit(f"Starting script='{os.path.basename(script)}' {line_args=}.")
+    # Popen is a context manager, but we want to keep proc alive and not wait for it.
+    # We cannot use run() for this. Remember to manually terminate the process later.
+    proc = subprocess.Popen([sys.executable, script, *line_args],
+                            stdout=sys.stdout, stderr=sys.stderr)
     proc._args, proc._kwargs = args, kwargs  # Magic for restart_python.
     atexit.register(proc.terminate)
-    emit(f"Started python script='{os.path.basename(script)}' {proc.pid=}.")
+    emit(f"Started script='{os.path.basename(script)}' {proc.pid=}.")
     return proc
 
-def stop_python(proc: sp.Popen) -> tuple[tuple, dict]:
-    # TODO: Check if the process is still alive?
+def stop_py(proc: subprocess.Popen) -> tuple[tuple, dict]:
     emit(f"Stopping {proc.pid=}.")
     proc.terminate(); proc.wait()
     atexit.unregister(proc.terminate)
     return proc._args, proc._kwargs
 
-def restart_python(proc: sp.Popen = None, opid=PID) -> sp.Popen:
-    if proc: args, kwargs = stop_python(proc)
+def restart_py(proc: subprocess.Popen = None, opid=PID) -> tuple[subprocess.Popen, bool]:
+    if proc and proc.poll() is None: 
+        args, kwargs = stop_py(proc)
+        kwargs['opid'] = opid
     else: args, kwargs = [], {}
-    kwargs['opid'] = opid
-    return start_python(__file__, *args, **kwargs)
+    return start_py(__file__, *args, **kwargs)
 
 def linear_distance(source: str, mutation: str) -> int:
     distance = 0
@@ -132,7 +138,7 @@ def linear_distance(source: str, mutation: str) -> int:
         else: mutation = mutation.replace(line, '', 1)
     return distance - len(mutation)
 
-def watch_over(proc: sp.Popen, fn: str) -> t.NoReturn:  
+def watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:  
     # TODO: Restart the watcher after it has restarted the server.
     source, old_mtime, stable = read_file(fn), mtime_file(fn), True
     while True:
@@ -141,31 +147,28 @@ def watch_over(proc: sp.Popen, fn: str) -> t.NoReturn:
             mutation, old_mtime = read_file(fn), new_mtime
             if mutation != source:
                 emit(f"Mutation detected. Optimistic restart.")
-                proc, stable = restart_python(proc), False
+                proc, stable = restart_py(proc), False
             continue
         if proc.poll() is not None:
             if proc.returncode == 0:
                 sys.exit(0)
             if stable:
                 emit(f"Script died {proc.returncode=}. Restart and mark unstable.")
-                proc, stable = restart_python(proc), False
+                proc, stable = restart_py(proc), False
                 continue
             if (mutation := read_file(fn)) != source :
-                # TODO: Consider using a more sophisticated algorithm.
                 if linear_distance(source, mutation) == 0:
-                    # Get the filename of the script.
                     emit(f"No mutation detected. Optimistic restart.")
-                    proc, stable = restart_python(proc), False
+                    proc, stable = restart_py(proc), False
                     continue
                 else:
                     emit(f"Mutation detected. Restart and mark unstable.")
-                    proc, stable = restart_python(proc), True
+                    proc, stable = restart_py(proc), True
                     continue
             halt(f"Unstability detected. Please check source.")
         if not stable:
             emit(f"Stabilizing {proc.pid=}.")
             source, stable = read_file(fn), True
-            continue    
 
 
 #@# 4. CONTENT GENERATION
@@ -219,7 +222,6 @@ def dispatch_processor(fname: str, context: dict) -> str:
 #@# 5. COMMUNICATION 
 
 import ssl
-import signal
 import secrets
 import importlib
 import datetime as dt
@@ -358,8 +360,11 @@ def client_request(
 
 def watcher_loop(*args, next: str = None, **kwargs) -> t.NoReturn:
     # TODO: Include a mode to watch external processes.
-    role = kwargs['role'] = next
-    watch_over(start_python(__file__, *args, **kwargs), __file__)
+    # The watcher itself is started in a deamon thread. IF this thread dies, the main
+    # thread will start a new watcher with the same param.
+    if not next: raise ValueError('next role is not defined')
+    kwargs['role'] = next
+    watch_over(start_py(__file__, *args, **kwargs), __file__)
 
 def server_loop(*args, host='localhost', port='9443', **kwargs) -> t.NoReturn:
     # TODO: After the server is ready, figure out what to start next (not the tester).
@@ -369,6 +374,7 @@ def server_loop(*args, host='localhost', port='9443', **kwargs) -> t.NoReturn:
     with server_cls((host, int(port)), handler_cls) as httpd:
         emit(f"Server ready at https://{host}:{port}")
         atexit.register(httpd.shutdown)
+        time.sleep(2)
         httpd.serve_forever()
 
 def tester_loop(*args, role: str = None, **kwargs) -> t.NoReturn:
@@ -391,16 +397,16 @@ if __name__ == "__main__":
     else:
         __args, __kwargs = split_arg_line(sys.argv[1:])
         __role = __kwargs.pop('role')  # This should never fail.
-    emit(f"In subprocess role='{__role}' args={__args} kwargs={__kwargs}")
+    emit(f"In role='{__role}' args={__args} kwargs={__kwargs}")
     # TODO: Roles with __ prefix are reserved for internal use.
     # TODO: If the launched role has a test_<role> function, run it.
     set_workdir(__role)
     try:
         locals()[f"{__role}_loop"](*__args, **__kwargs)
     except Exception as e:
-        emit(f"Exception in role '{__role}': {e}")
-        # TODO: Make sure we don't get stuck in an infinite loop.
-        tester_loop(role=__role, args=__args, kwargs=__kwargs)
+        emit(f"Exception in role '{__role}': {type(e)}: {e}")
+         
+    # tester_loop(role=__role, args=__args, kwargs=__kwargs)
 
 
 #@# 7. TESTS
@@ -411,13 +417,4 @@ if __name__ == "__main__":
 def test_server_loop(requests, *args, **kwargs) -> t.NoReturn:
     # See if we can reach the server.
     status, body = client_request('/')
-    assert status == 'HTTP/1.0 200 OK'
-    # See if we can reach the server with a query string.
-    status, body = client_request('/?a=1&b=2')
-    assert status == 'HTTP/1.0 200 OK'
-    # See if we can reach the server with a POST request.
-    status, body = client_request('/', {'a': 1, 'b': 2})
-    assert status == 'HTTP/1.0 200 OK'
-    # See if we can reach the server with a POST request and a query string.
-    status, body = client_request('/?a=1&b=2', {'a': 1, 'b': 2})
     assert status == 'HTTP/1.0 200 OK'
