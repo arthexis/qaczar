@@ -9,14 +9,13 @@
 # - Use functions, not classes, for modularity, composability and encapsulation.
 # - Functions should not reference functions or globals from later in the script.
 # - TODO items should be encapsulated in functions to simplify refactoring.
-# - Prioritize stability and clarity over new features.
 # - Avoid using asynchrony, concurrency, multiprocessing, multithreading, etc. Use HTTPS for RPC.
 # - Use the standard library, not third-party libraries. Seriously.
 # - Sometimes its ok to break the rules, take advantage of the language.
 # - In case of doubt, just run the script and see what happens.
 
 
-#@# 1. LOCAL PLATFORM
+#@# 0. LOCAL PLATFORM
 
 import os
 import sys
@@ -25,20 +24,17 @@ import typing as t
 
 
 PID = os.getpid()
-REDLINE = 0
 
 def iso8601() -> str: 
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
 
 def emit(msg: str, _at=None) -> None: 
-    global PID, REDLINE
+    global PID
     f = _at or sys._getframe(1)  
-    if f.f_lineno > REDLINE: REDLINE = f.f_lineno
-    print(f'[{PID}:{f.f_lineno} {iso8601()}] {f.f_code.co_name}: {msg}', file=sys.stderr)
+    print(f'[{PID}:{f.f_lineno} {iso8601()}] {f.f_code.co_name}:  {msg}', file=sys.stderr)
 
 def halt(msg: str) -> t.NoReturn:
     f = sys._getframe(1)
-    # TODO: Consider additional cleanup or information gathering.
     emit(f"{msg} <- Final message.", _at=f)
     emit(f"Halting all processes.", _at=f)
     sys.exit(0)
@@ -48,16 +44,14 @@ def mtime_file(fn: str) -> float:
     return os.path.getmtime(fn)
 
 def read_file(fn: str, encoding=None) -> bytes:
-    # TODO: Keep a cache of file contents to avoid reading the same file twice.
     with open(fn, 'rb' if not encoding else 'r', encoding=encoding) as f: return f.read()
     
 def write_file(fn: str, data: bytes | str, encoding=None) -> None:
     if encoding and not isinstance(data, str): data = str(data)
-    # TODO: Consider using a temporary file and then renaming it to avoid data loss.
     with open(fn, 'wb' if not encoding else 'w', encoding=encoding) as f: f.write(data)
 
 
-#@# 2. META-PROGRAMMING
+#@# 1. META-PROGRAMMING
 
 import importlib
 import functools
@@ -65,14 +59,11 @@ import functools
 DEBUG = False
 
 def dedent(code: str) -> str:
-    # TODO: Make it work with tabs.
     indent = len(code) - len(code.lstrip()) - 1
     return '\n'.join(line[indent:] for line in code.splitlines())
 
 def timed(f: t.Callable) -> t.Callable:
     global DEBUG
-    # TODO: Extract timed results from the log during testing?
-    # TODO: Think about something to keep track of decorators.
     if not DEBUG: return f
     @functools.wraps(f)
     def timed(*args, **kwargs):
@@ -84,7 +75,6 @@ def timed(f: t.Callable) -> t.Callable:
     return timed
 
 def extract_todos(tag: str = 'TODO', fname: str='qaczar.py') -> list[str]:
-    # TODO: Measure extract contributions (how much a function is doing).
     todos = []
     for line in read_file(fname, encoding='utf-8').splitlines():
         if (todo := line.lstrip().split('#', 1)[0].strip()) and todo.startswith(f'{tag}:'):
@@ -103,7 +93,9 @@ def extract_function(func: str, fname: str='qaczar.py') -> str:
 
 def first_diff(source: str, target: str) -> int | None:
     for i, (s, t) in enumerate(zip(source, target)):
-        if s != t and not (s.isspace() and t.isspace()): return i
+        if s != t and not (s.isspace() and t.isspace()): 
+            if s.startswith('#') and t.startswith('#'): continue
+            return i
     return None
 
 
@@ -154,7 +146,6 @@ def restart_py(proc: subprocess.Popen = None, opid=PID) -> subprocess.Popen:
 
 def watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:  
     # TODO: Perhaps detect changes to watcher code itself and stop in those cases.
-    global REDLINE
     assert isinstance(proc, subprocess.Popen)
     source, old_mtime, stable = read_file(fn), mtime_file(fn), True
     while True:
@@ -163,7 +154,6 @@ def watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
             mutation, old_mtime = read_file(fn), new_mtime
             if mutation != source:
                 # TODO: Add logic to detect if the mutation is a comment.
-                # TODO: Check if the mutation occurrs above the REDLINE. If so, mark unsafe?
                 emit(f"Mutation detected. Optimistic restart.")
                 proc, stable = restart_py(proc), True
             continue
@@ -179,10 +169,10 @@ def watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
             source, stable = read_file(fn), True
             
 
-#@# 4. CONTENT GENERATION
+#@# 3. CONTENT GENERATION
 
 import io
-import xml.dom.minidom as dom
+import xml.etree.ElementTree as etree
 from contextlib import redirect_stdout
 
 WORKDIR = os.path.join(os.path.dirname('qaczar.py'), '.work')
@@ -196,13 +186,6 @@ def work_path(fname: str) -> str:
     if not os.path.isdir(WORKDIR): os.mkdir(WORKDIR)
     return os.path.join(WORKDIR, fname)
 
-def replace_node(*, old: dom.Node, new: str) -> None:
-    old.parentNode.replaceChild(dom.parseString(new).firstChild, old)
-
-def iter_scripts(document: dom.Document) -> t.Iterator[dom.Node]:
-    for node in document.getElementsByTagName('script'):
-        if node.getAttribute('type') == 'text/python': yield node
-
 def exec_inline(source: str, *, context: dict) -> str:
     with redirect_stdout(io.StringIO()) as stdout:
         exec(source, None, context)
@@ -210,6 +193,7 @@ def exec_inline(source: str, *, context: dict) -> str:
 
 def process_py(fname: str, context: dict) -> str:
     # TODO: Function fragments are not being extracted properly.
+    # TODO: Consider usinng AST to extract function fragments.
     emit(f"Processing {fname=} with {context=}.")
     if '@' in fname: 
         func_name, script = fname.split('@')
@@ -220,30 +204,53 @@ def process_py(fname: str, context: dict) -> str:
         emit(f"Calling {func_name=} in module='{module_name} {fname=}.")
         if context['method'] == 'POST':
             function = getattr(module, func_name, None)
-            content = function(**context['formdata'])
+            content = function(**context['form'])
         else:
             content = extract_function(func_name, fname=script)
             emit(f"Extracted {len(content)=} bytes from {func_name=} in {script=}.")
     else:
         content = read_file(fname, encoding='utf-8')
         if context['method'] == 'POST':
-            content = exec_inline(content, context=context['formdata'])
+            content = exec_inline(content, context=context['form'])
     write_file(wp := work_path(fname), content, encoding='utf-8')
     emit(f"Written to {wp=} as {fname=} ({len(content)=} bytes).")
     return wp
 
+class TreeBuilder(etree.TreeBuilder):
+    def __init__(self, context: dict):
+        super().__init__()
+        self.context = context
+    def data(self, data):
+        if data.strip() and '{' in data:
+            emit(f"Formatting {data=}.")
+            text = data.format(**self.context)
+            super().data(text)
+        else:
+            super().data(data)
+
+class Q:
+    def __getattr__(self, name):
+        target = globals()[name]
+        if callable(target):
+            return target()
+        return target
+        
+    
 def process_html(fname: str, context: dict) -> str:
     # TODO: New function to automatically create a form from a function.
-    # TODO: Extract and process variables in the form of ${var}.
-    source = read_file(fname, encoding='utf-8')
-    document = dom.parseString(source)
+    try:
+        context['Q'] = Q()
+        root = etree.parse(fname, parser=etree.XMLParser(
+                target=TreeBuilder(context=context))).getroot()
+        document = etree.ElementTree(root)
+    except etree.ParseError as e:
+        emit(f"Parse error: {e.msg} at line {e.lineno}, column {e.offset}.")
+        return None
     context['document'] = document
-    # Loop over every text node and replace variables.
-    for node in document.getElementsByTagName('body')[0].childNodes:
-        if node.nodeType == node.TEXT_NODE and '{' in node.data:
-            node.data = node.data.format(**os.environ, **globals(), **locals(), **context)
-    xml = document.toxml()
-    write_file(wp := work_path(fname), xml[xml.index('?>') + 2:], encoding='utf-8')
+    xml = etree.tostring(root, encoding='unicode')
+    if not xml.startswith('<!DOCTYPE html>'):
+        xml = '<!DOCTYPE html>' + xml
+    write_file(wp := work_path(fname), xml, encoding='utf-8')
     emit(f"Written to {wp=} as {fname=} ({len(xml)=} bytes).")  
     return wp
     
@@ -254,7 +261,8 @@ def dispatch_processor(fname: str, context: dict) -> str | None:
         return processor(fname, context)
     return None
 
-#@# 5. COMMUNICATION 
+
+#@# 4. COMMUNICATION 
 
 import ssl
 import secrets
@@ -349,8 +357,8 @@ def build_https_server() -> tuple:
             else: path, qs = path.split('?', 1)
             context = {'ip': self.client_address[0], 'ts': iso8601(), 'method': method}
             context['query'] = parse.parse_qs(qs)
-            if method == 'POST': context['formdata'] = parse.parse_qs(self.rfile_read())
-            else: context['formdata'] = {}
+            if method == 'POST': context['form'] = parse.parse_qs(self.rfile_read())
+            else: context['form'] = {}
             return context
 
         def build_response(self, method: str = None) -> bool:
@@ -376,7 +384,8 @@ def build_https_server() -> tuple:
 
 def client_request(
         path: str, data: dict = None, host: str = HOST, port: int = PORT) -> tuple:
-    # TODO: Test this.
+    # TODO: Something is wrong: connections seem to get stuck together.
+    emit(f"Requesting {path} from {host}:{port}.")
     if path[0] != '/': path = '/' + path
     method = 'POST' if data is not None else 'GET'
     with ss.create_connection((host, port)) as sock:
@@ -394,7 +403,7 @@ def client_request(
             return status, body
 
 
-#@# 6. COMMON ROLES
+#@# 5. COMMON ROLES
 # NOTE: All <role>_loop functions must have *args and **kwargs as parameters.
 
 def watcher_role(*args, next: str = None, **kwargs) -> t.NoReturn:
@@ -408,19 +417,22 @@ def watcher_role(*args, next: str = None, **kwargs) -> t.NoReturn:
 
 def server_role(*args, host='localhost', port='9443', **kwargs) -> t.NoReturn:
     # TODO: After the server is ready, figure out what to start next (not the tester).
-    # TODO: See if we can use doctest to test the code of _loop functions.
     # TODO: Should we pass extra arguments to the server? (e.g. for the relay)
     server_cls, handler_cls = build_https_server()
     with server_cls((host, int(port)), handler_cls) as httpd:
         emit(f"Server ready at https://{host}:{port}")
         atexit.register(httpd.shutdown)
+        # Start a new role for tests.
+        kwargs['role'] = 'tester'
+        kwargs['suite'] = 'server' if 'suite' not in kwargs else kwargs['suite']
+        start_py('qaczar.py', *args, **kwargs)
         httpd.serve_forever()
 
-def tester_role(*args, role: str = None, **kwargs) -> t.NoReturn:
-    # TODO: After tests are completed successfully, restart the opid watcher.
-    # TODO: Consider some kind of chaos monkey testing.
-    # doctest.testmod(verbose=True)
-    emit(f"Tester done.")
+def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
+    emit(f"Running tests for {suite}")
+    for test in globals().keys():
+        if test == f'test_{suite}': 
+            globals()[test](*args, **kwargs)
 
 def messenger_role(*args, **kwargs: dict) -> t.NoReturn:
     # TODO: Listener that queues requests and forwards them to the server.
@@ -434,8 +446,8 @@ def role_dispatcher(role: str, args: tuple, kwargs: dict) -> None:
     # TODO: Roles with __ prefix are reserved for internal use.
     # TODO: If the launched role has a test_<role> function, run it.
     import threading
-    emit(f"Assuming role='{__role}' args={__args} kwargs={__kwargs}")
     opid = kwargs.pop('opid', None)  # If we receive opid it means we are being watched.
+    emit(f"Assuming role='{__role}' args={__args} kwargs={__kwargs} opid={opid}")
     def dispatch():
         try:
             function = globals().get(f"{role}_role")
@@ -445,7 +457,8 @@ def role_dispatcher(role: str, args: tuple, kwargs: dict) -> None:
             emit(f"Exception in role '{role}': {type(e)}: {e}")
             raise
     threading.Thread(target=dispatch, daemon=True).start()
-    while threading.active_count() > 1: time.sleep(60)
+    emit(f"Waiting for role '{role}' to complete.")
+    while threading.active_count() > 1: time.sleep(1)
 
 
 if __name__ == "__main__":
@@ -459,7 +472,7 @@ if __name__ == "__main__":
     role_dispatcher(__role, __args, __kwargs)
 
 
-#@# 7. TESTS
+#@#  6. TESTS
 # NOTE: All test_<role> functions must have *args and **kwargs as parameters.
 
 # TODO: Implement our own blockchain for versioning and testing.
@@ -467,7 +480,9 @@ if __name__ == "__main__":
 def hello_world() -> str:
     return "Hello World!"
 
-def test_server_loop(requests, *args, **kwargs) -> t.NoReturn:
+def test_server(requests, *args, **kwargs) -> t.NoReturn:
     # See if we can reach the server.
+    emit("Testing server.")
     status, body = client_request('/')
+    emit(f"Server response: {status} {body}")
     assert status == 'HTTP/1.0 200 OK'
