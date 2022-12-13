@@ -15,24 +15,20 @@
     </p>
 
     <hr />
-
-    <h2>Sections</h2>
-    <ol>
-    % for i in SOURCE.sections:
-        <li>
-            ${i}
-        </li>
-    % endfor
-    </ol>
-
-    <hr />
     
     <h2>TODOs</h2>
     <ol>
-    % for i in extract_todos():
-        <li>
-            ${i}
-        </li>
+    % for section, todos in SOURCE.section_todos.items():
+        % if todos:
+            <li>
+                <h3>${section}</h3>
+                <ol>
+                % for todo in todos:
+                    <li>${todo}</li>
+                % endfor
+                </ol>
+            </li>
+        % endif
     % endfor
     </ol>
     

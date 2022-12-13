@@ -4,119 +4,74 @@
 <head>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="qaczar.css" type="text/css" />
-    <title>QACZAR 3836</title>
+    <title>QACZAR 21008</title>
 </head>
 
 <body>
-    <h1><a href="qaczar.html">QACZAR 3836</a></h1>
-    <p id="target"> Hello, World! 2022-12-13 15:49:20 </p>
+    <h1><a href="qaczar.html">QACZAR 21008</a></h1>
+    <p id="target"> Hello, World! 2022-12-13 16:07:08 </p>
     <p>
         <a href="hello_world@qaczar.py">hello_world@qaczar.py</a>
     </p>
 
     <hr />
-
-    <h2>Sections</h2>
-    <ol>
-        <li>
-            0. LOCAL PLATFORM
-        </li>
-        <li>
-            1. META-PROGRAMMING
-        </li>
-        <li>
-            2. SUBPROCESSING
-        </li>
-        <li>
-            3. CONTENT GENERATION
-        </li>
-        <li>
-            4. COMMUNICATION
-        </li>
-        <li>
-            5. COMMON ROLES
-        </li>
-        <li>
-            6. TESTS
-        </li>
-    </ol>
-
-    <hr />
     
     <h2>TODOs</h2>
     <ol>
-        <li>
-            Add option to import from a local directory, or specify a version?
-        </li>
-        <li>
-            Keep a dynamic deny list of modules that are not allowed to be imported.
-        </li>
-        <li>
-            Perhaps detect changes to watcher code itself and stop in those cases.
-        </li>
-        <li>
-            Add logic to detect if the mutation is a comment.
-        </li>
-        <li>
-            Function fragments are not being extracted properly.
-        </li>
-        <li>
-            Consider usinng AST to extract function fragments.
-        </li>
-        <li>
-            New function to automatically create a form from a function.
-        </li>
-        <li>
-            Figure out a more robust way to handle post data.
-        </li>
-        <li>
-            Consider using a database (sqlite3?).
-        </li>
-        <li>
-            Investigate using blockchain to resolve authority clashes.
-        </li>
-        <li>
-            Figure out if we are the CA.
-        </li>
-        <li>
-            Use a CA if available.
-        </li>
-        <li>
-            Change default response depending on the next role of the server.
-        </li>
-        <li>
-            Something is wrong: connections seem to get stuck together.
-        </li>
-        <li>
-            Include a mode to watch external processes.
-        </li>
-        <li>
-            This could later be used to gather the output of the process being watched.
-        </li>
-        <li>
-            After the server is ready, figure out what to start next (not the tester).
-        </li>
-        <li>
-            Should we pass extra arguments to the server? (e.g. for the relay)
-        </li>
-        <li>
-            Listener that queues requests and forwards them to the server.
-        </li>
-        <li>
-            Multiple input channels should be supported.
-        </li>
-        <li>
-            Roles with __ prefix are reserved for internal use.
-        </li>
-        <li>
-            Allow it to work with roles defined in other modules.
-        </li>
-        <li>
-            Implement our own blockchain for versioning and testing.
-        </li>
-        <li>
-            The request doesn't seem to be made?
-        </li>
+            <li>
+                <h3>1. META-PROGRAMMING</h3>
+                <ol>
+                    <li>79: Add option to import from a local directory, or specify a version?</li>
+                    <li>80: Keep a dynamic deny list of modules that are not allowed to be imported.</li>
+                </ol>
+            </li>
+            <li>
+                <h3>2. SUBPROCESSING</h3>
+                <ol>
+                    <li>212: Perhaps detect changes to watcher code itself and stop in those cases.</li>
+                    <li>220: Add logic to detect if the mutation is a comment.</li>
+                </ol>
+            </li>
+            <li>
+                <h3>3. CONTENT GENERATION</h3>
+                <ol>
+                    <li>259: Function fragments are not being extracted properly.</li>
+                    <li>260: Consider usinng AST to extract function fragments.</li>
+                    <li>296: New function to automatically create a form from a function.</li>
+                </ol>
+            </li>
+            <li>
+                <h3>4. COMMUNICATION</h3>
+                <ol>
+                    <li>327: Figure out a more robust way to handle post data.</li>
+                    <li>328: Consider using a database (sqlite3?).</li>
+                    <li>329: Investigate using blockchain to resolve authority clashes.</li>
+                    <li>340: Figure out if we are the CA.</li>
+                    <li>345: Use a CA if available.</li>
+                    <li>395: Change default response depending on the next role of the server.</li>
+                    <li>417: Something is wrong: connections seem to get stuck together.</li>
+                </ol>
+            </li>
+            <li>
+                <h3>5. COMMON ROLES</h3>
+                <ol>
+                    <li>440: Include a mode to watch external processes.</li>
+                    <li>441: This could later be used to gather the output of the process being watched.</li>
+                    <li>449: After the server is ready, figure out what to start next (not the tester).</li>
+                    <li>450: Should we pass extra arguments to the server? (e.g. for the relay)</li>
+                    <li>468: Listener that queues requests and forwards them to the server.</li>
+                    <li>469: Multiple input channels should be supported.</li>
+                    <li>476: Roles with __ prefix are reserved for internal use.</li>
+                    <li>502: Allow it to work with roles defined in other modules.</li>
+                </ol>
+            </li>
+            <li>
+                <h3>6. TESTS</h3>
+                <ol>
+                    <li>509: Implement our own blockchain for versioning and testing.</li>
+                    <li>515: The request doesn't seem to be made?</li>
+                </ol>
+            </li>
     </ol>
     
     <hr />

@@ -107,6 +107,7 @@ class Source:
         self.data = read_file(fname, encoding=encoding)
         self.lines = self.data.splitlines()
         self.sections = {}
+        self.section_todos = {}
         self._parse()
 
     def _parse(self) -> None:
@@ -117,6 +118,13 @@ class Source:
                 sections[section] = []
             elif section: sections[section].append(line)
         self.sections = sections
+        self.section_todos = {name: [] for name in sections}
+        for name, lines in sections.items():
+            for line in lines:
+                if line.strip().startswith('# TODO: '):
+                    text = line.split('# TODO: ')[1].strip()
+                    text = f'{self.lines.index(line)}: {text}'
+                    self.section_todos[name].append(text)
 
 SOURCE = Source('qaczar.py', encoding='utf-8')
 

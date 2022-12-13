@@ -34,8 +34,10 @@ a:visited, a:link {
 .comment {
     color: #999;
 }
-/* Number ols */
 ol {
     list-style-type: none;
-    padding: 10;
+    padding: 0.5em;
+}
+ul {
+    margin-left: 0.5em;
 }
