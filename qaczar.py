@@ -22,7 +22,7 @@ import sys
 import time
 import typing as t
 
-
+PYTHON = sys.executable
 PID = os.getpid()
 
 def iso8601() -> str: 
@@ -44,10 +44,12 @@ def mtime_file(fn: str) -> float:
     return os.path.getmtime(fn)
 
 def read_file(fn: str, encoding=None) -> bytes:
+    if '__' in fn: fn = fn.replace('__', '.')
     with open(fn, 'rb' if not encoding else 'r', encoding=encoding) as f: return f.read()
     
 def write_file(fn: str, data: bytes | str, encoding=None) -> None:
     if encoding and not isinstance(data, str): data = str(data)
+    if '__' in fn: fn = fn.replace('__', '.')
     with open(fn, 'wb' if not encoding else 'w', encoding=encoding) as f: f.write(data)
 
 
@@ -56,7 +58,7 @@ def write_file(fn: str, data: bytes | str, encoding=None) -> None:
 import importlib
 import functools
 
-DEBUG = False
+DEBUG = True
 
 def dedent(code: str) -> str:
     indent = len(code) - len(code.lstrip()) - 1
@@ -74,11 +76,57 @@ def timed(f: t.Callable) -> t.Callable:
         return result
     return timed
 
+def pip_import(module: str) -> t.Any:
+    # TODO: Add option to import from a local directory, or specify a version?
+    # TODO: Keep a dynamic deny list of modules that are not allowed to be imported.
+    try:
+        return importlib.import_module(module)
+    except ModuleNotFoundError:
+        emit(f"Installing {module=}.")
+        if '.' in module: module = module.split('.')[0]
+        subprocess.run([sys.executable, '-m', 'pip', 'install', module])
+        requirements = read_file('requirements.txt', encoding='utf-8')
+        if module not in requirements:
+            emit(f"Appending {module=} to requirements.txt.")
+            write_file('requirements.txt', requirements + 
+                f'\n{module}', encoding='utf-8')
+        return importlib.import_module(module)
+    
+def imports(*modules: tuple[str]) -> t.Callable:
+    def decorator(f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            return f(*(pip_import(module) for module in modules), *args, **kwargs)
+        return wrapper
+    return decorator
+
+class Source:
+    def __init__(self, fname: str, encoding: str=None):
+        self.fname = fname
+        self.encoding = encoding
+        self.data = read_file(fname, encoding=encoding)
+        self.lines = self.data.splitlines()
+        self.sections = {}
+        self._parse()
+
+    def _parse(self) -> None:
+        sections, section = {}, None
+        for line in self.lines:
+            if line.startswith('#@#'):
+                section = line[3:].strip()
+                sections[section] = []
+            elif section: sections[section].append(line)
+        self.sections = sections
+
+SOURCE = Source('qaczar.py', encoding='utf-8')
+
 def extract_todos(tag: str = 'TODO', fname: str='qaczar.py') -> list[str]:
+    emit(f"Extracting {tag=} from {fname=}.")
+    tag = '# ' + tag.upper() + ': '
     todos = []
     for line in read_file(fname, encoding='utf-8').splitlines():
-        if (todo := line.lstrip().split('#', 1)[0].strip()) and todo.startswith(f'{tag}:'):
-            todos.append(todo[5:].strip())
+        if tag in line: todos.append(line.split(tag)[1].strip())
+    emit(f"Found {len(todos)} {tag}s.")
     return todos
 
 def extract_function(func: str, fname: str='qaczar.py') -> str:
@@ -98,13 +146,10 @@ def first_diff(source: str, target: str) -> int | None:
             return i
     return None
 
-
 #@# 2. SUBPROCESSING
 
 import atexit
 import subprocess 
-
-PYTHON = sys.executable
 
 def arg_line(*args: tuple[str], **kwargs: dict) -> tuple[str]:
     for k, v in kwargs.items(): args += (f'--{k}={str(v)}', )
@@ -117,6 +162,18 @@ def split_arg_line(args: list[str]) -> tuple[tuple, dict]:
             __key, __value = arg[2:].split('='); kwargs[__key] = __value
         else: largs.append(arg)
     return tuple(largs), kwargs
+
+def ensure_venv() -> None:
+    global PYTHON
+    # Check if its windows or linux.
+    if sys.platform.startswith('win'):
+        if not os.path.isfile('.venv/Scripts/python.exe'): 
+            subprocess.run([sys.executable, '-m', 'venv', '.venv'])
+        PYTHON = '.venv/Scripts/python.exe'
+        return
+    if not os.path.isfile('.venv/bin/python3'): 
+        subprocess.run([sys.executable, '-m', 'venv', '.venv'])
+    PYTHON = '.venv/bin/python3'
 
 def start_py(script: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
     global PYTHON
@@ -177,7 +234,7 @@ from contextlib import redirect_stdout
 
 WORKDIR = os.path.join(os.path.dirname('qaczar.py'), '.work')
 
-def set_workdir(role: str='work') -> None:
+def set_workdir(role: str) -> None:
     global WORKDIR
     WORKDIR = os.path.join(os.path.dirname('qaczar.py'), f'.{role}')
 
@@ -216,42 +273,27 @@ def process_py(fname: str, context: dict) -> str:
     emit(f"Written to {wp=} as {fname=} ({len(content)=} bytes).")
     return wp
 
-class TreeBuilder(etree.TreeBuilder):
-    def __init__(self, context: dict):
-        super().__init__()
-        self.context = context
-    def data(self, data):
-        if data.strip() and '{' in data:
-            emit(f"Formatting {data=}.")
-            text = data.format(**self.context)
-            super().data(text)
-        else:
-            super().data(data)
+TEMPLATES = {}
 
-class Q:
-    def __getattr__(self, name):
-        target = globals()[name]
-        if callable(target):
-            return target()
-        return target
-        
-    
-def process_html(fname: str, context: dict) -> str:
+def load_template(fname: str) -> str:
+    global TEMPLATES
+    if (last := mtime_file(fname)) != TEMPLATES.get(fname, (None, None))[1]:
+        emit(f"Loading template {fname=}.")
+        mt = pip_import('mako.template')
+        tpl = mt.Template(filename=fname)
+        TEMPLATES[fname] = tpl, last
+        return tpl
+    return TEMPLATES[fname][0]
+
+def build_form():
     # TODO: New function to automatically create a form from a function.
-    try:
-        context['Q'] = Q()
-        root = etree.parse(fname, parser=etree.XMLParser(
-                target=TreeBuilder(context=context))).getroot()
-        document = etree.ElementTree(root)
-    except etree.ParseError as e:
-        emit(f"Parse error: {e.msg} at line {e.lineno}, column {e.offset}.")
-        return None
-    context['document'] = document
-    xml = etree.tostring(root, encoding='unicode')
-    if not xml.startswith('<!DOCTYPE html>'):
-        xml = '<!DOCTYPE html>' + xml
-    write_file(wp := work_path(fname), xml, encoding='utf-8')
-    emit(f"Written to {wp=} as {fname=} ({len(xml)=} bytes).")  
+    pass
+
+def process_html(fname: str, context: dict) -> str:
+    template = load_template(fname)
+    content = template.render(**globals(), **context)
+    write_file(wp := work_path(fname), content, encoding='utf-8')
+    emit(f"Written to {wp=} as {fname=} ({len(content)=} bytes).")  
     return wp
     
 @timed
@@ -282,25 +324,6 @@ def receive_post(data: dict) -> str:
     fname = secrets.token_hex(8) + '.txt'
     write_file(wp := work_path(fname), data)
     return wp
-
-def pip_import(module: str) -> t.Any:
-    # TODO: Add option to import from a local directory, or specify a version?
-    # TODO: Keep a dynamic deny list of modules that are not allowed to be imported.
-    try:
-        return importlib.import_module(module)
-    except ModuleNotFoundError:
-        emit(f"Installing {module=}.")
-        if '.' in module: module = module.split('.')[0]
-        subprocess.run([sys.executable, '-m', 'pip', 'install', module])
-        return importlib.import_module(module)
-    
-def imports(*modules: tuple[str]) -> t.Callable:
-    def decorator(f):
-        @functools.wraps(f)
-        def wrapper(*args, **kwargs):
-            return f(*(pip_import(module) for module in modules), *args, **kwargs)
-        return wrapper
-    return decorator
 
 @imports('cryptography.hazmat.primitives.serialization',
     'cryptography.hazmat.primitives.asymmetric.rsa',
@@ -429,7 +452,7 @@ def server_role(*args, host='localhost', port='9443', **kwargs) -> t.NoReturn:
         httpd.serve_forever()
 
 def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
-    emit(f"Running tests for {suite}")
+    emit(f"Running tests for {suite}.")
     for test in globals().keys():
         if test == f'test_{suite}': 
             globals()[test](*args, **kwargs)
@@ -439,22 +462,21 @@ def messenger_role(*args, **kwargs: dict) -> t.NoReturn:
     # TODO: Multiple input channels should be supported.
     raise NotImplementedError
 
-def monitor_role(*args, **kwargs: dict) -> t.NoReturn:
+def worker_role(*args, **kwargs: dict) -> t.NoReturn:
     raise NotImplementedError
 
 def role_dispatcher(role: str, args: tuple, kwargs: dict) -> None:
     # TODO: Roles with __ prefix are reserved for internal use.
-    # TODO: If the launched role has a test_<role> function, run it.
     import threading
     opid = kwargs.pop('opid', None)  # If we receive opid it means we are being watched.
-    emit(f"Assuming role='{__role}' args={__args} kwargs={__kwargs} opid={opid}")
+    emit(f"Assuming role='{__role}' args={__args} kwargs={__kwargs} watch by {opid=}.")
     def dispatch():
         try:
             function = globals().get(f"{role}_role")
             if function is None: raise ValueError(f"Role '{role}' is not defined.")
             function(*args, **kwargs)
         except Exception as e:
-            emit(f"Exception in role '{role}': {type(e)}: {e}")
+            emit(f"Exception in role '{role}': {type(e)}: {e}.")
             raise
     threading.Thread(target=dispatch, daemon=True).start()
     emit(f"Waiting for role '{role}' to complete.")
@@ -467,8 +489,10 @@ if __name__ == "__main__":
     else:
         __args, __kwargs = split_arg_line(sys.argv[1:])
         __role = __kwargs.pop('role')  # It's ok to fail if role is not defined.
+    ensure_venv()
     set_workdir(__role)
     DEBUG = True if 'debug' in __args else DEBUG
+    # TODO: Allow it to work with roles defined in other modules.
     role_dispatcher(__role, __args, __kwargs)
 
 
@@ -481,7 +505,7 @@ def hello_world() -> str:
     return "Hello World!"
 
 def test_server(requests, *args, **kwargs) -> t.NoReturn:
-    # See if we can reach the server.
+    # TODO: The request doesn't seem to be made?
     emit("Testing server.")
     status, body = client_request('/')
     emit(f"Server response: {status} {body}")

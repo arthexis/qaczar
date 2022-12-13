@@ -4,21 +4,44 @@
 <head>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="qaczar.css" type="text/css" />
-    <title>QACZAR {Q.PID}</title>
+    <title>QACZAR ${PID}</title>
 </head>
 
 <body>
-    <h1><a href="qaczar.html">QACZAR</a></h1>
-    <p id="target"> Hello, World! {Q.iso8601} </p>
+    <h1><a href="qaczar.html">QACZAR ${PID}</a></h1>
+    <p id="target"> Hello, World! ${iso8601()} </p>
     <p>
         <a href="hello_world@qaczar.py">hello_world@qaczar.py</a>
     </p>
-    <p>
-        Download the source code for this project <a href="qaczar.py">here</a>.
-    </p>
-    <p>
-        <h2>What is QACZAR? </h2>
-        </p>
+
+    <hr />
+
+    <h2>Sections</h2>
+    <ol>
+    % for i in SOURCE.sections:
+        <li>
+            ${i}
+        </li>
+    % endfor
+    </ol>
+
+    <hr />
+    
+    <h2>TODOs</h2>
+    <ol>
+    % for i in extract_todos():
+        <li>
+            ${i}
+        </li>
+    % endfor
+    </ol>
+    
+    <hr />
+
+    <footer>
+        <a href="qaczar.py">DOWNLOAD SOURCE</a>.
+    </footer>
+
 </body>
 
 </html>
