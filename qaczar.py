@@ -335,11 +335,9 @@ def commit_source() -> t.NoReturn:
     os.system('git push')
 
 
-#@# ROLE DISPATCH
+#@# COMMON ROLES
 
 def watcher_role(*args, next: str = None, **kwargs) -> t.NoReturn:
-    # The watcher itself is started in a deamon thread. IF this thread dies, the main
-    # thread will start a new watcher with the same param.
     if not next: raise ValueError('next role was not defined')
     kwargs['role'] = next
     watch_over(start_py('qaczar.py', *args, **kwargs), 'qaczar.py')
@@ -360,10 +358,11 @@ def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
         if test == f'test_{suite}': 
             emit(f"Running {test=}...")
             globals()[test](*args, **kwargs)
-    # If all tests passed, we can exit.
     emit(f"Tests for {suite} passed.")
     commit_source()
 
+
+#@# DISPATCHER
 
 def role_dispatcher(role: str, args: tuple, kwargs: dict) -> None:
     import threading
@@ -376,7 +375,6 @@ def role_dispatcher(role: str, args: tuple, kwargs: dict) -> None:
     threading.Thread(target=dispatch, daemon=True).start()
     # We can do other stuff here, like launching another role.
     while threading.active_count() > 1: time.sleep(1)
-
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
