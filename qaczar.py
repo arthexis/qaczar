@@ -97,11 +97,6 @@ def imports(*modules: tuple[str]) -> t.Callable:
         return wrapper
     return decorator
 
-def extract_code(fname: str, **filters) -> str:
-    # TODO: Implement filters.
-    code = read_file(fname, encoding='utf-8')
-    return code
-
 
 #@# SUBPROCESSING
 
@@ -230,24 +225,18 @@ def endpoint(func: t.Callable) -> t.Callable:
     return func
 
 def process_py(fname: str, context: dict) -> str:
-    # GET returns a fragment of the code.
-    # POST executes the code passing the form data as arguments.
-    if context['method'] == 'GET':
-        if query := context['query']: 
-            code = extract_code(fname, **query)
-        else: code = read_file(fname)
-        write_file(wp := work_path(fname), code, encoding='utf-8')
-        emit(f"Written to {wp=} as {fname=} ({len(code)=} bytes).")
-        return wp
-    if context['method'] == 'POST':
-        code = read_file(fname)
-        emit(f"Executing {fname=} with {context['data']=}.")
-        # Capture the output and write to a work file.
-        with contextlib.redirect_stdout(io.StringIO()) as out:
-            exec(code, globals(), context['data'])
-        write_file(wp := work_path(fname), out.getvalue(), encoding='utf-8')
-        emit(f"Written to {wp=} as {fname=} ({len(out.getvalue())=} bytes).")
-        return wp
+    # Try to import the module.
+    module = fname.split('.')[0]
+    try: importlib.import_module(module)
+    except ModuleNotFoundError: pass
+    # Try to run the function.
+    if (func := ENDPOINTS.get(module)):
+        emit(f"Running {func.__name__}().")
+        if (out := func(**context)) is not None:
+            write_file(wp := work_path(fname), out, encoding='utf-8')
+            emit(f"Written to {wp=} as {fname=} ({len(out)=} bytes).")  
+            return wp
+    return None
     
 @timed
 def dispatch_processor(fname: str, context: dict) -> str | None:
