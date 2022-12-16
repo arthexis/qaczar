@@ -242,7 +242,7 @@ def dispatch_processor(fname: str, context: dict) -> str | None:
 #@# SECURE SERVER
 
 import ssl
-import secrets
+import urllib3
 import importlib
 import datetime as dt
 import http.server as hs
@@ -333,6 +333,10 @@ def build_https_server() -> tuple:
 
 @imports('requests')
 def test_server(requests, *args, **kwargs) -> t.NoReturn:
+    # Use the self-signed certificate to verify the server
+    http = urllib3.PoolManager(
+        cert_reqs='CERT_REQUIRED',
+        ca_certs=get_ssl_certs()[0])
     def server_request(fname:str):
         r = requests.get(url := f"https://{HOST}:{PORT}/{fname}", verify=False)
         emit(f"Server response: {url=} {r.status_code} {r.reason}")
