@@ -334,9 +334,8 @@ def test_server(urllib3, *args, **kwargs) -> t.NoReturn:
         if r.status != 200: raise ValueError(f"Unexpected response: {r.status} {r.reason}")
         return r.data.decode('utf-8')
     
-    server_request('qaczar.html')
-    server_request('qaczar.py')
-    server_request('qaczar.css')
+    assert 'QACZAR' in server_request('qaczar.html')
+    assert 'QACZAR' in server_request('qaczar.py')
 
 
 #@#  REPOSITORY
