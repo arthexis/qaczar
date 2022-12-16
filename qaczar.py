@@ -30,13 +30,13 @@ def iso8601() -> str:
 
 def emit(msg: str, _at=None) -> None: 
     global PID
-    f = _at or sys._getframe(1)  
-    print(f'[{PID}:{f.f_lineno} {iso8601()}] {f.f_code.co_name}:  {msg}', file=sys.stderr)
+    frame = _at or sys._getframe(1)  
+    print(f'[{PID}:{frame.f_lineno} {iso8601()}] {frame.f_code.co_name}:  {msg}', file=sys.stderr)
 
 def halt(msg: str) -> t.NoReturn:
-    f = sys._getframe(1)
-    emit(f"{msg} <- Final message.", _at=f)
-    emit(f"Halting all processes.", _at=f)
+    frame = sys._getframe(1)
+    emit(f"{msg} <- Final message.", _at=frame)
+    emit(f"Halting all processes.", _at=frame)
     sys.exit(0)
 
 def mtime_file(fname: str) -> float:
@@ -76,39 +76,25 @@ def timed(f: t.Callable) -> t.Callable:
         return result
     return timed
 
-def pip_import(module: str) -> t.Any:
-    try:
-        return importlib.import_module(module)
-    except ModuleNotFoundError:
-        emit(f"Installing {module=}.")
-        if '.' in module: module = module.split('.')[0]
-        subprocess.run([sys.executable, '-m', 'pip', 'install', module])
-        requirements = read_file('requirements.txt', encoding='utf-8')
-        if module not in requirements:
-            emit(f"Appending {module=} to requirements.txt.")
-            write_file('requirements.txt', requirements + 
-                f'\n{module}', encoding='utf-8')
-        return importlib.import_module(module)
-
 REQUIREMENTS = set()
 
-def imports(*modules: tuple[str]) -> t.Callable:
+def pip_import(module: str) -> t.Any:
     global REQUIREMENTS
-    for module in modules:
-        if '.' in module: module = module.split('.')[0]
-        if module not in sys.builtin_module_names: REQUIREMENTS.add(module)
+    name = module.split('.')[0]
+    if name not in REQUIREMENTS:    
+        subprocess.run([sys.executable, '-m', 'pip', 'install', name])
+        REQUIREMENTS.add(name)
+    return importlib.import_module(module)
+
+def imports(*modules: tuple[str]) -> t.Callable:
     def decorator(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
-            return f(*(pip_import(module) for module in modules), *args, **kwargs)
+            imported = [pip_import(module) for module in modules]
+            emit(f"Imported {modules=} for {f.__name__}.")
+            return f(*imported, *args, **kwargs)
         return wrapper
     return decorator
-
-def write_requirements() -> None:
-    global REQUIREMENTS
-    if not REQUIREMENTS: return
-    emit(f"Writting {len(REQUIREMENTS)} requirements.")
-    write_file('requirements.txt', '\n'.join(REQUIREMENTS), encoding='utf-8')
 
 
 #@# SUBPROCESSING
@@ -129,7 +115,7 @@ def split_arg_line(args: list[str]) -> tuple[tuple, dict]:
         else: largs.append(arg)
     return tuple(largs), kwargs
 
-def ensure_venv(reset=False) -> None:
+def setup_environ(reset=False) -> None:
     global PYTHON
     if reset and os.path.isdir('.venv'):
         emit(f"Removing {'.venv'} directory.")
@@ -142,6 +128,8 @@ def ensure_venv(reset=False) -> None:
     if not os.path.isfile('.venv/bin/python3'): 
         subprocess.run([sys.executable, '-m', 'venv', '.venv'])
     PYTHON = '.venv/bin/python3'
+    subprocess.run([PYTHON, '-m', 'pip', 'install', '--upgrade', 'pip'])
+    set_workdir(__role)
 
 def start_py(script: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
     global PYTHON
@@ -242,7 +230,6 @@ def dispatch_processor(fname: str, context: dict) -> str | None:
 #@# SECURE SERVER
 
 import ssl
-import urllib3
 import importlib
 import datetime as dt
 import http.server as hs
@@ -251,32 +238,36 @@ import urllib.parse as parse
 
 HOST, PORT, SITE = 'localhost', 9443, 'qaczar.com'
 
-@imports('cryptography.hazmat.primitives.serialization',
+@imports('cryptography.x509',
     'cryptography.hazmat.primitives.asymmetric.rsa',
-    'cryptography.x509',
-    'cryptography.hazmat.primitives.hashes')
-def get_ssl_certs(ser, rsa, x509, hashes, site=SITE) -> tuple[str, str]:
+    'cryptography.hazmat.primitives.hashes',
+    'cryptography.hazmat.primitives.serialization')
+def get_ssl_certs(x509, rsa, hashes, ser, site=HOST) -> tuple[str, str]:
+    # x509 has to be imported first, or serialization will be missing dependencies.
     if not os.path.exists('.ssl'): os.mkdir('.ssl')
     certname, keyname = '.ssl/cert.pem', '.ssl/key.pem'
-    if not os.path.exists(certname) or not os.path.exists(keyname):
-        emit("Generating SSL certificates for localhost.")
-        key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-        write_file(keyname, key.private_bytes(
-                encoding=ser.Encoding.PEM,
-                format=ser.PrivateFormat.PKCS8,
-                encryption_algorithm=ser.NoEncryption()))
-        name = x509.Name([x509.NameAttribute(x509.NameOID.COMMON_NAME, site)])
-        cert = x509.CertificateBuilder() \
-                .subject_name(name) \
-                .issuer_name(name) \
-                .public_key(key.public_key()) \
-                .serial_number(x509.random_serial_number()) \
-                .not_valid_before(dt.datetime.utcnow()) \
-                .not_valid_after(dt.datetime.utcnow() + dt.timedelta(days=3)) \
-                .add_extension(x509.SubjectAlternativeName([x509.DNSName(site)]), critical=False) \
-                .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True) \
-                .sign(key, hashes.SHA256())
-        write_file(certname, cert.public_bytes(ser.Encoding.PEM))
+    if os.path.exists(certname) and os.path.exists(keyname):
+        cert = x509.load_pem_x509_certificate(read_file(certname))
+        if cert.not_valid_after > dt.datetime.utcnow(): return certname, keyname
+        else: os.remove(certname); os.remove(keyname)
+    emit("Generating new SSL certificates for localhost.")
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    write_file(keyname, key.private_bytes(
+            encoding=ser.Encoding.PEM,
+            format=ser.PrivateFormat.PKCS8,
+            encryption_algorithm=ser.NoEncryption()))
+    name = x509.Name([x509.NameAttribute(x509.NameOID.COMMON_NAME, site)])
+    cert = x509.CertificateBuilder() \
+            .subject_name(name) \
+            .issuer_name(name) \
+            .public_key(key.public_key()) \
+            .serial_number(x509.random_serial_number()) \
+            .not_valid_before(dt.datetime.utcnow()) \
+            .not_valid_after(dt.datetime.utcnow() + dt.timedelta(days=3)) \
+            .add_extension(x509.SubjectAlternativeName([x509.DNSName(site)]), critical=False) \
+            .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True) \
+            .sign(key, hashes.SHA256())
+    write_file(certname, cert.public_bytes(ser.Encoding.PEM))
     return certname, keyname
 
 def build_https_server() -> tuple:
@@ -331,18 +322,18 @@ def build_https_server() -> tuple:
 
 #@#  SELF TESTING
 
-@imports('requests')
-def test_server(requests, *args, **kwargs) -> t.NoReturn:
-    # Use the self-signed certificate to verify the server
+@imports('urllib3')
+def test_server(urllib3, *args, **kwargs) -> t.NoReturn:
     http = urllib3.PoolManager(
         cert_reqs='CERT_REQUIRED',
         ca_certs=get_ssl_certs()[0])
+    
     def server_request(fname:str):
-        r = requests.get(url := f"https://{HOST}:{PORT}/{fname}", verify=False)
-        emit(f"Server response: {url=} {r.status_code} {r.reason}")
-        if r.status_code != 200: 
-            raise ValueError(f"Error response: {r.status_code} {r.reason}")
-        return r.text
+        r = http.request('GET', url := f"https://{HOST}:{PORT}/{fname}", timeout=30)
+        emit(f"Server response: {url=} {r=}")
+        if r.status != 200: raise ValueError(f"Unexpected response: {r.status} {r.reason}")
+        return r.data.decode('utf-8')
+    
     server_request('qaczar.html')
     server_request('qaczar.py')
     server_request('qaczar.css')
@@ -351,7 +342,6 @@ def test_server(requests, *args, **kwargs) -> t.NoReturn:
 #@#  REPOSITORY
 
 def commit_source() -> t.NoReturn:
-    write_requirements()
     emit("Commiting source to repository.")
     os.system('git add .')
     os.system('git commit -m "auto commit"')
@@ -408,7 +398,6 @@ if __name__ == "__main__":
         __args, __kwargs = split_arg_line(sys.argv[1:])
         __role = __kwargs.pop('role')  # It's ok to fail if role is not defined.
         reset = False
-    ensure_venv(reset=reset)
-    set_workdir(__role)
+    setup_environ(reset=reset)
     DEBUG = True if 'debug' in __args else DEBUG
     role_dispatcher(__role, __args, __kwargs)
