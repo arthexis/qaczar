@@ -129,7 +129,6 @@ def setup_environ(reset=False) -> None:
         subprocess.run([sys.executable, '-m', 'venv', '.venv'])
     PYTHON = '.venv/bin/python3'
     subprocess.run([PYTHON, '-m', 'pip', 'install', '--upgrade', 'pip'])
-    set_workdir(__role)
 
 def start_py(script: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
     global PYTHON
@@ -379,6 +378,7 @@ def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
 
 def role_dispatcher(role: str, args: tuple, kwargs: dict) -> None:
     import threading
+    set_workdir(role)
     opid = kwargs.pop('opid', None)  # If we receive opid it means we are being watched.
     emit(f"Assuming role='{__role}' args={__args} kwargs={__kwargs} watch by {opid=}.")
     def dispatch():
