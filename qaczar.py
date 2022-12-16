@@ -186,6 +186,9 @@ def watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
 
 #@# CONTENT GENERATOR
 
+import io
+import contextlib
+
 WORKDIR = os.path.join(os.path.dirname('qaczar.py'), '.work')
 TEMPLATES = {}
 
@@ -220,10 +223,24 @@ def process_html(fname: str, context: dict) -> str:
     return wp
 
 def process_py(fname: str, context: dict) -> str:
-    # Get returns the 
-    emit(f"Running {fname=}.")
-    mod = importlib.import_module(fname[:-3])
-    return None
+    # GET returns a fragment of the code.
+    # POST executes the code passing the form data as arguments.
+    if context['method'] == 'GET':
+        if query := context['query']: 
+            code = extract_code(fname, **query)
+        else: code = read_file(fname)
+        write_file(wp := work_path(fname), code, encoding='utf-8')
+        emit(f"Written to {wp=} as {fname=} ({len(code)=} bytes).")
+        return wp
+    if context['method'] == 'POST':
+        code = read_file(fname)
+        emit(f"Executing {fname=} with {context['data']=}.")
+        # Capture the output and write to a work file.
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            exec(code, globals(), context['data'])
+        write_file(wp := work_path(fname), out.getvalue(), encoding='utf-8')
+        emit(f"Written to {wp=} as {fname=} ({len(out.getvalue())=} bytes).")
+        return wp
     
 @timed
 def dispatch_processor(fname: str, context: dict) -> str | None:
