@@ -315,7 +315,6 @@ def build_https_server() -> tuple:
 
 #@#  SELF TESTING
 
-
 @imports('requests')
 def test_server(requests, *args, **kwargs) -> t.NoReturn:
     url = f"https://{HOST}:{PORT}/qaczar.html"
