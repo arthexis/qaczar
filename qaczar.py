@@ -97,6 +97,11 @@ def imports(*modules: tuple[str]) -> t.Callable:
         return wrapper
     return decorator
 
+def extract_code(fname: str, **filters) -> str:
+    # TODO: Implement filters.
+    code = read_file(fname, encoding='utf-8')
+    return code
+
 
 #@# SUBPROCESSING
 
@@ -181,10 +186,6 @@ def watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
 
 #@# CONTENT GENERATOR
 
-import io
-import xml.etree.ElementTree as etree
-from contextlib import redirect_stdout
-
 WORKDIR = os.path.join(os.path.dirname('qaczar.py'), '.work')
 TEMPLATES = {}
 
@@ -217,6 +218,12 @@ def process_html(fname: str, context: dict) -> str:
     write_file(wp := work_path(fname), content, encoding='utf-8')
     emit(f"Written to {wp=} as {fname=} ({len(content)=} bytes).")  
     return wp
+
+def process_py(fname: str, context: dict) -> str:
+    # Get returns the 
+    emit(f"Running {fname=}.")
+    mod = importlib.import_module(fname[:-3])
+    return None
     
 @timed
 def dispatch_processor(fname: str, context: dict) -> str | None:
