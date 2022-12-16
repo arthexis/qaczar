@@ -222,6 +222,13 @@ def process_html(fname: str, context: dict) -> str:
     emit(f"Written to {wp=} as {fname=} ({len(content)=} bytes).")  
     return wp
 
+ENDPOINTS = {}
+
+def endpoint(func: t.Callable) -> t.Callable:
+    ENDPOINTS[func.__name__] = func
+    # TODO: Validate authorization.
+    return func
+
 def process_py(fname: str, context: dict) -> str:
     # GET returns a fragment of the code.
     # POST executes the code passing the form data as arguments.
