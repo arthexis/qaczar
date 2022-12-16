@@ -231,6 +231,7 @@ def process_py(fname: str, context: dict) -> str:
     except ModuleNotFoundError: pass
     # Try to run the function.
     # TODO: Wrong, should be a function in the module, not the module itself.
+    # Consider running a launcher role to execute the function.
     if (func := ENDPOINTS.get(module)):
         # If the method is POST, run the function.
         # IF the method is GET, return the form for the function.
