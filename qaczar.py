@@ -50,6 +50,8 @@ def read_file(fname: str, encoding=None) -> bytes:
 def write_file(fname: str, data: bytes | str, encoding=None) -> None:
     if encoding and not isinstance(data, str): data = str(data)
     if '__' in fname: fname = fname.replace('__', '.')
+    # TODO: Fix issue when writing to a missing directory.
+    if not os.path.isdir(os.path.dirname(fname)): os.makedirs(os.path.dirname(fname))
     with open(fname, 'wb' if not encoding else 'w', encoding=encoding) as f: f.write(data)
 
 
