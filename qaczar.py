@@ -76,8 +76,12 @@ def timed(f: t.Callable) -> t.Callable:
         return result
     return timed
 
+IMPORT_HISTORY = set()
+
 def pip_import(module: str) -> t.Any:
+    global IMPORT_HISTORY
     try:
+        IMPORT_HISTORY.add(module)
         return importlib.import_module(module)
     except ModuleNotFoundError:
         emit(f"Installing {module=}.")
@@ -328,7 +332,7 @@ def test_server(requests, *args, **kwargs) -> t.NoReturn:
 #@#  REPOSITORY
 
 def commit_source() -> t.NoReturn:
-    emit("Commiting source to repository")
+    emit("Commiting source to repository.")
     os.system('git add .')
     os.system('git commit -m "auto commit"')
     os.system('git push')
@@ -352,6 +356,7 @@ def server_role(*args, host='localhost', port='9443', **kwargs) -> t.NoReturn:
         httpd.serve_forever()
 
 def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
+    # TODO: Use tests to prevent regressions.
     emit(f"Running tests for {suite}.")
     for test in globals().keys():
         if test == f'test_{suite}': 
