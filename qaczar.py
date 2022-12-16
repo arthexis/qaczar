@@ -342,6 +342,7 @@ def test_server(requests, *args, **kwargs) -> t.NoReturn:
 #@#  REPOSITORY
 
 def commit_source() -> t.NoReturn:
+    write_requirements()
     emit("Commiting source to repository.")
     os.system('git add .')
     os.system('git commit -m "auto commit"')
