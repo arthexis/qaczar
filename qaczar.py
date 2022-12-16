@@ -76,12 +76,12 @@ def timed(f: t.Callable) -> t.Callable:
         return result
     return timed
 
-IMPORT_HISTORY = set()
+REQUIREMENTS = set()
 
 def pip_import(module: str) -> t.Any:
-    global IMPORT_HISTORY
+    global REQUIREMENTS
+    if module not in sys.builtin_module_names: REQUIREMENTS.add(module)
     try:
-        IMPORT_HISTORY.add(module)
         return importlib.import_module(module)
     except ModuleNotFoundError:
         emit(f"Installing {module=}.")
@@ -102,9 +102,16 @@ def imports(*modules: tuple[str]) -> t.Callable:
         return wrapper
     return decorator
 
+def write_requirements() -> None:
+    global REQUIREMENTS
+    if not REQUIREMENTS: return
+    emit(f"Writting {len(REQUIREMENTS)} requirements.")
+    write_file('requirements.txt', '\n'.join(REQUIREMENTS), encoding='utf-8')
+
 
 #@# SUBPROCESSING
 
+import shutil
 import atexit
 import subprocess 
 
@@ -120,8 +127,11 @@ def split_arg_line(args: list[str]) -> tuple[tuple, dict]:
         else: largs.append(arg)
     return tuple(largs), kwargs
 
-def ensure_venv() -> None:
+def ensure_venv(reset=False) -> None:
     global PYTHON
+    if reset and os.path.isdir('.venv'):
+        emit(f"Removing {'.venv'} directory.")
+        shutil.rmtree('.venv')
     if sys.platform.startswith('win'):
         if not os.path.isfile('.venv/Scripts/python.exe'): 
             subprocess.run([sys.executable, '-m', 'venv', '.venv'])
@@ -383,10 +393,12 @@ def role_dispatcher(role: str, args: tuple, kwargs: dict) -> None:
 if __name__ == "__main__":
     if len(sys.argv) == 1:
         __role, __args, __kwargs = 'watcher', [], {'next': 'server'}
+        reset = True
     else:
         __args, __kwargs = split_arg_line(sys.argv[1:])
         __role = __kwargs.pop('role')  # It's ok to fail if role is not defined.
-    ensure_venv()
+        reset = False
+    ensure_venv(reset=reset)
     set_workdir(__role)
     DEBUG = True if 'debug' in __args else DEBUG
     role_dispatcher(__role, __args, __kwargs)
