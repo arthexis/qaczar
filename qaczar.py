@@ -230,7 +230,10 @@ def process_py(fname: str, context: dict) -> str:
     try: importlib.import_module(module)
     except ModuleNotFoundError: pass
     # Try to run the function.
+    # TODO: Wrong, should be a function in the module, not the module itself.
     if (func := ENDPOINTS.get(module)):
+        # If the method is POST, run the function.
+        # IF the method is GET, return the form for the function.
         emit(f"Running {func.__name__}().")
         if (out := func(**context)) is not None:
             write_file(wp := work_path(fname), out, encoding='utf-8')
