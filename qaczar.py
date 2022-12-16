@@ -356,7 +356,7 @@ def server_role(*args, host='localhost', port='9443', **kwargs) -> t.NoReturn:
         httpd.serve_forever()
 
 def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
-    # TODO: Use tests to prevent regressions.
+    # TODO: Use tests to prevent regressions (loss of functionality)
     emit(f"Running tests for {suite}.")
     for test in globals().keys():
         if test == f'test_{suite}': 
