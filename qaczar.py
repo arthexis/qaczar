@@ -332,14 +332,13 @@ def build_https_server() -> tuple:
 #@#  SELF TESTING
 
 @imports('requests')
-def server_request(requests, fname:str):
-    r = requests.get(url := f"https://{HOST}:{PORT}/{fname}", verify=False)
-    emit(f"Server response: {url=} {r.status_code} {r.reason}")
-    if r.status_code != 200: raise ValueError(f"Error response: {r.status_code} {r.reason}")
-    return r.text
-
-
-def test_server(*args, **kwargs) -> t.NoReturn:
+def test_server(requests, *args, **kwargs) -> t.NoReturn:
+    def server_request(fname:str):
+        r = requests.get(url := f"https://{HOST}:{PORT}/{fname}", verify=False)
+        emit(f"Server response: {url=} {r.status_code} {r.reason}")
+        if r.status_code != 200: 
+            raise ValueError(f"Error response: {r.status_code} {r.reason}")
+        return r.text
     server_request('qaczar.html')
     server_request('qaczar.py')
     server_request('qaczar.css')
