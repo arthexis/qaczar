@@ -333,12 +333,12 @@ def build_https_server() -> tuple:
 
 @imports('requests')
 def test_server(requests, *args, **kwargs) -> t.NoReturn:
-    url = f"https://{HOST}:{PORT}/qaczar.html"
-    emit(f"Testing server at {url}")
-    r = requests.get(url, verify=False)
+    url = lambda fname: f"https://{HOST}:{PORT}/{fname}"
+    r = requests.get(url('qaczar.html'), verify=False)
     emit(f"Server response: {r.status_code} {r.reason}")
     if r.status_code != 200: raise ValueError(f"Server response: {r.status_code} {r.reason}")
-    else: emit("Server test passed")
+    # Check if we can download our own source code
+    r = requests.get(url('qaczar.py'), verify=False)
 
 
 #@#  REPOSITORY
