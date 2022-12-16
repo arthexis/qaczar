@@ -375,6 +375,11 @@ def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
     commit_source()
 
 
+def deployer_role(*args, **kwargs) -> t.NoReturn:
+    pass
+
+
+
 #@# DISPATCHER
 
 def role_dispatcher(role: str, args: tuple, kwargs: dict) -> None:
