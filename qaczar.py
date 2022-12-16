@@ -124,10 +124,9 @@ def setup_environ(reset=False) -> None:
         if not os.path.isfile('.venv/Scripts/python.exe'): 
             subprocess.run([sys.executable, '-m', 'venv', '.venv'])
         PYTHON = '.venv/Scripts/python.exe'
-        return
-    if not os.path.isfile('.venv/bin/python3'): 
+    elif not os.path.isfile('.venv/bin/python3'): 
         subprocess.run([sys.executable, '-m', 'venv', '.venv'])
-    PYTHON = '.venv/bin/python3'
+        PYTHON = '.venv/bin/python3'
     subprocess.run([PYTHON, '-m', 'pip', 'install', '--upgrade', 'pip'])
 
 def start_py(script: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
@@ -344,6 +343,7 @@ def commit_source() -> t.NoReturn:
     os.system('git add .')
     os.system('git commit -m "auto commit"')
     os.system('git push')
+    emit("Source committed to repository.")
 
 
 #@# COMMON ROLES
