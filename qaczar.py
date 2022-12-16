@@ -76,11 +76,7 @@ def timed(f: t.Callable) -> t.Callable:
         return result
     return timed
 
-REQUIREMENTS = set()
-
 def pip_import(module: str) -> t.Any:
-    global REQUIREMENTS
-    if module not in sys.builtin_module_names: REQUIREMENTS.add(module)
     try:
         return importlib.import_module(module)
     except ModuleNotFoundError:
@@ -93,8 +89,14 @@ def pip_import(module: str) -> t.Any:
             write_file('requirements.txt', requirements + 
                 f'\n{module}', encoding='utf-8')
         return importlib.import_module(module)
-    
+
+REQUIREMENTS = set()
+
 def imports(*modules: tuple[str]) -> t.Callable:
+    global REQUIREMENTS
+    for module in modules:
+        if '.' in module: module = module.split('.')[0]
+        if module not in sys.builtin_module_names: REQUIREMENTS.add(module)
     def decorator(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
