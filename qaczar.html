@@ -4,34 +4,15 @@
 <head>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="qaczar.css" type="text/css" />
-    <title>QACZAR ${PID}</title>
+    <title>QACZAR</title>
 </head>
 
 <body>
-    <h1><a href="qaczar.html">QACZAR ${PID}</a></h1>
-    <p id="target"> Hello, World! ${iso8601()} </p>
-    <p>
-        <a href="hello_world@qaczar.py">hello_world@qaczar.py</a>
-    </p>
+    <h1><a href="qaczar.html">QACZAR</a></h1>
+    <p id="target"> Hello, World!</p>
 
     <hr />
-    
-    <h2>TODOs</h2>
-    <ol>
-    % for section, todos in SOURCE.section_todos.items():
-        % if todos:
-            <li>
-                <h3>${section}</h3>
-                <ol>
-                % for todo in todos:
-                    <li>${todo}</li>
-                % endfor
-                </ol>
-            </li>
-        % endif
-    % endfor
-    </ol>
-    
+
     <hr />
 
     <footer>
@@ -39,5 +20,4 @@
     </footer>
 
 </body>
-
 </html>

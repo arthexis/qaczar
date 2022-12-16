@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# A Python script that experiments with programming paradigms and ideas.
+# A Python script that experiments with rapid application development.
 # by R.J. Guillén (rjguillen [at] qaczar.com) 2022
 
 #   GUIDELINES
@@ -98,6 +98,25 @@ def imports(*modules: tuple[str]) -> t.Callable:
         return wrapper
     return decorator
 
+LineRefs: t.TypeAlias = list[tuple[int, str]]
+Section: t.TypeAlias = tuple[str, LineRefs]
+
+def split_source(source: str, tag: str = None, sep='#@#') -> t.Generator[Section, None, None]:
+    emit(f"Splitting source code into sections.")
+    for section in source.split(sep):
+        # TODO: Fix this, it's not working.
+        name, *lines = section.splitlines()
+        if tag: lines = [line[len(tag):] 
+            for line in lines if line.strip().startswith(tag)]
+        emit(f"Found section {name=}.")
+        yield name, [(i+1, line) for i, line in enumerate(lines)]
+
+def first_diff(source: str, target: str) -> int | None:
+    for i, (s, t) in enumerate(zip(source, target)):
+        if s != t and not (s.isspace() and t.isspace()): 
+            if s.startswith('#') and t.startswith('#'): continue
+            return i
+    return None
 
 #@# SUBPROCESSING
 
@@ -176,14 +195,13 @@ def watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
             source, stable = read_file(fn), True
             
 
-#@# CONTENT GENERATOR
+#@# CONTENT GENERATION
 
 import io
 import xml.etree.ElementTree as etree
 from contextlib import redirect_stdout
 
 WORKDIR = os.path.join(os.path.dirname('qaczar.py'), '.work')
-TEMPLATES = {}
 
 def set_workdir(role: str) -> None:
     global WORKDIR
@@ -193,6 +211,37 @@ def work_path(fname: str) -> str:
     global WORKDIR
     if not os.path.isdir(WORKDIR): os.mkdir(WORKDIR)
     return os.path.join(WORKDIR, fname)
+
+def exec_inline(source: str, *, context: dict) -> str:
+    with redirect_stdout(io.StringIO()) as stdout:
+        exec(source, None, context)
+        return stdout.getvalue()
+
+def process_py(fname: str, context: dict) -> str:
+    # TODO: Consider using AST to extract function fragments.
+    emit(f"Processing {fname=} with {context=}.")
+    if '@' in fname: 
+        func_name, script = fname.split('@')
+        module_name = script[:-3]
+        # Import the module and get the function.
+        module = importlib.import_module(module_name)
+        fname = f"{func_name}@{module_name}.html"
+        emit(f"Calling {func_name=} in module='{module_name} {fname=}.")
+        if context['method'] == 'POST':
+            function = getattr(module, func_name, None)
+            content = function(**context['form'])
+        else:
+            content = extract_function(func_name, fname=script)
+            emit(f"Extracted {len(content)=} bytes from {func_name=} in {script=}.")
+    else:
+        content = read_file(fname, encoding='utf-8')
+        if context['method'] == 'POST':
+            content = exec_inline(content, context=context['form'])
+    write_file(wp := work_path(fname), content, encoding='utf-8')
+    emit(f"Written to {wp=} as {fname=} ({len(content)=} bytes).")
+    return wp
+
+TEMPLATES = {}
 
 def load_template(fname: str) -> str:
     global TEMPLATES
@@ -223,7 +272,7 @@ def dispatch_processor(fname: str, context: dict) -> str | None:
     return None
 
 
-#@# SECURE SERVER
+#@# COMMUNICATIONS
 
 import ssl
 import secrets
@@ -235,15 +284,26 @@ import urllib.parse as parse
 
 HOST, PORT, SITE = 'localhost', 9443, 'qaczar.com'
 
+def receive_post(data: dict) -> str:
+    # TODO: Figure out a more robust way to handle post data.
+    # TODO: Consider using a database (sqlite3?).
+    # TODO: Investigate using blockchain to resolve authority clashes.
+    emit(f"Received {data=}.")
+    fname = secrets.token_hex(8) + '.txt'
+    write_file(wp := work_path(fname), data)
+    return wp
+
 @imports('cryptography.hazmat.primitives.serialization',
     'cryptography.hazmat.primitives.asymmetric.rsa',
     'cryptography.x509',
     'cryptography.hazmat.primitives.hashes')
 def get_ssl_certs(ser, rsa, x509, hashes, site=SITE) -> tuple[str, str]:
+    # TODO: Figure out if we are the CA.
     if not os.path.exists('.ssl'): os.mkdir('.ssl')
     certname, keyname = '.ssl/cert.pem', '.ssl/key.pem'
     if not os.path.exists(certname) or not os.path.exists(keyname):
         emit("Generating SSL certificates for localhost.")
+        # TODO: Use a CA if available.
         key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         write_file(keyname, key.private_bytes(
                 encoding=ser.Encoding.PEM,
@@ -293,6 +353,7 @@ def build_https_server() -> tuple:
             return context
 
         def build_response(self, method: str = None) -> bool:
+            # TODO: Change default response depending on the next role of the server.
             self.path = '/qaczar.html' if self.path == '/' else self.path
             context = self.build_context(self.path, method)
             self.work_path = dispatch_processor(self.path[1:], context)
@@ -312,30 +373,29 @@ def build_https_server() -> tuple:
 
     return SSLServer, EmitHandler
 
-
-#@#  SELF TESTING
-
-
-@imports('requests')
-def test_server(requests, *args, **kwargs) -> t.NoReturn:
-    url = f"https://{HOST}:{PORT}/qaczar.html"
-    emit(f"Testing server at {url}")
-    r = requests.get(url, verify=False)
-    emit(f"Server response: {r.status_code} {r.reason}")
-    if r.status_code != 200: raise ValueError(f"Server response: {r.status_code} {r.reason}")
-    else: emit("Server test passed")
-
-
-#@#  REPOSITORY
-
-def commit_source() -> t.NoReturn:
-    emit("Commiting source to repository")
-    os.system('git add .')
-    os.system('git commit -m "auto commit"')
-    os.system('git push')
+def client_request(
+        path: str, data: dict = None, host: str = HOST, port: int = PORT) -> tuple:
+    # TODO: Something is wrong: connections seem to get stuck together.
+    emit(f"Requesting {path} from {host}:{port}.")
+    if path[0] != '/': path = '/' + path
+    method = 'POST' if data is not None else 'GET'
+    with ss.create_connection((host, port)) as sock:
+        with ss.SSLContext().wrap_socket(sock, server_hostname=host) as ssock:
+            ssock.sendall(f"{method} {path} HTTP/1.1\r\n".encode())
+            ssock.sendall(f"Host: {host}:{port}\r\n".encode())
+            if data is not None:
+                ssock.sendall("Content-Type: application/x-www-form-urlencoded\r\n".encode())
+                ssock.sendall(f"Content-Length: {len(data)}\r\n".encode())
+                ssock.sendall("\r\n".encode())
+                ssock.sendall(parse.urlencode(data).encode())
+            ssock.sendall("\r\n".encode())
+            response = ssock.recv(4096).decode()
+            status, body = response.split('\r\n\r\n', 1)
+            return status, body
 
 
-#@# ROLE DISPATCH
+#@# ROLE SCHEDULER
+# NOTE: All <role>_loop functions must have *args and **kwargs as parameters.
 
 def watcher_role(*args, next: str = None, **kwargs) -> t.NoReturn:
     # The watcher itself is started in a deamon thread. IF this thread dies, the main
@@ -358,23 +418,29 @@ def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
     emit(f"Running tests for {suite}.")
     for test in globals().keys():
         if test == f'test_{suite}': 
-            emit(f"Running {test=}...")
             globals()[test](*args, **kwargs)
-    # If all tests passed, we can exit.
-    emit(f"Tests for {suite} passed.")
-    commit_source()
 
+def messenger_role(*args, **kwargs: dict) -> t.NoReturn:
+    # TODO: Listener that queues requests and forwards them to the server.
+    raise NotImplementedError
+
+def worker_role(*args, **kwargs: dict) -> t.NoReturn:
+    raise NotImplementedError
 
 def role_dispatcher(role: str, args: tuple, kwargs: dict) -> None:
     import threading
     opid = kwargs.pop('opid', None)  # If we receive opid it means we are being watched.
     emit(f"Assuming role='{__role}' args={__args} kwargs={__kwargs} watch by {opid=}.")
     def dispatch():
-        function = globals().get(f"{role}_role")
-        if function is None: raise ValueError(f"Role '{role}' is not defined.")
-        function(*args, **kwargs)
+        try:
+            function = globals().get(f"{role}_role")
+            if function is None: raise ValueError(f"Role '{role}' is not defined.")
+            function(*args, **kwargs)
+        except Exception as e:
+            emit(f"Exception in role '{role}': {type(e)}: {e}.")
+            raise
     threading.Thread(target=dispatch, daemon=True).start()
-    # We can do other stuff here, like launching another role.
+    emit(f"Waiting for role '{role}' to complete.")
     while threading.active_count() > 1: time.sleep(1)
 
 
@@ -388,3 +454,19 @@ if __name__ == "__main__":
     set_workdir(__role)
     DEBUG = True if 'debug' in __args else DEBUG
     role_dispatcher(__role, __args, __kwargs)
+
+
+#@#  SELF TESTING
+# NOTE: All test_<role> functions must have *args and **kwargs as parameters.
+
+# TODO: Implement our own blockchain for versioning and testing.
+
+def hello_world() -> str:
+    return "Hello World!"
+
+def test_server(requests, *args, **kwargs) -> t.NoReturn:
+    # TODO: The request doesn't seem to be made?
+    emit("Testing server.")
+    status, body = client_request('/')
+    emit(f"Server response: {status} {body}")
+    assert status == 'HTTP/1.0 200 OK'
