@@ -344,6 +344,12 @@ def build_https_server() -> tuple:
     return SSLServer, EmitHandler
 
 
+#@# RECEIVERS
+
+def hello_world(*args, **kwargs) -> str:
+    return "Hello, world!"
+
+
 #@#  SELF TESTING
 
 @imports('urllib3')
