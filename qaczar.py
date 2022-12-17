@@ -244,9 +244,14 @@ def process_py(fname: str, context: dict) -> str:
     
 @timed
 def dispatch_processor(fname: str, context: dict) -> str | None:
-    if (processor := globals().get(f'process_{fname.split(".")[-1]}')):
+    # TODO: Handle sub-paths inside files.
+    prefix, suffix = fname.split(".")
+    if '/' in suffix: 
+        suffix, subpath = suffix.split('/')
+        context['subpath'] = subpath
+    if (processor := globals().get(f'process_{suffix}')):
         emit(f"Processing {fname=} with <{processor.__name__}>.")
-        return processor(fname, context)
+        return processor(f'{prefix}.{suffix}', context)
     return None
 
 
