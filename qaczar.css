@@ -41,6 +41,10 @@ ol, ul {
 ul li {
     display: inline;
 }
+ol li::before {
+    content: counter(list) ". ";
+    counter-increment: list;
+}
 hr {
     border: 0;
     border-top: 1px solid #666;
