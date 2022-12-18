@@ -51,7 +51,8 @@ def read_file(fname: str, encoding=None) -> bytes:
 def _write_file(fname: str, data: bytes | str, encoding=None) -> str:
     if encoding and not isinstance(data, str): data = str(data)
     if '__' in fname: fname = fname.replace('__', '.')
-    if not os.path.isdir(os.path.dirname(fname)): os.makedirs(os.path.dirname(fname))
+    parent_dir = os.path.dirname(fname)
+    if parent_dir and not os.path.isdir(parent_dir): os.makedirs(parent_dir)
     with open(fname, 'wb' if not encoding else 'w', encoding=encoding) as f: f.write(data)
     return fname
 
@@ -60,8 +61,6 @@ def _write_file(fname: str, data: bytes | str, encoding=None) -> str:
 
 import importlib
 import functools
-
-REQUIREMENTS = set()
 
 def dedent(code: str) -> str:
     indent = len(code) - len(code.lstrip()) - 1
@@ -79,11 +78,11 @@ def timed(f: t.Callable) -> t.Callable:
     return _timed
 
 def _pip_import(module: str) -> t.Any:
-    global REQUIREMENTS
     name = module.split('.')[0]
-    if name not in REQUIREMENTS:    
+    requirements = read_file('requirements.txt', encoding='utf-8').splitlines()
+    if name not in requirements:    
         subprocess.run([sys.executable, '-m', 'pip', 'install', name])
-        REQUIREMENTS.add(name)
+        with open('requirements.txt', 'a', encoding='utf-8') as f: f.write(f'{name}\r\n')
     return importlib.import_module(module)
 
 def imports(*modules: tuple[str]) -> t.Callable:
@@ -117,6 +116,9 @@ import subprocess
 
 def _setup_environ(reset=False) -> None:
     global PYTHON
+    # TODO: Add qaczar itself (edit mode?) to a new requirements.txt file.
+    if not os.path.isfile('requirements.txt'): 
+        _write_file('requirements.txt', '', encoding='utf-8')
     if reset and os.path.isdir('.venv'):
         emit(f"Removing {'.venv'} directory.")
         shutil.rmtree('.venv')
