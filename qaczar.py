@@ -98,13 +98,6 @@ def imports(*modules: tuple[str]) -> t.Callable:
         return wrapper
     return decorator
 
-
-#@# SUBPROCESSING
-
-import shutil
-import atexit
-import subprocess 
-
 def arg_line(*args: tuple[str], **kwargs: dict) -> tuple[str]:
     for k, v in kwargs.items(): args += (f'--{k}={str(v)}', )
     return args
@@ -116,6 +109,13 @@ def split_arg_line(args: list[str]) -> tuple[tuple, dict]:
             __key, __value = arg[2:].split('='); kwargs[__key] = __value
         else: largs.append(arg)
     return tuple(largs), kwargs
+
+
+#@# SUBPROCESSING
+
+import shutil
+import atexit
+import subprocess 
 
 def _setup_environ(reset=False) -> None:
     global PYTHON
@@ -157,7 +157,7 @@ def _restart_py(proc: subprocess.Popen = None, opid=PID) -> subprocess.Popen:
     else: args, kwargs = [], {}
     return _start_py('qaczar.py', *args, **kwargs)
 
-def watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:  
+def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:  
     assert isinstance(proc, subprocess.Popen)
     source, old_mtime, stable = _read_file(fn), _mtime_file(fn), True
     while True:
@@ -410,7 +410,7 @@ def _commit_source() -> t.NoReturn:
 def watcher_role(*args, next: str = None, **kwargs) -> t.NoReturn:
     if not next: raise ValueError('next role was not defined')
     kwargs['role'] = next
-    watch_over(_start_py('qaczar.py', *args, **kwargs), 'qaczar.py')
+    _watch_over(_start_py('qaczar.py', *args, **kwargs), 'qaczar.py')
 
 def server_role(*args, host='localhost', port='9443', **kwargs) -> t.NoReturn:
     server_cls, handler_cls = _build_https_server()
