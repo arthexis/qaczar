@@ -240,12 +240,10 @@ def _build_form(module, subpath: str) -> str:
             f"<link rel='stylesheet' href='/qaczar.css'>"
             f"<h3>{subpath.upper()}</h3>")
     for name, param in sig.parameters.items():
-        if param.kind == param.VAR_KEYWORD: continue
+        if param.kind in (param.VAR_KEYWORD, param.VAR_POSITIONAL): continue
         if name.startswith('_'): continue
         form += f"<label for='{name}'>{name.upper()}:</label>"
-        if param.kind == param.VAR_POSITIONAL:
-            form += f"<input type='text' name='{name}' value='[]'>"
-        elif param.default is param.empty or param.default is None:
+        if param.default is param.empty or param.default is None:
             form += f"<input type='text' name='{name}'>"
         else:
             form += f"<input type='text' name='{name}' value='{param.default}'>"

@@ -35,12 +35,11 @@ p {
 a:visited, a:link {
     color: #66FF66;
 }
-ol {
+ol, ul {
     list-style-type: none;
-    padding: 0.5rem;
 }
-ul {
-    margin-left: 0.5rem;
+ul li {
+    display: inline;
 }
 hr {
     border: 0;
