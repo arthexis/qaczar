@@ -243,13 +243,21 @@ def _build_form(module, subpath: str) -> str:
         if param.kind in (param.VAR_KEYWORD, param.VAR_POSITIONAL): continue
         if name.startswith('_'): continue
         form += f"<label for='{name}'>{name.upper()}:</label>"
+        input_type = 'text'
+        if param.annotation is not param.empty:
+            if param.annotation is int: input_type = 'number'
+            elif param.annotation is bool: input_type = 'checkbox'
         if param.default is param.empty or param.default is None:
-            form += f"<input type='text' name='{name}'>"
+            form += f"<input type='{input_type}' name='{name}'>"
         else:
-            form += f"<input type='text' name='{name}' value='{param.default}'>"
+            form += f"<input type='{input_type}' name='{name}' value='{param.default}'>"
         form += f"<br>"
     form += f"<button type='submit'>EXECUTE</button></form>"
     return form
+
+def _execute_form(module, subpath: str, data: dict) -> str:
+    func = getattr(module, subpath)
+
 
 def process_py(fname: str, context: dict) -> str:
     # GET returns a form for a function (or list of functions),
@@ -263,6 +271,7 @@ def process_py(fname: str, context: dict) -> str:
         return write_file(outname, form)
     elif method == 'POST':
         func = getattr(module, subpath)
+        # TODO: Handle POST data (fields are handled as arrays)
         result = func(**context['data'])
         return write_file(outname, result)
     
