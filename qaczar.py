@@ -235,10 +235,11 @@ def _build_form(module, subpath: str) -> str:
     # TODO: Functions with cache decorator should just be invoked?
     func = getattr(module, subpath)
     sig = inspect.signature(func)
-    form = (f"<form action='/{ _module_name(module)}.py/{subpath}' "
+    mod_name = _module_name(module)
+    form = (f"<form action='/{mod_name}.py/{subpath}' "
             f"method='POST' accept-charset='utf-8' name='{subpath}'>" \
             f"<link rel='stylesheet' href='/qaczar.css'>"
-            f"<h3>{subpath.upper()}</h3>")
+            f"<h3>{subpath.upper()} @ {mod_name}</h3>")
     for name, param in sig.parameters.items():
         if param.kind in (param.VAR_KEYWORD, param.VAR_POSITIONAL): continue
         if name.startswith('_'): continue
