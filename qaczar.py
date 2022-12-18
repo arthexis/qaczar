@@ -252,7 +252,7 @@ def process_py(fname: str, context: dict) -> str:
     module = importlib.import_module(fname[:-3])
     method = context.get('method', 'GET')
     if method == 'GET':
-        form = build_form(fname, subpath)
+        form = build_form(module, subpath)
         outname = f"{subpath}.{fname[:-3]}.html"
         return write_file(work_path(outname), form, encoding='utf-8')
     elif method == 'POST':
