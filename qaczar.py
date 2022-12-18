@@ -229,17 +229,16 @@ def function_index(module = None) -> str:
             for fn in _extract_api(module))
 
 def _build_form(module, subpath: str) -> str:
-    # TODO: Handle multiple subpaths (form composition?).
-    # TODO: Consider using annotations to determine the form type.
-    # TODO: Consider using etree to build the form.
+    # TODO: Handle multiple subpaths by using fieldsets.
+    # TODO: Consider using type annotations to determine the input type.
     # TODO: Add function name, description, and docstring.
     # TODO: Functions with cache decorator should just be invoked?
     func = getattr(module, subpath)
     sig = inspect.signature(func)
     form = (f"<form action='/{ _module_name(module)}.py/{subpath}' "
             f"method='POST' accept-charset='utf-8' name='{subpath}'>" \
+            f"<link rel='stylesheet' href='/qaczar.css'>"
             f"<h3>{subpath}</h3>")
-            
     for name, param in sig.parameters.items():
         if param.kind == param.VAR_KEYWORD: continue
         if name.startswith('_'): continue
