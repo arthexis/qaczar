@@ -257,8 +257,10 @@ def _build_form(module, subpath: str) -> str:
     return form
 
 def _execute_form(module, subpath: str, data: dict) -> str:
+    # TODO: Handle POST data (fields are handled as arrays)
     func = getattr(module, subpath)
-
+    result = func(**data)
+    return result
 
 def process_py(fname: str, context: dict) -> str:
     # GET returns a form for a function (or list of functions),
@@ -268,13 +270,9 @@ def process_py(fname: str, context: dict) -> str:
     outname = f"{_module_name(module)}.{subpath}.html" 
     method = context.get('method', 'GET')
     if method == 'GET':
-        form = _build_form(module, subpath)
-        return write_file(outname, form)
+        return write_file(outname, _build_form(module, subpath))
     elif method == 'POST':
-        func = getattr(module, subpath)
-        # TODO: Handle POST data (fields are handled as arrays)
-        result = func(**context['data'])
-        return write_file(outname, result)
+        return write_file(outname, _execute_form(module, subpath, context.get('data', {})))
     
 @timed
 def _dispatch_processor(fname: str, context: dict) -> str | None:
