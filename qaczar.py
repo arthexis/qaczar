@@ -197,6 +197,9 @@ def work_path(fname: str) -> str:
     if not os.path.isdir(WORKDIR): os.mkdir(WORKDIR)
     return os.path.join(WORKDIR, fname)
 
+def write_work_file(fname: str, content: str) -> str:
+    return write_file(work_path(fname), content, encoding='utf-8')
+
 def _load_template(fname: str) -> str:
     global TEMPLATES
     if (last := mtime_file(fname)) != TEMPLATES.get(fname, (None, None))[1]:
@@ -210,7 +213,7 @@ def _load_template(fname: str) -> str:
 def process_html(fname: str, context: dict) -> str:
     template = _load_template(fname)
     content = template.render(**globals(), **context)
-    return write_file(work_path(fname), content, encoding='utf-8')
+    return write_work_file(fname, content)
 
 def _extract_api(module) -> t.Generator[t.Callable, None, None]:
     for name, func in inspect.getmembers(module, inspect.isfunction):
