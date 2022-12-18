@@ -237,7 +237,7 @@ def _build_form(module, subpath: str) -> str:
     sig = inspect.signature(func)
     form = (f"<form action='/{ _module_name(module)}.py/{subpath}' "
             f"method='POST' accept-charset='utf-8' name='{subpath}'>" \
-            f"<link rel='stylesheet' href='/qaczar.css'>"
+            f"<link rel='stylesheet' href='/qaczar.css'><hr>"
             f"<h3>{subpath.upper()}</h3>")
     for name, param in sig.parameters.items():
         if param.kind == param.VAR_KEYWORD: continue
