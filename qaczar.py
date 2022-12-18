@@ -44,7 +44,7 @@ def _mtime_file(fname: str) -> float:
     if not os.path.isfile(fname): return 0.0
     return os.path.getmtime(fname)
 
-def _read_file(fname: str, encoding=None) -> bytes:
+def read_file(fname: str, encoding=None) -> bytes:
     if '__' in fname: fname = fname.replace('__', '.')
     with open(fname, 'rb' if not encoding else 'r', encoding=encoding) as f: return f.read()
     
@@ -159,11 +159,11 @@ def _restart_py(proc: subprocess.Popen = None, opid=PID) -> subprocess.Popen:
 
 def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:  
     assert isinstance(proc, subprocess.Popen)
-    source, old_mtime, stable = _read_file(fn), _mtime_file(fn), True
+    source, old_mtime, stable = read_file(fn), _mtime_file(fn), True
     while True:
         time.sleep(2.6)
         if (new_mtime := _mtime_file(fn)) != old_mtime:
-            mutation, old_mtime = _read_file(fn), new_mtime
+            mutation, old_mtime = read_file(fn), new_mtime
             if mutation != source:
                 emit(f"Mutation detected. Optimistic restart.")
                 proc, stable = _restart_py(proc), True
@@ -177,7 +177,7 @@ def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
             halt(f"Script died twice. Stopping watcher.")
         if not stable:
             emit(f"Stabilizing {proc.pid=}.")
-            source, stable = _read_file(fn), True
+            source, stable = read_file(fn), True
             
 
 #@# CONTENT GENERATOR
@@ -196,7 +196,7 @@ def _work_path(fname: str) -> str:
     if not os.path.isdir(WORKDIR): os.mkdir(WORKDIR)
     return os.path.join(WORKDIR, fname)
 
-def _write_work_file(fname: str, content: str) -> str:
+def write_file(fname: str, content: str) -> str:
     return _write_file(_work_path(fname), content, encoding='utf-8')
 
 def _load_template(fname: str) -> str:
@@ -212,7 +212,7 @@ def _load_template(fname: str) -> str:
 def process_html(fname: str, context: dict) -> str:
     template = _load_template(fname)
     content = template.render(**globals(), **context)
-    return _write_work_file(fname, content)
+    return write_file(fname, content)
 
 def _extract_api(module) -> t.Generator[t.Callable, None, None]:
     for name, func in inspect.getmembers(module, inspect.isfunction):
@@ -263,12 +263,12 @@ def process_py(fname: str, context: dict) -> str:
     if method == 'GET':
         # TODO: Functions with cache decorator should just be invoked.
         form = _build_form(module, subpath)
-        return _write_work_file(outname, form)
+        return write_file(outname, form)
     elif method == 'POST':
         func = getattr(module, subpath)
         emit(f"Invoking {func.__name__}({context['form']})")
         result = func(**context['form'])
-        return _write_work_file(outname, result)
+        return write_file(outname, result)
     
 @timed
 def _dispatch_processor(fname: str, context: dict) -> str | None:
@@ -307,7 +307,7 @@ def _get_ssl_certs(x509, rsa, hashes, ser, site=HOST) -> tuple[str, str]:
     if not os.path.exists('.ssl'): os.mkdir('.ssl')
     certname, keyname = '.ssl/cert.pem', '.ssl/key.pem'
     if os.path.exists(certname) and os.path.exists(keyname):
-        cert = x509.load_pem_x509_certificate(_read_file(certname))
+        cert = x509.load_pem_x509_certificate(read_file(certname))
         if cert.not_valid_after > dt.datetime.utcnow(): return certname, keyname
         else: os.remove(certname); os.remove(keyname)
     emit("Generating new SSL certificates for localhost.")
