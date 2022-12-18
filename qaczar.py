@@ -257,11 +257,11 @@ def process_py(fname: str, context: dict) -> str:
     if method == 'GET':
         form = build_form(module, subpath)
         outname = f"{subpath}.{fname[:-3]}.html"
-        return write_file(work_path(outname), form, encoding='utf-8')
+        return write_work_file(outname, form)
     elif method == 'POST':
         func = getattr(module, subpath)
         result = func(**context['form'])
-        return write_file(work_path(f"{subpath}.html"), result, encoding='utf-8')
+        return write_work_file(f"{subpath}.html", result)
     
 @timed
 def dispatch_processor(fname: str, context: dict) -> str | None:
