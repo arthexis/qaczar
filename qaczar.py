@@ -232,6 +232,7 @@ def build_form(module, subpath: str) -> str:
     # TODO: Handle multiple subpaths (form composition?).
     # TODO: Consider using annotations to determine the form type.
     # TODO: Consider using etree to build the form.
+    # TODO: Add function name, description, and docstring.
     func = getattr(module, subpath)
     sig = inspect.signature(func)
     mod_name = module.__name__ if module.__name__ != '__main__' else 'qaczar'
@@ -247,7 +248,7 @@ def build_form(module, subpath: str) -> str:
             form += f"<input type='text' name='{name}'>"
         else:
             form += f"<input type='text' name='{name}' value='{param.default}'>"
-    form += f"<input type='submit' value='Submit {mod_name}'></form>"
+    form += f"<input type='submit' value='Post to {mod_name}'></form>"
     return form
 
 def process_py(fname: str, context: dict) -> str:
@@ -325,7 +326,7 @@ def get_ssl_certs(x509, rsa, hashes, ser, site=HOST) -> tuple[str, str]:
     _write_file(certname, cert.public_bytes(ser.Encoding.PEM))
     return certname, keyname
 
-def build_https_server() -> tuple:
+def _build_https_server() -> tuple:
     ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     ssl_ctx.load_cert_chain(*get_ssl_certs())
     
@@ -412,7 +413,7 @@ def watcher_role(*args, next: str = None, **kwargs) -> t.NoReturn:
     watch_over(_start_py('qaczar.py', *args, **kwargs), 'qaczar.py')
 
 def server_role(*args, host='localhost', port='9443', **kwargs) -> t.NoReturn:
-    server_cls, handler_cls = build_https_server()
+    server_cls, handler_cls = _build_https_server()
     with server_cls((host, int(port)), handler_cls) as httpd:
         emit(f"Server ready at https://{host}:{port}")
         atexit.register(httpd.shutdown)
@@ -434,7 +435,6 @@ def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
 
 def deployer_role(*args, **kwargs) -> t.NoReturn:
     pass
-
 
 
 #@# DISPATCHER
