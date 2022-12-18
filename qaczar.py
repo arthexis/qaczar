@@ -224,8 +224,8 @@ def _module_name(module) -> str:
 def function_index(module = None) -> str:
     if module is None: module = sys.modules[__name__]
     mod_name = _module_name(module)
-    return ','.join(
-            f"<a href='{mod_name}.py/{fn.__name__}'>{fn.__name__}</a>" 
+    return '\n'.join(
+            f"<li><a href='{mod_name}.py/{fn.__name__}'>{fn.__name__}</a></li>" 
             for fn in _extract_api(module))
 
 def _build_form(module, subpath: str) -> str:
