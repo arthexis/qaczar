@@ -220,15 +220,15 @@ def _extract_api(module) -> t.Generator[t.Callable, None, None]:
 
 def function_index(module = None) -> str:
     if module is None: module = sys.modules[__name__]
-    name = module.__name__ if module.__name__ != '__main__' else 'qaczar'
+    mod_name = module.__name__ if module.__name__ != '__main__' else 'qaczar'
     return '\n'.join(
-            f"<li><a href='{name}.py/{fn.__name__}'>{fn.__name__}</a></li>" 
+            f"<li><a href='{mod_name}.py/{fn.__name__}'>{fn.__name__}</a></li>" 
             for fn in _extract_api(module))
 
 def build_form(module, subpath: str) -> str:
     # TODO: Handle multiple subpaths (form composition?).
     # TODO: Consider using annotations to determine the form type.
-    # TODO: Fix error displaying the form.
+    # TODO: Consider using etree to build the form.
     func = getattr(module, subpath)
     sig = inspect.signature(func)
     mod_name = module.__name__ if module.__name__ != '__main__' else 'qaczar'
@@ -258,7 +258,7 @@ def process_py(fname: str, context: dict) -> str:
     elif method == 'POST':
         func = getattr(module, subpath)
         result = func(**context['form'])
-        return result
+        return write_file(work_path(f"{subpath}.html"), result, encoding='utf-8')
     
 @timed
 def dispatch_processor(fname: str, context: dict) -> str | None:
