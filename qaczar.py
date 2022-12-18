@@ -356,7 +356,6 @@ def _build_https_server() -> tuple:
             return context
 
         def build_response(self, method: str = None) -> bool:
-            # TODO: Handle sub-paths to python scripts.
             self.path = '/qaczar.html' if self.path == '/' else self.path
             context = self.build_context(self.path, method)
             self.work_path = _dispatch_processor(self.path[1:], context)
