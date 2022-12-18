@@ -245,7 +245,7 @@ def _build_form(module, subpath: str) -> str:
         form += f"<label for='{name}'>{name.upper()}:</label>"
         if param.kind == param.VAR_POSITIONAL:
             form += f"<input type='text' name='{name}' value='[]'>"
-        elif param.default is param.empty:
+        elif param.default is param.empty or param.default is None:
             form += f"<input type='text' name='{name}'>"
         else:
             form += f"<input type='text' name='{name}' value='{param.default}'>"

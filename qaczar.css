@@ -53,7 +53,7 @@ hr {
 }
 form {
     /* Encase in a green box with rounded corners */
-    background-color: #333;
+    background-color: #444;
     border: 1px solid #666;
     border-radius: 0.5rem;
     padding: 0.5rem;
@@ -71,4 +71,5 @@ button {
     border: 1px solid #666;
     border-radius: 0.5rem;
     padding: 0.5rem;
+    font-size: 1rem;
 }
