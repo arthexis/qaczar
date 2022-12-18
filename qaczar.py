@@ -238,11 +238,11 @@ def _build_form(module, subpath: str) -> str:
     form = (f"<form action='/{ _module_name(module)}.py/{subpath}' "
             f"method='POST' accept-charset='utf-8' name='{subpath}'>" \
             f"<link rel='stylesheet' href='/qaczar.css'>"
-            f"<h3>{subpath}</h3>")
+            f"<h3>{subpath.capitalize()}</h3>")
     for name, param in sig.parameters.items():
         if param.kind == param.VAR_KEYWORD: continue
         if name.startswith('_'): continue
-        form += f"<label for='{name}'>{name}</label>"
+        form += f"<label for='{name}'>{name.capitalize()} : </label>"
         if param.kind == param.VAR_POSITIONAL:
             form += f"<input type='text' name='{name}' value='[]'>"
         elif param.default is param.empty:
