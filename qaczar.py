@@ -217,7 +217,7 @@ def process_html(fname: str, context: dict) -> str:
     content = template.render(**globals(), **context)
     return write_file(fname, content)
 
-def _extract_api(module) -> t.Generator[t.Callable, None, None]:
+def extract_api(module = sys.modules[__name__]) -> t.Generator[t.Callable, None, None]:
     for name, func in inspect.getmembers(module, inspect.isfunction):
         if name.startswith('_'): continue
         if inspect.signature(func).return_annotation in (t.NoReturn, t.Callable): continue
@@ -226,18 +226,15 @@ def _extract_api(module) -> t.Generator[t.Callable, None, None]:
 def _module_name(module) -> str:
     return module.__name__ if module.__name__ != '__main__' else 'qaczar'
 
-def function_index(module = None) -> str:
-    if module is None: module = sys.modules[__name__]
+def function_index(module = sys.modules[__name__]) -> str:
     mod_name = _module_name(module)
     return '\n'.join(
             f"<li><a href='{mod_name}.py/{fn.__name__}'>{fn.__name__}</a></li>" 
-            for fn in _extract_api(module))
+            for fn in extract_api(module))
 
 def _build_form(module, subpath: str) -> str:
     # TODO: Handle multiple subpaths by using fieldsets.
-    # TODO: Consider using type annotations to determine the input type.
-    # TODO: Add function name, description, and docstring.
-    # TODO: Functions with cache decorator should just be invoked?
+    # TODO: Add function docstring (and give docs a style).
     func = getattr(module, subpath)
     sig = inspect.signature(func)
     mod_name = _module_name(module)
