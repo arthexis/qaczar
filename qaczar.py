@@ -89,6 +89,7 @@ def _pip_import(module: str) -> t.Any:
     return importlib.import_module(module)
 
 def imports(*modules: tuple[str]) -> t.Callable:
+    # TODO: Allow specifying a version number (important for self-recovery).
     def decorator(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
