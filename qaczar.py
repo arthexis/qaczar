@@ -181,9 +181,7 @@ def watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
 
 #@# CONTENT GENERATOR
 
-import io
 import inspect
-import contextlib
 
 WORKDIR = os.path.join(os.path.dirname('qaczar.py'), '.work')
 TEMPLATES = {}
@@ -248,7 +246,6 @@ def build_form(module, subpath: str) -> str:
 def process_py(fname: str, context: dict) -> str:
     # GET returns a form for a function (or list of functions),
     # POST executes them and returns the result as hypermedia.
-    # TODO: When no subpath is given, return a list of functions.
     if (subpath := context.get('subpath', None)) is None: return fname
     module = importlib.import_module(fname[:-3])
     method = context.get('method', 'GET')
@@ -296,7 +293,6 @@ HOST, PORT, SITE = 'localhost', 9443, 'qaczar.com'
     'cryptography.hazmat.primitives.hashes',
     'cryptography.hazmat.primitives.serialization')
 def get_ssl_certs(x509, rsa, hashes, ser, site=HOST) -> tuple[str, str]:
-    # x509 has to be imported first, or serialization will be missing dependencies.
     if not os.path.exists('.ssl'): os.mkdir('.ssl')
     certname, keyname = '.ssl/cert.pem', '.ssl/key.pem'
     if os.path.exists(certname) and os.path.exists(keyname):
