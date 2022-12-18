@@ -279,8 +279,8 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
 
 #@# POST RECEIVERS
 
-def hello_world(*args, **kwargs) -> str:
-    return "Hello, world!"
+def hello_world(name: str = 'World') -> str:
+    return f"Hello, {name}!"
 
 
 #@# HTTPS SERVER
