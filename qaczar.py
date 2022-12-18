@@ -79,7 +79,7 @@ def timed(f: t.Callable) -> t.Callable:
 
 REQUIREMENTS = set()
 
-def pip_import(module: str) -> t.Any:
+def _pip_import(module: str) -> t.Any:
     global REQUIREMENTS
     name = module.split('.')[0]
     if name not in REQUIREMENTS:    
@@ -91,7 +91,7 @@ def imports(*modules: tuple[str]) -> t.Callable:
     def decorator(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
-            imported = [pip_import(module) for module in modules]
+            imported = [_pip_import(module) for module in modules]
             emit(f"Imported {modules=} for {f.__name__}.")
             return f(*imported, *args, **kwargs)
         return wrapper
@@ -116,7 +116,7 @@ def split_arg_line(args: list[str]) -> tuple[tuple, dict]:
         else: largs.append(arg)
     return tuple(largs), kwargs
 
-def setup_environ(reset=False) -> None:
+def _setup_environ(reset=False) -> None:
     global PYTHON
     if reset and os.path.isdir('.venv'):
         emit(f"Removing {'.venv'} directory.")
@@ -130,7 +130,7 @@ def setup_environ(reset=False) -> None:
         PYTHON = '.venv/bin/python3'
     subprocess.run([PYTHON, '-m', 'pip', 'install', '--upgrade', 'pip'])
 
-def start_py(script: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
+def _start_py(script: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
     global PYTHON
     line_args = [str(a) for a in arg_line(*args, **kwargs)]
     emit(f"Starting {script=} {line_args=}.")
@@ -143,18 +143,18 @@ def start_py(script: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
     emit(f"Started script='{os.path.basename(script)}' {proc.pid=}.")
     return proc
 
-def stop_py(proc: subprocess.Popen) -> tuple[tuple, dict]:
+def _stop_py(proc: subprocess.Popen) -> tuple[tuple, dict]:
     emit(f"Stopping {proc.pid=}.")
     proc.terminate(); proc.wait()
     atexit.unregister(proc.terminate)
     return proc._args, proc._kwargs
 
-def restart_py(proc: subprocess.Popen = None, opid=PID) -> subprocess.Popen:
+def _restart_py(proc: subprocess.Popen = None, opid=PID) -> subprocess.Popen:
     if proc and proc.poll() is None: 
-        args, kwargs = stop_py(proc)
+        args, kwargs = _stop_py(proc)
         kwargs['opid'] = opid
     else: args, kwargs = [], {}
-    return start_py('qaczar.py', *args, **kwargs)
+    return _start_py('qaczar.py', *args, **kwargs)
 
 def watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:  
     assert isinstance(proc, subprocess.Popen)
@@ -165,13 +165,13 @@ def watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
             mutation, old_mtime = read_file(fn), new_mtime
             if mutation != source:
                 emit(f"Mutation detected. Optimistic restart.")
-                proc, stable = restart_py(proc), True
+                proc, stable = _restart_py(proc), True
             continue
         if proc.poll() is not None:  # Script terminated.
             if proc.returncode == 0: sys.exit(0)  # Halt from below.
             if stable:
                 emit(f"Script died {proc.returncode=}. Restart and mark unstable.")
-                proc, stable = restart_py(proc), False
+                proc, stable = _restart_py(proc), False
                 continue
             halt(f"Script died twice. Stopping watcher.")
         if not stable:
@@ -182,12 +182,13 @@ def watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
 #@# CONTENT GENERATOR
 
 import io
+import inspect
 import contextlib
 
 WORKDIR = os.path.join(os.path.dirname('qaczar.py'), '.work')
 TEMPLATES = {}
 
-def set_workdir(role: str) -> None:
+def _set_workdir(role: str) -> None:
     global WORKDIR
     WORKDIR = os.path.join(os.path.dirname('qaczar.py'), f'.{role}')
 
@@ -196,55 +197,71 @@ def work_path(fname: str) -> str:
     if not os.path.isdir(WORKDIR): os.mkdir(WORKDIR)
     return os.path.join(WORKDIR, fname)
 
-def load_template(fname: str) -> str:
+def _load_template(fname: str) -> str:
     global TEMPLATES
     if (last := mtime_file(fname)) != TEMPLATES.get(fname, (None, None))[1]:
         emit(f"Loading template {fname=}.")
-        mt = pip_import('mako.template')
+        mt = _pip_import('mako.template')
         tpl = mt.Template(filename=fname)
         TEMPLATES[fname] = tpl, last
         return tpl
     return TEMPLATES[fname][0]
 
-def build_form():
-    # TODO: New function to automatically create a form from a function.
-    pass
-
 def process_html(fname: str, context: dict) -> str:
-    template = load_template(fname)
+    template = _load_template(fname)
     content = template.render(**globals(), **context)
     write_file(wp := work_path(fname), content, encoding='utf-8')
     emit(f"Written to {wp=} as {fname=} ({len(content)=} bytes).")  
     return wp
 
-ENDPOINTS = {}
+def extract_api(module) -> t.Generator[t.Callable, None, None]:
+    for name, func in inspect.getmembers(module, inspect.isfunction):
+        if name.startswith('_'): continue
+        if inspect.signature(func).return_annotation == t.NoReturn: continue
+        yield func
 
-def endpoint(func: t.Callable) -> t.Callable:
-    ENDPOINTS[func.__name__] = func
-    # TODO: Validate authorization.
-    return func
+def function_index(module) -> str:
+    functions = inspect.getmembers(module, inspect.isfunction)
+    return process_html('index.html', {'functions': functions})
+
+def build_form(module, subpath: str) -> str:
+    # TODO: Handle multiple subpaths (form composition?).
+    # TODO: Consider using annotations to determine the form type.
+    func = getattr(module, subpath)
+    sig = inspect.signature(func)
+    form = f"""<form action="{module}.py/{subpath}" method="POST">"""
+    for name, param in sig.parameters.items():
+        if param.kind == param.VAR_KEYWORD: continue
+        form += f"""<label for="{name}">{name}</label>"""
+        if param.kind == param.VAR_POSITIONAL:
+            form += f"""<input type="text" name="{name}" value="[]">"""
+        elif param.default is param.empty:
+            form += f"""<input type="text" name="{name}">"""
+        else:
+            form += f"""<input type="text" name="{name}" value="{param.default}">"""
+    form += """<input type="submit" value="Submit">"""
+    form += "</form>"
+    return form
 
 def process_py(fname: str, context: dict) -> str:
-    # Try to import the module.
-    module = fname.split('.')[0]
-    try: importlib.import_module(module)
-    except ModuleNotFoundError: pass
-    # Try to run the function.
-    # TODO: Wrong, should be a function in the module, not the module itself.
-    # Consider running a launcher role to execute the function.
-    if (func := ENDPOINTS.get(module)):
-        # If the method is POST, run the function.
-        # IF the method is GET, return the form for the function.
-        emit(f"Running {func.__name__}().")
-        if (out := func(**context)) is not None:
-            write_file(wp := work_path(fname), out, encoding='utf-8')
-            emit(f"Written to {wp=} as {fname=} ({len(out)=} bytes).")  
-            return wp
-    return None
+    # GET returns a form for a function (or list of functions),
+    # POST executes them and returns the result as hypermedia.
+    # TODO: When no subpath is given, return a list of functions.
+    if (subpath := context.get('subpath', None)) is None: return fname
+    module = importlib.import_module(fname[:-3])
+    method = context.get('method', 'GET')
+    if method == 'GET':
+        form = build_form(fname, subpath)
+        write_file(wp := work_path(fname), form, encoding='utf-8')
+        emit(f"Written form to {wp=} as {fname=} ({len(form)=} bytes).")
+        return wp
+    elif method == 'POST':
+        func = getattr(module, subpath)
+        result = func(**context['form'])
+        return result
     
 @timed
 def dispatch_processor(fname: str, context: dict) -> str | None:
-    # TODO: Handle sub-paths inside files.
     prefix, suffix = fname.split(".")
     if '/' in suffix: 
         suffix, subpath = suffix.split('/')
@@ -255,7 +272,13 @@ def dispatch_processor(fname: str, context: dict) -> str | None:
     return None
 
 
-#@# SECURE SERVER
+#@# POST RECEIVERS
+
+def hello_world(*args, **kwargs) -> str:
+    return "Hello, world!"
+
+
+#@# HTTPS SERVER
 
 import ssl
 import importlib
@@ -349,12 +372,6 @@ def build_https_server() -> tuple:
     return SSLServer, EmitHandler
 
 
-#@# RECEIVERS
-
-def hello_world(*args, **kwargs) -> str:
-    return "Hello, world!"
-
-
 #@#  SELF TESTING
 
 @imports('urllib3')
@@ -388,7 +405,7 @@ def commit_source() -> t.NoReturn:
 def watcher_role(*args, next: str = None, **kwargs) -> t.NoReturn:
     if not next: raise ValueError('next role was not defined')
     kwargs['role'] = next
-    watch_over(start_py('qaczar.py', *args, **kwargs), 'qaczar.py')
+    watch_over(_start_py('qaczar.py', *args, **kwargs), 'qaczar.py')
 
 def server_role(*args, host='localhost', port='9443', **kwargs) -> t.NoReturn:
     server_cls, handler_cls = build_https_server()
@@ -397,7 +414,7 @@ def server_role(*args, host='localhost', port='9443', **kwargs) -> t.NoReturn:
         atexit.register(httpd.shutdown)
         kwargs['role'] = 'tester'
         kwargs['suite'] = 'server' if 'suite' not in kwargs else kwargs['suite']
-        start_py('qaczar.py', *args, **kwargs)
+        _start_py('qaczar.py', *args, **kwargs)
         httpd.serve_forever()
 
 def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
@@ -419,8 +436,9 @@ def deployer_role(*args, **kwargs) -> t.NoReturn:
 #@# DISPATCHER
 
 def role_dispatcher(role: str, args: tuple, kwargs: dict) -> None:
+    # TODO: Consider using tomlib for configuration.
     import threading
-    set_workdir(role)
+    _set_workdir(role)
     opid = kwargs.pop('opid', None)  # If we receive opid it means we are being watched.
     emit(f"Assuming role='{__role}' args={__args} kwargs={__kwargs} watch by {opid=}.")
     def dispatch():
@@ -439,6 +457,6 @@ if __name__ == "__main__":
         __args, __kwargs = split_arg_line(sys.argv[1:])
         __role = __kwargs.pop('role')  # It's ok to fail if role is not defined.
         reset = False
-    setup_environ(reset=reset)
+    _setup_environ(reset=reset)
     DEBUG = True if 'debug' in __args else DEBUG
     role_dispatcher(__role, __args, __kwargs)
