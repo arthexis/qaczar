@@ -238,7 +238,7 @@ def _build_form(module, subpath: str) -> str:
     form = (f"<form action='/{ _module_name(module)}.py/{subpath}' "
             f"method='POST' accept-charset='utf-8' name='{subpath}'>" \
             f"<link rel='stylesheet' href='/qaczar.css'>"
-            f"<h3>{subpath.upper()}</h3><hr>")
+            f"<h3>{subpath.upper()}</h3>")
     for name, param in sig.parameters.items():
         if param.kind == param.VAR_KEYWORD: continue
         if name.startswith('_'): continue
@@ -250,7 +250,7 @@ def _build_form(module, subpath: str) -> str:
         else:
             form += f"<input type='text' name='{name}' value='{param.default}'>"
         form += f"<br>"
-    form += f"<button type='submit'>SUBMIT</button></form>"
+    form += f"<button type='submit'>EXECUTE</button></form>"
     return form
 
 def process_py(fname: str, context: dict) -> str:
