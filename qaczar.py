@@ -268,7 +268,7 @@ def process_py(fname: str, context: dict) -> str:
     
 @timed
 def _dispatch_processor(fname: str, context: dict) -> str | None:
-    prefix, suffix = fname.split(".")
+    prefix, suffix = fname.split(".", 1)  # Only one dot is allowed.
     if '/' in suffix: 
         suffix, subpath = suffix.split('/')
         context['subpath'] = subpath
