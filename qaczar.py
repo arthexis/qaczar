@@ -263,8 +263,6 @@ def _execute_form(module, subpath: str, data: dict) -> str:
     return result
 
 def process_py(fname: str, context: dict) -> str:
-    # GET returns a form for a function (or list of functions),
-    # POST executes them and returns the result as hypermedia.
     if (subpath := context.get('subpath', None)) is None: return fname
     module = importlib.import_module(fname[:-3])
     outname = f"{_module_name(module)}.{subpath}.html" 
