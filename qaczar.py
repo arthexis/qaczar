@@ -39,15 +39,15 @@ def halt(msg: str) -> t.NoReturn:
     emit(f"Halting all processes.", _at=frame)
     sys.exit(0)
 
-def mtime_file(fname: str) -> float:
+def _mtime_file(fname: str) -> float:
     if not os.path.isfile(fname): return 0.0
     return os.path.getmtime(fname)
 
-def read_file(fname: str, encoding=None) -> bytes:
+def _read_file(fname: str, encoding=None) -> bytes:
     if '__' in fname: fname = fname.replace('__', '.')
     with open(fname, 'rb' if not encoding else 'r', encoding=encoding) as f: return f.read()
     
-def write_file(fname: str, data: bytes | str, encoding=None) -> str:
+def _write_file(fname: str, data: bytes | str, encoding=None) -> str:
     if encoding and not isinstance(data, str): data = str(data)
     if '__' in fname: fname = fname.replace('__', '.')
     if not os.path.isdir(os.path.dirname(fname)): os.makedirs(os.path.dirname(fname))
@@ -160,11 +160,11 @@ def _restart_py(proc: subprocess.Popen = None, opid=PID) -> subprocess.Popen:
 
 def watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:  
     assert isinstance(proc, subprocess.Popen)
-    source, old_mtime, stable = read_file(fn), mtime_file(fn), True
+    source, old_mtime, stable = _read_file(fn), _mtime_file(fn), True
     while True:
         time.sleep(2.6)
-        if (new_mtime := mtime_file(fn)) != old_mtime:
-            mutation, old_mtime = read_file(fn), new_mtime
+        if (new_mtime := _mtime_file(fn)) != old_mtime:
+            mutation, old_mtime = _read_file(fn), new_mtime
             if mutation != source:
                 emit(f"Mutation detected. Optimistic restart.")
                 proc, stable = _restart_py(proc), True
@@ -178,7 +178,7 @@ def watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
             halt(f"Script died twice. Stopping watcher.")
         if not stable:
             emit(f"Stabilizing {proc.pid=}.")
-            source, stable = read_file(fn), True
+            source, stable = _read_file(fn), True
             
 
 #@# CONTENT GENERATOR
@@ -192,17 +192,17 @@ def _set_workdir(role: str) -> None:
     global WORKDIR
     WORKDIR = os.path.join(os.path.dirname('qaczar.py'), f'.{role}')
 
-def work_path(fname: str) -> str:
+def _work_path(fname: str) -> str:
     global WORKDIR
     if not os.path.isdir(WORKDIR): os.mkdir(WORKDIR)
     return os.path.join(WORKDIR, fname)
 
-def write_work_file(fname: str, content: str) -> str:
-    return write_file(work_path(fname), content, encoding='utf-8')
+def _write_work_file(fname: str, content: str) -> str:
+    return _write_file(_work_path(fname), content, encoding='utf-8')
 
 def _load_template(fname: str) -> str:
     global TEMPLATES
-    if (last := mtime_file(fname)) != TEMPLATES.get(fname, (None, None))[1]:
+    if (last := _mtime_file(fname)) != TEMPLATES.get(fname, (None, None))[1]:
         emit(f"Loading template {fname=}.")
         mt = _pip_import('mako.template')
         tpl = mt.Template(filename=fname)
@@ -213,7 +213,7 @@ def _load_template(fname: str) -> str:
 def process_html(fname: str, context: dict) -> str:
     template = _load_template(fname)
     content = template.render(**globals(), **context)
-    return write_work_file(fname, content)
+    return _write_work_file(fname, content)
 
 def _extract_api(module) -> t.Generator[t.Callable, None, None]:
     for name, func in inspect.getmembers(module, inspect.isfunction):
@@ -238,6 +238,8 @@ def build_form(module, subpath: str) -> str:
     form = f"<form action='{mod_name}.py/{subpath}' method='POST'>"
     for name, param in sig.parameters.items():
         if param.kind == param.VAR_KEYWORD: continue
+        if param.annotation is param.empty: continue
+        if name.startswith('_'): continue
         form += f"<label for='{name}'>{name}</label>"
         if param.kind == param.VAR_POSITIONAL:
             form += f"<input type='text' name='{name}' value='[]'>"
@@ -257,11 +259,11 @@ def process_py(fname: str, context: dict) -> str:
     if method == 'GET':
         form = build_form(module, subpath)
         outname = f"{subpath}.{fname[:-3]}.html"
-        return write_work_file(outname, form)
+        return _write_work_file(outname, form)
     elif method == 'POST':
         func = getattr(module, subpath)
         result = func(**context['form'])
-        return write_work_file(f"{subpath}.html", result)
+        return _write_work_file(f"{subpath}.html", result)
     
 @timed
 def dispatch_processor(fname: str, context: dict) -> str | None:
@@ -300,12 +302,12 @@ def get_ssl_certs(x509, rsa, hashes, ser, site=HOST) -> tuple[str, str]:
     if not os.path.exists('.ssl'): os.mkdir('.ssl')
     certname, keyname = '.ssl/cert.pem', '.ssl/key.pem'
     if os.path.exists(certname) and os.path.exists(keyname):
-        cert = x509.load_pem_x509_certificate(read_file(certname))
+        cert = x509.load_pem_x509_certificate(_read_file(certname))
         if cert.not_valid_after > dt.datetime.utcnow(): return certname, keyname
         else: os.remove(certname); os.remove(keyname)
     emit("Generating new SSL certificates for localhost.")
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    write_file(keyname, key.private_bytes(
+    _write_file(keyname, key.private_bytes(
             encoding=ser.Encoding.PEM,
             format=ser.PrivateFormat.PKCS8,
             encryption_algorithm=ser.NoEncryption()))
@@ -320,7 +322,7 @@ def get_ssl_certs(x509, rsa, hashes, ser, site=HOST) -> tuple[str, str]:
             .add_extension(x509.SubjectAlternativeName([x509.DNSName(site)]), critical=False) \
             .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True) \
             .sign(key, hashes.SHA256())
-    write_file(certname, cert.public_bytes(ser.Encoding.PEM))
+    _write_file(certname, cert.public_bytes(ser.Encoding.PEM))
     return certname, keyname
 
 def build_https_server() -> tuple:
