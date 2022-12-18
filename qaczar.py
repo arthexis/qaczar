@@ -250,8 +250,8 @@ def _build_form(module, subpath: str) -> str:
         else:
             form += f"<input type='text' name='{name}' value='{param.default}'>"
         form += f"<br>"
-    submit_label = func.__name__.replace('_', ' ').title()
-    form += f"<input type='submit' value='{submit_label}'></form>"
+    submit_label = func.__name__.replace('_', ' ').upper()
+    form += f"<button type='submit'>{submit_label}</button></form>"
     return form
 
 def process_py(fname: str, context: dict) -> str:

@@ -60,3 +60,7 @@ form {
     width: auto;
     display: inline-block;
 }
+label {
+    display: block;
+    margin-top: 0.5em;
+}
