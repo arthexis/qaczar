@@ -129,7 +129,7 @@ def _setup_environ(reset=False) -> None:
     elif not os.path.isfile('.venv/bin/python3'): 
         subprocess.run([sys.executable, '-m', 'venv', '.venv'])
         PYTHON = '.venv/bin/python3'
-    subprocess.run([PYTHON, '-m', 'pip', 'install', '--upgrade', 'pip'])
+    subprocess.run([PYTHON, '-m', 'pip', 'install', '--upgrade', 'pip', '--quiet'])
 
 def _start_py(script: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
     global PYTHON
