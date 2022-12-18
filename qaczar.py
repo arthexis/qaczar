@@ -71,13 +71,13 @@ def timed(f: t.Callable) -> t.Callable:
     global DEBUG
     if not DEBUG: return f
     @functools.wraps(f)
-    def timed(*args, **kwargs):
+    def _timed(*args, **kwargs):
         start = time.time(); elapsed = time.time() - start
         emit(f"Function <{f.__name__}> {args=} {kwargs=} called.")
         result = f(*args, **kwargs)
         emit(f"Function <{f.__name__}> {args=} {kwargs=} took {elapsed:.4f} seconds.")
         return result
-    return timed
+    return _timed
 
 def _pip_import(module: str) -> t.Any:
     global REQUIREMENTS
@@ -227,7 +227,7 @@ def function_index(module = None) -> str:
             f"<li><a href='{mod_name}.py/{fn.__name__}'>{fn.__name__}</a></li>" 
             for fn in _extract_api(module))
 
-def build_form(module, subpath: str) -> str:
+def _build_form(module, subpath: str) -> str:
     # TODO: Handle multiple subpaths (form composition?).
     # TODO: Consider using annotations to determine the form type.
     # TODO: Consider using etree to build the form.
@@ -258,7 +258,7 @@ def process_py(fname: str, context: dict) -> str:
     method = context.get('method', 'GET')
     if method == 'GET':
         # TODO: Functions with cache decorator should just be invoked.
-        form = build_form(module, subpath)
+        form = _build_form(module, subpath)
         outname = f"{subpath}.{fname[:-3]}.html"
         return _write_work_file(outname, form)
     elif method == 'POST':
@@ -267,7 +267,7 @@ def process_py(fname: str, context: dict) -> str:
         return _write_work_file(f"{subpath}.html", result)
     
 @timed
-def dispatch_processor(fname: str, context: dict) -> str | None:
+def _dispatch_processor(fname: str, context: dict) -> str | None:
     prefix, suffix = fname.split(".")
     if '/' in suffix: 
         suffix, subpath = suffix.split('/')
@@ -359,7 +359,7 @@ def _build_https_server() -> tuple:
             # TODO: Handle sub-paths to python scripts.
             self.path = '/qaczar.html' if self.path == '/' else self.path
             context = self.build_context(self.path, method)
-            self.work_path = dispatch_processor(self.path[1:], context)
+            self.work_path = _dispatch_processor(self.path[1:], context)
             emit(f"{context['ip']} {context['ts']} {method} {self.path} ({self.work_path})")
             
         def translate_path(self, path: str = None) -> str:
@@ -439,7 +439,7 @@ def deployer_role(*args, **kwargs) -> t.NoReturn:
 
 #@# DISPATCHER
 
-def role_dispatcher(role: str, args: tuple, kwargs: dict) -> t.NoReturn:
+def _role_dispatcher(role: str, args: tuple, kwargs: dict) -> t.NoReturn:
     # TODO: Consider using tomlib for configuration.
     import threading
     _set_workdir(role)
@@ -463,4 +463,4 @@ if __name__ == "__main__":
         reset = False
     _setup_environ(reset=reset)
     DEBUG = True if 'debug' in __args else DEBUG
-    role_dispatcher(__role, __args, __kwargs)
+    _role_dispatcher(__role, __args, __kwargs)
