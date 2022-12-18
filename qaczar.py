@@ -227,6 +227,7 @@ def function_index(module = None) -> str:
 def build_form(module, subpath: str) -> str:
     # TODO: Handle multiple subpaths (form composition?).
     # TODO: Consider using annotations to determine the form type.
+    # TODO: Fix error displaying the form.
     func = getattr(module, subpath)
     sig = inspect.signature(func)
     form = f"""<form action="{module}.py/{subpath}" method="POST">"""
