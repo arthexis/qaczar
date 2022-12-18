@@ -261,7 +261,9 @@ def process_py(fname: str, context: dict) -> str:
         # TODO: Functions with cache decorator should just be invoked.
         form = _build_form(module, subpath)
         # return write_file(outname, form)
-        return process_html('qaczar.html', {'form': form})
+        outname = process_html('qaczar.html', {'form': form})
+        emit(f"Generated {outname}")
+        return outname
     elif method == 'POST':
         func = getattr(module, subpath)
         result = func(**context['data'])
