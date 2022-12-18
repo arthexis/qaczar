@@ -200,7 +200,7 @@ def write_file(fname: str, content: str) -> str:
 
 def list_file(fname: str, tag: str = 'li', filter: str = None) -> str:
     return ''.join(f'<{tag}>{line if not filter else line.split(filter)[1]}</{tag}>'
-        for line in read_file(fname).splitlines()
+        for line in read_file(fname, encoding='utf-8').splitlines()
         if not filter or line.strip().startswith(filter))
 
 def _load_template(fname: str) -> str:
