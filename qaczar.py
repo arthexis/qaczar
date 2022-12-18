@@ -227,6 +227,9 @@ def function_index(module = None) -> str:
             f"<li><a href='{mod_name}.py/{fn.__name__}'>{fn.__name__}</a></li>" 
             for fn in _extract_api(module))
 
+def _module_name(module) -> str:
+    return module.__name__ if module.__name__ != '__main__' else 'qaczar'
+
 def _build_form(module, subpath: str) -> str:
     # TODO: Handle multiple subpaths (form composition?).
     # TODO: Consider using annotations to determine the form type.
@@ -255,16 +258,16 @@ def process_py(fname: str, context: dict) -> str:
     # POST executes them and returns the result as hypermedia.
     if (subpath := context.get('subpath', None)) is None: return fname
     module = importlib.import_module(fname[:-3])
+    outname = f"{_module_name(module)}.{subpath}.html" 
     method = context.get('method', 'GET')
     if method == 'GET':
         # TODO: Functions with cache decorator should just be invoked.
         form = _build_form(module, subpath)
-        outname = f"{subpath}.{fname[:-3]}.html"
         return _write_work_file(outname, form)
     elif method == 'POST':
         func = getattr(module, subpath)
         result = func(**context['form'])
-        return _write_work_file(f"{subpath}.html", result)
+        return _write_work_file(outname, result)
     
 @timed
 def _dispatch_processor(fname: str, context: dict) -> str | None:
