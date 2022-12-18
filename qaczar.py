@@ -47,11 +47,12 @@ def read_file(fname: str, encoding=None) -> bytes:
     if '__' in fname: fname = fname.replace('__', '.')
     with open(fname, 'rb' if not encoding else 'r', encoding=encoding) as f: return f.read()
     
-def write_file(fname: str, data: bytes | str, encoding=None) -> None:
+def write_file(fname: str, data: bytes | str, encoding=None) -> str:
     if encoding and not isinstance(data, str): data = str(data)
     if '__' in fname: fname = fname.replace('__', '.')
     if not os.path.isdir(os.path.dirname(fname)): os.makedirs(os.path.dirname(fname))
     with open(fname, 'wb' if not encoding else 'w', encoding=encoding) as f: f.write(data)
+    return fname
 
 
 #@# META-PROGRAMMING
@@ -251,8 +252,9 @@ def process_py(fname: str, context: dict) -> str:
     method = context.get('method', 'GET')
     if method == 'GET':
         form = build_form(fname, subpath)
-        write_file(wp := work_path(fname), form, encoding='utf-8')
-        emit(f"Written form to {wp=} as {fname=} ({len(form)=} bytes).")
+        outname = f"{subpath}.{fname[:-3]}.html"
+        write_file(wp := work_path(outname), form, encoding='utf-8')
+        emit(f"Written form to {wp=} as {outname=} ({len(form)=} bytes).")
         return wp
     elif method == 'POST':
         func = getattr(module, subpath)
