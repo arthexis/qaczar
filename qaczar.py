@@ -198,8 +198,10 @@ def _work_path(fname: str) -> str:
 def write_file(fname: str, content: str) -> str:
     return _write_file(_work_path(fname), content, encoding='utf-8')
 
-def list_file(fname: str, tag: str = 'li') -> str:
-    return ''.join(f'<{tag}>{line}</{tag}>' for line in read_file(fname).splitlines())
+def list_file(fname: str, tag: str = 'li', filter: str = None) -> str:
+    return ''.join(f'<{tag}>{line.strip()}</{tag}>' 
+        for line in read_file(fname).splitlines()
+        if not filter or line.strip().startswith(filter))
 
 def _load_template(fname: str) -> str:
     global TEMPLATES
