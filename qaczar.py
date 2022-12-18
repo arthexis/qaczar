@@ -242,7 +242,7 @@ def _build_form(module, subpath: str) -> str:
     for name, param in sig.parameters.items():
         if param.kind == param.VAR_KEYWORD: continue
         if name.startswith('_'): continue
-        form += f"<label for='{name}'>{name.upper()} : </label>"
+        form += f"<label for='{name}'>{name.upper()}:</label>"
         if param.kind == param.VAR_POSITIONAL:
             form += f"<input type='text' name='{name}' value='[]'>"
         elif param.default is param.empty:
