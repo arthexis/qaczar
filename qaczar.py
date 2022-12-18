@@ -220,8 +220,9 @@ def _extract_api(module) -> t.Generator[t.Callable, None, None]:
 
 def function_index(module = None) -> str:
     if module is None: module = sys.modules[__name__]
+    name = module.__name__ if module.__name__ != '__main__' else 'qaczar'
     return '\n'.join(
-            f"<li><a href='{module.__name__}.py/{fn.__name__}'>{fn.__name__}</a></li>" 
+            f"<li><a href='{name}.py/{fn.__name__}'>{fn.__name__}</a></li>" 
             for fn in _extract_api(module))
 
 def build_form(module, subpath: str) -> str:
