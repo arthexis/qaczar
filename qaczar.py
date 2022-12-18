@@ -218,15 +218,15 @@ def _extract_api(module) -> t.Generator[t.Callable, None, None]:
         if inspect.signature(func).return_annotation in (t.NoReturn, t.Callable): continue
         yield func
 
+def _module_name(module) -> str:
+    return module.__name__ if module.__name__ != '__main__' else 'qaczar'
+
 def function_index(module = None) -> str:
     if module is None: module = sys.modules[__name__]
-    mod_name = module.__name__ if module.__name__ != '__main__' else 'qaczar'
+    mod_name = _module_name(module)
     return '\n'.join(
             f"<li><a href='{mod_name}.py/{fn.__name__}'>{fn.__name__}</a></li>" 
             for fn in _extract_api(module))
-
-def _module_name(module) -> str:
-    return module.__name__ if module.__name__ != '__main__' else 'qaczar'
 
 def _build_form(module, subpath: str) -> str:
     # TODO: Handle multiple subpaths (form composition?).
