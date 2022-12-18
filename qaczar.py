@@ -249,6 +249,7 @@ def _build_form(module, subpath: str) -> str:
             form += f"<input type='text' name='{name}'>"
         else:
             form += f"<input type='text' name='{name}' value='{param.default}'>"
+        form += f"<br>"
     submit_label = func.__name__.replace('_', ' ').title()
     form += f"<input type='submit' value='{submit_label}'></form>"
     return form
