@@ -233,10 +233,10 @@ def _build_form(module, subpath: str) -> str:
     # TODO: Consider using annotations to determine the form type.
     # TODO: Consider using etree to build the form.
     # TODO: Add function name, description, and docstring.
+    # TODO: Functions with cache decorator should just be invoked?
     func = getattr(module, subpath)
     sig = inspect.signature(func)
-    mod_name = module.__name__ if module.__name__ != '__main__' else 'qaczar'
-    form = f"<form action='/{mod_name}.py/{subpath}' method='POST'>"
+    form = f"<form action='/{ _module_name(module)}.py/{subpath}' method='POST'>"
     for name, param in sig.parameters.items():
         if param.kind == param.VAR_KEYWORD: continue
         if param.annotation is param.empty: continue
@@ -260,12 +260,8 @@ def process_py(fname: str, context: dict) -> str:
     outname = f"{_module_name(module)}.{subpath}.html" 
     method = context.get('method', 'GET')
     if method == 'GET':
-        # TODO: Functions with cache decorator should just be invoked.
         form = _build_form(module, subpath)
-        # return write_file(outname, form)
-        outname = process_html('qaczar.html', {'form': form})
-        emit(f"Generated {outname}")
-        return outname
+        return write_file(outname, form)
     elif method == 'POST':
         func = getattr(module, subpath)
         result = func(**context['data'])
