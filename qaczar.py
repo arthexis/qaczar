@@ -209,9 +209,7 @@ def _load_template(fname: str) -> str:
 def process_html(fname: str, context: dict) -> str:
     template = _load_template(fname)
     content = template.render(**globals(), **context)
-    write_file(wp := work_path(fname), content, encoding='utf-8')
-    emit(f"Written to {wp=} as {fname=} ({len(content)=} bytes).")  
-    return wp
+    return write_file(work_path(fname), content, encoding='utf-8')
 
 def _extract_api(module) -> t.Generator[t.Callable, None, None]:
     for name, func in inspect.getmembers(module, inspect.isfunction):
@@ -253,9 +251,7 @@ def process_py(fname: str, context: dict) -> str:
     if method == 'GET':
         form = build_form(fname, subpath)
         outname = f"{subpath}.{fname[:-3]}.html"
-        write_file(wp := work_path(outname), form, encoding='utf-8')
-        emit(f"Written form to {wp=} as {outname=} ({len(form)=} bytes).")
-        return wp
+        return write_file(work_path(outname), form, encoding='utf-8')
     elif method == 'POST':
         func = getattr(module, subpath)
         result = func(**context['form'])
