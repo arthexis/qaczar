@@ -397,7 +397,6 @@ def test_server(urllib3, *args, **kwargs) -> t.NoReturn:
 #@#  REPOSITORY
 
 def _commit_source() -> t.NoReturn:
-    emit("Commiting source to repository.")
     os.system('git add .')
     os.system('git commit -m "auto commit"')
     os.system('git push')
