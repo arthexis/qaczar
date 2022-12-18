@@ -73,7 +73,6 @@ def timed(f: t.Callable) -> t.Callable:
     @functools.wraps(f)
     def _timed(*args, **kwargs):
         start = time.time(); elapsed = time.time() - start
-        emit(f"Function <{f.__name__}> {args=} {kwargs=} called.")
         result = f(*args, **kwargs)
         emit(f"Function <{f.__name__}> {args=} {kwargs=} took {elapsed:.4f} seconds.")
         return result
@@ -93,7 +92,6 @@ def imports(*modules: tuple[str]) -> t.Callable:
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
             imported = [_pip_import(module) for module in modules]
-            emit(f"Imported {modules=} for {f.__name__}.")
             return f(*imported, *args, **kwargs)
         return wrapper
     return decorator
@@ -141,7 +139,6 @@ def _start_py(script: str, *args: list[str], **kwargs: dict) -> subprocess.Popen
                             stdout=sys.stdout, stderr=sys.stderr)
     proc._args, proc._kwargs = args, kwargs  # Magic for restart_python.
     atexit.register(proc.terminate)
-    emit(f"Started script='{os.path.basename(script)}' {proc.pid=}.")
     return proc
 
 def _stop_py(proc: subprocess.Popen) -> tuple[tuple, dict]:
@@ -202,7 +199,6 @@ def write_file(fname: str, content: str) -> str:
 def _load_template(fname: str) -> str:
     global TEMPLATES
     if (last := _mtime_file(fname)) != TEMPLATES.get(fname, (None, None))[1]:
-        emit(f"Loading template {fname=}.")
         mt = _pip_import('mako.template')
         tpl = mt.Template(filename=fname)
         TEMPLATES[fname] = tpl, last
@@ -267,7 +263,6 @@ def process_py(fname: str, context: dict) -> str:
         return write_file(outname, form)
     elif method == 'POST':
         func = getattr(module, subpath)
-        emit(f"Invoking {func.__name__}({context['form']})")
         result = func(**context['form'])
         return write_file(outname, result)
     
@@ -278,7 +273,6 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
         suffix, subpath = suffix.split('/')
         context['subpath'] = subpath
     if (processor := globals().get(f'process_{suffix}')):
-        emit(f"Processing {fname=} with <{processor.__name__}>.")
         return processor(f'{prefix}.{suffix}', context)
     return None
 
