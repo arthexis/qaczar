@@ -260,10 +260,11 @@ def process_py(fname: str, context: dict) -> str:
     if method == 'GET':
         # TODO: Functions with cache decorator should just be invoked.
         form = _build_form(module, subpath)
-        return write_file(outname, form)
+        # return write_file(outname, form)
+        return process_html('qaczar.html', {'form': form})
     elif method == 'POST':
         func = getattr(module, subpath)
-        result = func(**context['form'])
+        result = func(**context['data'])
         return write_file(outname, result)
     
 @timed
@@ -350,8 +351,8 @@ def _build_https_server() -> tuple:
             else: path, qs = path.split('?', 1)
             context = {'ip': self.client_address[0], 'ts': iso8601(), 'method': method}
             context['query'] = parse.parse_qs(qs)
-            if method == 'POST': context['form'] = parse.parse_qs(self.rfile_read())
-            else: context['form'] = {}
+            if method == 'POST': context['data'] = parse.parse_qs(self.rfile_read())
+            else: context['data'] = {}
             return context
 
         def build_response(self, method: str = None) -> bool:
