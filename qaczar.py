@@ -214,15 +214,17 @@ def process_html(fname: str, context: dict) -> str:
     emit(f"Written to {wp=} as {fname=} ({len(content)=} bytes).")  
     return wp
 
-def extract_api(module) -> t.Generator[t.Callable, None, None]:
+def _extract_api(module) -> t.Generator[t.Callable, None, None]:
     for name, func in inspect.getmembers(module, inspect.isfunction):
         if name.startswith('_'): continue
         if inspect.signature(func).return_annotation == t.NoReturn: continue
         yield func
 
-def function_index(module) -> str:
-    functions = inspect.getmembers(module, inspect.isfunction)
-    return process_html('index.html', {'functions': functions})
+def function_index(module = None) -> str:
+    if module is None: module = sys.modules[__name__]
+    return '\n'.join(
+            f"<li><a href='{module}.py/{fn.__name__}'>{fn.__name__}</a></li>" 
+            for fn in _extract_api(module))
 
 def build_form(module, subpath: str) -> str:
     # TODO: Handle multiple subpaths (form composition?).
