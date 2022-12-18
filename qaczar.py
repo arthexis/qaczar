@@ -24,6 +24,7 @@ import typing as t
 
 PYTHON = sys.executable
 PID = os.getpid()
+DEBUG = False  
 
 def iso8601() -> str: 
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
@@ -60,7 +61,7 @@ def _write_file(fname: str, data: bytes | str, encoding=None) -> str:
 import importlib
 import functools
 
-DEBUG = False
+REQUIREMENTS = set()
 
 def dedent(code: str) -> str:
     indent = len(code) - len(code.lstrip()) - 1
@@ -77,8 +78,6 @@ def timed(f: t.Callable) -> t.Callable:
         emit(f"Function <{f.__name__}> {args=} {kwargs=} took {elapsed:.4f} seconds.")
         return result
     return timed
-
-REQUIREMENTS = set()
 
 def _pip_import(module: str) -> t.Any:
     global REQUIREMENTS
@@ -218,7 +217,7 @@ def process_html(fname: str, context: dict) -> str:
 def _extract_api(module) -> t.Generator[t.Callable, None, None]:
     for name, func in inspect.getmembers(module, inspect.isfunction):
         if name.startswith('_'): continue
-        if inspect.signature(func).return_annotation == t.NoReturn: continue
+        if inspect.signature(func).return_annotation in (t.NoReturn, t.Callable): continue
         yield func
 
 def function_index(module = None) -> str:
@@ -258,6 +257,7 @@ def process_py(fname: str, context: dict) -> str:
     module = importlib.import_module(fname[:-3])
     method = context.get('method', 'GET')
     if method == 'GET':
+        # TODO: Functions with cache decorator should just be invoked.
         form = build_form(module, subpath)
         outname = f"{subpath}.{fname[:-3]}.html"
         return _write_work_file(outname, form)
@@ -299,7 +299,7 @@ HOST, PORT, SITE = 'localhost', 9443, 'qaczar.com'
     'cryptography.hazmat.primitives.asymmetric.rsa',
     'cryptography.hazmat.primitives.hashes',
     'cryptography.hazmat.primitives.serialization')
-def get_ssl_certs(x509, rsa, hashes, ser, site=HOST) -> tuple[str, str]:
+def _get_ssl_certs(x509, rsa, hashes, ser, site=HOST) -> tuple[str, str]:
     if not os.path.exists('.ssl'): os.mkdir('.ssl')
     certname, keyname = '.ssl/cert.pem', '.ssl/key.pem'
     if os.path.exists(certname) and os.path.exists(keyname):
@@ -328,7 +328,7 @@ def get_ssl_certs(x509, rsa, hashes, ser, site=HOST) -> tuple[str, str]:
 
 def _build_https_server() -> tuple:
     ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    ssl_ctx.load_cert_chain(*get_ssl_certs())
+    ssl_ctx.load_cert_chain(*_get_ssl_certs())
     
     class SSLServer(ss.TCPServer):
         def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True):
@@ -383,7 +383,7 @@ def _build_https_server() -> tuple:
 def test_server(urllib3, *args, **kwargs) -> t.NoReturn:
     http = urllib3.PoolManager(
         cert_reqs='CERT_REQUIRED',
-        ca_certs=get_ssl_certs()[0])
+        ca_certs=_get_ssl_certs()[0])
     
     def server_request(fname:str):
         r = http.request('GET', url := f"https://{HOST}:{PORT}/{fname}", timeout=30)
@@ -397,7 +397,7 @@ def test_server(urllib3, *args, **kwargs) -> t.NoReturn:
 
 #@#  REPOSITORY
 
-def commit_source() -> t.NoReturn:
+def _commit_source() -> t.NoReturn:
     emit("Commiting source to repository.")
     os.system('git add .')
     os.system('git commit -m "auto commit"')
@@ -430,7 +430,7 @@ def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
             emit(f"Running {test=}...")
             globals()[test](*args, **kwargs)
     emit(f"Tests for {suite} passed.")
-    commit_source()
+    _commit_source()
 
 
 def deployer_role(*args, **kwargs) -> t.NoReturn:
@@ -439,7 +439,7 @@ def deployer_role(*args, **kwargs) -> t.NoReturn:
 
 #@# DISPATCHER
 
-def role_dispatcher(role: str, args: tuple, kwargs: dict) -> None:
+def role_dispatcher(role: str, args: tuple, kwargs: dict) -> t.NoReturn:
     # TODO: Consider using tomlib for configuration.
     import threading
     _set_workdir(role)
