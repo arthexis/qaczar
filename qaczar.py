@@ -231,18 +231,18 @@ def build_form(module, subpath: str) -> str:
     # TODO: Fix error displaying the form.
     func = getattr(module, subpath)
     sig = inspect.signature(func)
-    form = f"""<form action="{module.__name__}.py/{subpath}" method="POST">"""
+    mod_name = module.__name__ if module.__name__ != '__main__' else 'qaczar'
+    form = f"<form action='{mod_name}.py/{subpath}' method='POST'>"
     for name, param in sig.parameters.items():
         if param.kind == param.VAR_KEYWORD: continue
-        form += f"""<label for="{name}">{name}</label>"""
+        form += f"<label for='{name}'>{name}</label>"
         if param.kind == param.VAR_POSITIONAL:
-            form += f"""<input type="text" name="{name}" value="[]">"""
+            form += f"<input type='text' name='{name}' value='[]'>"
         elif param.default is param.empty:
-            form += f"""<input type="text" name="{name}">"""
+            form += f"<input type='text' name='{name}'>"
         else:
-            form += f"""<input type="text" name="{name}" value="{param.default}">"""
-    form += """<input type="submit" value="Submit">"""
-    form += "</form>"
+            form += f"<input type='text' name='{name}' value='{param.default}'>"
+    form += f"<input type='submit' value='Submit {mod_name}'></form>"
     return form
 
 def process_py(fname: str, context: dict) -> str:
