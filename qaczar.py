@@ -230,7 +230,7 @@ def build_form(module, subpath: str) -> str:
     # TODO: Fix error displaying the form.
     func = getattr(module, subpath)
     sig = inspect.signature(func)
-    form = f"""<form action="{module}.py/{subpath}" method="POST">"""
+    form = f"""<form action="{module.__name__}.py/{subpath}" method="POST">"""
     for name, param in sig.parameters.items():
         if param.kind == param.VAR_KEYWORD: continue
         form += f"""<label for="{name}">{name}</label>"""
