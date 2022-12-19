@@ -208,7 +208,7 @@ def list_files(path: str = '.', tag: str = 'li', ext: str = None, link: bool = T
     return '\n'.join(
         f'<{tag}>{fname}</{tag}>' if not link else f'<{tag}><a href="{fname}">{fname}</a></{tag}>'
         for fname in os.listdir(path)
-        if (not ext or fname.endswith(ext)) and not fname.startswith('.'))
+        if (not ext or fname.endswith(ext)) and not fname.startswith(('.', '_')))
 
 def _load_template(fname: str) -> str:
     global TEMPLATES
