@@ -25,6 +25,7 @@ import typing as t
 PYTHON = sys.executable
 PID = os.getpid()
 DEBUG = False  
+DIR = os.path.dirname(os.path.abspath(__file__))
 
 def iso8601() -> str: 
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
@@ -211,10 +212,14 @@ def list_files(path: str = '.', tag: str = 'li', ext: str = None, link: bool = T
         if (not ext or fname.endswith(ext)) and not fname.startswith(('.', '_')))
 
 def _load_template(fname: str) -> str:
-    global TEMPLATES
+    # TODO: Add TemplateLookup to enable relative imports.
+    # TODO: Consider some kind of caching.
+    global TEMPLATES, DIR
     if (last := _mtime_file(fname)) != TEMPLATES.get(fname, (None, None))[1]:
         mt = _pip_import('mako.template')
-        tpl = mt.Template(filename=fname)
+        ml = _pip_import('mako.lookup')
+        lookup = ml.TemplateLookup(directories=[DIR, os.path.dirname(fname)])
+        tpl = mt.Template(filename=fname, lookup=lookup)
         TEMPLATES[fname] = tpl, last
         return tpl
     return TEMPLATES[fname][0]
