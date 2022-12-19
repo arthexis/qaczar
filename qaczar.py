@@ -277,8 +277,7 @@ def _build_form(mod_name: str, subpath: str) -> str:
         form += f"<label for='{name}'>{name.upper()}:</label>"
         form += _build_input_field(name, param) + "<br>"
     form += f"<button type='submit'>EXECUTE</button></form>"
-    write_file(f"{mod_name}__{subpath}.html" , form)
-    return form
+    return write_file(f"{mod_name}__{subpath}.html" , form)
 
 def _execute_form(mod_name: str, subpath: str, data: dict) -> str:
     func = getattr(sys.modules[mod_name], subpath)
@@ -286,7 +285,7 @@ def _execute_form(mod_name: str, subpath: str, data: dict) -> str:
         data = {k: v[0] for k, v in data.items()}
     result = func(**data)
     if isinstance(result, str): result = f"<pre>{result}</pre>"
-    return result
+    return write_file(f"{mod_name}__{subpath}.html", result)
 
 def process_py(fname: str, context: dict) -> str:
     """Allows extracting or executing functions from a python module.
