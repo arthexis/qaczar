@@ -317,7 +317,7 @@ SEEDS = {
 }
 
 def seed_application(app_name: str) -> None:
-    # TODO: Generalize seed files in a constant map.
+    global SEEDS
     if not os.path.exists(app_name): 
         emit(f"Creating new application: {app_name}")
         for ext, content in SEEDS.items():
