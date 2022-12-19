@@ -206,7 +206,7 @@ def list_file(fname: str = 'qaczar.py', tag: str = 'li', filter: str = None) -> 
 def list_files(path: str = '.', tag: str = 'li', ext: str = None) -> str:
     return ''.join(f'<{tag}>{fname}</{tag}>'
         for fname in os.listdir(path)
-        if not ext or fname.endswith(ext))
+        if (not ext or fname.endswith(ext)) and not fname.startswith('.'))
 
 def _load_template(fname: str) -> str:
     global TEMPLATES
