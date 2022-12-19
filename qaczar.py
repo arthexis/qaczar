@@ -365,6 +365,10 @@ def ascii_banner(pyfiglet, text:str) -> str:
     fonts = pyfiglet.FigletFont.getFonts()
     font = random.choice(fonts)
     return pyfiglet.figlet_format(text, font=font)
+
+def collect_contact(email: str, message: str) -> str:
+    # TODO: Consider field validation decorators for POST receiver functions.
+    emit(f"Contact from {email}: {message}")
     
 
 #@# HTTPS SERVER
