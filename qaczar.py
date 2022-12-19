@@ -47,7 +47,7 @@ def _mtime_file(fname: str) -> float:
     if not os.path.isfile(fname): return 0.0
     return os.path.getmtime(fname)
 
-def read_file(fname: str, encoding=None) -> bytes:
+def _read_file(fname: str, encoding=None) -> bytes:
     if '__' in fname: fname = fname.replace('__', '.')
     with open(fname, 'rb' if not encoding else 'r', encoding=encoding) as f: return f.read()
     
@@ -82,7 +82,7 @@ def timed(f: t.Callable) -> t.Callable:
 
 def _pip_import(module: str) -> t.Any:
     name = module.split('.')[0]
-    requirements = read_file('requirements.txt', encoding='utf-8').splitlines()
+    requirements = _read_file('requirements.txt', encoding='utf-8').splitlines()
     if name not in requirements:    
         subprocess.run([sys.executable, '-m', 'pip', 'install', name, '--quiet'])
         with open('requirements.txt', 'a', encoding='utf-8') as f: f.write(f'{name}\n')
@@ -163,11 +163,11 @@ def _restart_py(proc: subprocess.Popen = None, opid=PID) -> subprocess.Popen:
 
 def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:  
     assert isinstance(proc, subprocess.Popen)
-    source, old_mtime, stable = read_file(fn), _mtime_file(fn), True
+    source, old_mtime, stable = _read_file(fn), _mtime_file(fn), True
     while True:
         time.sleep(2.6)
         if (new_mtime := _mtime_file(fn)) != old_mtime:
-            mutation, old_mtime = read_file(fn), new_mtime
+            mutation, old_mtime = _read_file(fn), new_mtime
             if mutation != source:
                 emit(f"Mutation detected. Optimistic restart.")
                 proc, stable = _restart_py(proc), True
@@ -181,7 +181,7 @@ def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
             halt(f"Script died twice. Stopping watcher.")
         if not stable:
             emit(f"Stabilizing {proc.pid=}.")
-            source, stable = read_file(fn), True
+            source, stable = _read_file(fn), True
             
 
 #@# CONTENT GENERATOR
@@ -200,23 +200,26 @@ def _work_path(fname: str) -> str:
     if not os.path.isdir(WORKDIR): os.mkdir(WORKDIR)
     return os.path.join(WORKDIR, fname)
 
+def read_file(fname: str) -> str:
+    """Read a file from the active work folder."""
+    return _read_file(_work_path(fname), encoding='utf-8')
+
 def write_file(fname: str, content: str) -> str:
-    """Write a file to this server's work folder."""
-    # TODO: Consider if we need to override read_file() to read from work folder.
+    """Write a file to the active work folder."""
     return _write_file(_work_path(fname), content, encoding='utf-8')
 
 def enum_file(fname: str, tag: str = 'li', prefix: str = None) -> str:
     """Enumerate lines in a file, optionally filtering by prefix."""
     return ''.join(f'<{tag} data-ln="{i}">{line if not prefix else line.split(prefix)[1]}</{tag}>'
-        for i, line in enumerate(read_file(fname, encoding='utf-8').splitlines())
+        for i, line in enumerate(_read_file(fname, encoding='utf-8').splitlines())
         if not prefix or line.strip().startswith(prefix))
 
-def list_dir(path: str = '.', tag: str = 'li', ext: str = None, link: bool = True) -> str:
+def list_dir(directory: str = '.', tag: str = 'li', ext: str = None, link: bool = True) -> str:
     """List files in a directory, optionally filtering by extension."""
     return '\n'.join(
-        f'<{tag}>{fname}</{tag}>' if not link else f'<{tag}><a href="/{fname}">{fname}</a></{tag}>'
-        for fname in os.listdir(path)
-        if (not ext or fname.endswith(ext)) and not fname.startswith(('.', '_')))
+        f'<{tag}>{f}</{tag}>' if not link else f'<{tag}><a href="/{f}">{f}</a></{tag}>'
+        for f in os.listdir(directory)
+        if (not ext or f.endswith(ext)) and not f.startswith(('.', '_')))
 
 def _load_template(fname: str) -> str:
     global TEMPLATES, DIR
@@ -236,24 +239,18 @@ def process_html(fname: str, context: dict) -> str:
     content = template.render(**globals(), **context)
     return write_file(fname, content)
 
-def extract_api(module = sys.modules[__name__]) -> t.Generator[t.Callable, None, None]:
+def extract_api() -> t.Generator[t.Callable, None, None]:
     """Extract all public functions from a module."""
-    # TODO: Consider if 1st param of extract_api et al should be a string instead of module.
-    for name, func in inspect.getmembers(module, inspect.isfunction):
+    for name, func in inspect.getmembers(sys.modules[__name__], inspect.isfunction):
         if name.startswith('_') or not func.__doc__: continue
         if inspect.signature(func).return_annotation in (t.NoReturn, t.Callable): continue
         yield func
 
-def _module_name(module) -> str:
-    global APP
-    return module.__name__ if module.__name__ != '__main__' else APP
-
-def function_index(module = sys.modules[__name__]) -> str:
+def function_index() -> str:
     """Generate a list of links to all public functions in a module."""
-    mod_name = _module_name(module)
-    return '\n'.join(
-            f"<li><a href='{mod_name}.py/{fn.__name__}'>{fn.__name__}</a></li>" 
-            for fn in extract_api(module))
+    global APP
+    return '\n'.join(f"<li><a href='{APP}.py/{fn.__name__}'>{fn.__name__}</a></li>" 
+            for fn in extract_api())
 
 def _build_input_field(name: str, param: inspect.Parameter) -> str:
     input_type = 'text'
@@ -264,34 +261,28 @@ def _build_input_field(name: str, param: inspect.Parameter) -> str:
         return f"<input type='{input_type}' name='{name}'>"
     return f"<input type='{input_type}' name='{name}' value='{param.default}'>"
 
-FORMS = {}
 
-def _build_form(module, subpath: str) -> str:
+def _build_form(mod_name: str, subpath: str) -> str:
     # TODO: Handle multiple subpaths by using fieldsets? Allow decorators?
     # TODO: Cache forms to avoid re-parsing functions.
-    global FORMS
-    if (last := _mtime_file(module.__file__)) != FORMS.get(module.__file__, (None, None))[1]:
-        func = getattr(module, subpath)
-        sig, mod_name = inspect.signature(func), _module_name(module)
-        form = (f"<form action='/{mod_name}.py/{subpath}' "
-                f"method='POST' accept-charset='utf-8' name='{subpath}'>" 
-                f"<link rel='stylesheet' href='/qaczar.css'>"
-                f"<h3>{subpath.upper()} @ {mod_name.upper()}</h3>"
-                f"<p class='doc'>{func.__doc__}</p>")
-        for name, param in sig.parameters.items():
-            if not param.kind in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD): continue
-            if name.startswith('_'): continue
-            if param.annotation is param.empty: continue
-            form += f"<label for='{name}'>{name.upper()}:</label>"
-            form += _build_input_field(name, param) + "<br>"
-        form += f"<button type='submit'>EXECUTE</button></form>"
-        FORMS[module.__file__] = form, last
-        emit(f"Built {module.__file__=} {last=}.")
-    else: form = FORMS[module.__file__][0]
+    func = getattr(sys.modules[mod_name], subpath)
+    sig = inspect.signature(func)
+    form = (f"<form action='/{mod_name}.py/{subpath}' "
+            f"method='POST' accept-charset='utf-8' name='{subpath}'>" 
+            f"<link rel='stylesheet' href='/qaczar.css'>"
+            f"<h3>{subpath.upper()} @ {mod_name.upper()}</h3>"
+            f"<p class='doc'>{func.__doc__}</p>")
+    for name, param in sig.parameters.items():
+        if not param.kind in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD): continue
+        if name.startswith('_'): continue
+        if param.annotation is param.empty: continue
+        form += f"<label for='{name}'>{name.upper()}:</label>"
+        form += _build_input_field(name, param) + "<br>"
+    form += f"<button type='submit'>EXECUTE</button></form>"
     return form
 
-def _execute_form(module, subpath: str, data: dict) -> str:
-    func = getattr(module, subpath)
+def _execute_form(mod_name: str, subpath: str, data: dict) -> str:
+    func = getattr(sys.modules[mod_name], subpath)
     if all(len(v) == 1 for v in data.values()):
         data = {k: v[0] for k, v in data.items()}
     result = func(**data)
@@ -305,7 +296,7 @@ def process_py(fname: str, context: dict) -> str:
     """
     if (subpath := context.get('subpath', None)) is None: return fname
     module = importlib.import_module(fname[:-3])
-    outname = f"{_module_name(module)}__{subpath}.html" 
+    outname = f"{module.__name__}__{subpath}.html" 
     method = context.get('method', 'GET')
     if method == 'GET':
         return write_file(outname, _build_form(module, subpath))
@@ -411,7 +402,7 @@ def _get_ssl_certs(x509, rsa, hashes, ser, site=HOST) -> tuple[str, str]:
     if not os.path.exists('.ssl'): os.mkdir('.ssl')
     certname, keyname = '.ssl/cert.pem', '.ssl/key.pem'
     if os.path.exists(certname) and os.path.exists(keyname):
-        cert = x509.load_pem_x509_certificate(read_file(certname))
+        cert = x509.load_pem_x509_certificate(_read_file(certname))
         if cert.not_valid_after > dt.datetime.utcnow(): return certname, keyname
         else: os.remove(certname); os.remove(keyname)
     emit("Generating new SSL certificates for localhost.")
