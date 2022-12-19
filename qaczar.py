@@ -225,6 +225,7 @@ def _load_template(fname: str) -> str:
     return TEMPLATES[fname][0]
 
 def process_html(fname: str, context: dict) -> str:
+    # TODO: Make the title of the page dynamic.
     template = _load_template(fname)
     content = template.render(**globals(), **context)
     return write_file(fname, content)

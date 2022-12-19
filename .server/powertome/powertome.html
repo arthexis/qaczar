@@ -1,3 +1,40 @@
-%inherit 'qaczar.html'
-%block content
-
+<!DOCTYPE html>
+<html lang="en">
+    <!-- Use a single HTML template for all pages. -->
+    <!-- Use a single CSS file for all pages. -->
+    <!-- Use a single Python script for all pages. -->
+<head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="/qaczar.css" type="text/css" />
+    <title>QACZAR</title>
+</head>
+
+<body>
+    <h1><a href="/qaczar.html">QACZAR</a></h1>
+    <hr />
+    <h2>API</h2><ul><li><a href='qaczar.py/arg_line'>arg_line</a></li>
+<li><a href='qaczar.py/dedent'>dedent</a></li>
+<li><a href='qaczar.py/emit'>emit</a></li>
+<li><a href='qaczar.py/extract_api'>extract_api</a></li>
+<li><a href='qaczar.py/function_index'>function_index</a></li>
+<li><a href='qaczar.py/hello_world'>hello_world</a></li>
+<li><a href='qaczar.py/iso8601'>iso8601</a></li>
+<li><a href='qaczar.py/list_file'>list_file</a></li>
+<li><a href='qaczar.py/list_files'>list_files</a></li>
+<li><a href='qaczar.py/process_html'>process_html</a></li>
+<li><a href='qaczar.py/process_py'>process_py</a></li>
+<li><a href='qaczar.py/read_file'>read_file</a></li>
+<li><a href='qaczar.py/split_arg_line'>split_arg_line</a></li>
+<li><a href='qaczar.py/write_file'>write_file</a></li></ul><hr />
+    <h2>Roadmap</h2><ol class="ln"><li data-ln="89"> Allow specifying a version number (important for self-recovery).</li><li data-ln="119"> Add qaczar itself (edit mode?) to a new requirements.txt file.</li><li data-ln="214"> Add TemplateLookup to enable relative imports.</li><li data-ln="215"> Consider some kind of caching.</li><li data-ln="247"> Handle multiple subpaths by using fieldsets.</li><li data-ln="248"> Add function docstring (and give docs a style).</li><li data-ln="452"> Use tests to prevent regressions (loss of functionality)</li><li data-ln="469"> Consider using tomlib for configuration.</li></ol><hr />
+    <h2>Files</h2><ul><li><a href="powertome">powertome</a></li>
+<li><a href="qaczar.css">qaczar.css</a></li>
+<li><a href="qaczar.html">qaczar.html</a></li>
+<li><a href="qaczar.py">qaczar.py</a></li>
+<li><a href="requirements.txt">requirements.txt</a></li></ul><hr />
+
+    <footer>
+        <a href="/qaczar.py">-*- Powered by qaczar.py -*-</a>
+    </footer>
+</body>
+</html>
