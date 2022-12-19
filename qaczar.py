@@ -264,22 +264,30 @@ def _build_input_field(name: str, param: inspect.Parameter) -> str:
         return f"<input type='{input_type}' name='{name}'>"
     return f"<input type='{input_type}' name='{name}' value='{param.default}'>"
 
+FORMS = {}
+
 def _build_form(module, subpath: str) -> str:
     # TODO: Handle multiple subpaths by using fieldsets? Allow decorators?
-    func = getattr(module, subpath)
-    sig, mod_name = inspect.signature(func), _module_name(module)
-    form = (f"<form action='/{mod_name}.py/{subpath}' "
-            f"method='POST' accept-charset='utf-8' name='{subpath}'>" 
-            f"<link rel='stylesheet' href='/qaczar.css'>"
-            f"<h3>{subpath.upper()} @ {mod_name.upper()}</h3>"
-            f"<p class='doc'>{func.__doc__}</p>")
-    for name, param in sig.parameters.items():
-        if not param.kind in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD): continue
-        if name.startswith('_'): continue
-        if param.annotation is param.empty: continue
-        form += f"<label for='{name}'>{name.upper()}:</label>"
-        form += _build_input_field(name, param) + "<br>"
-    form += f"<button type='submit'>EXECUTE</button></form>"
+    # TODO: Cache forms to avoid re-parsing functions.
+    global FORMS
+    if (last := _mtime_file(module.__file__)) != FORMS.get(module.__file__, (None, None))[1]:
+        func = getattr(module, subpath)
+        sig, mod_name = inspect.signature(func), _module_name(module)
+        form = (f"<form action='/{mod_name}.py/{subpath}' "
+                f"method='POST' accept-charset='utf-8' name='{subpath}'>" 
+                f"<link rel='stylesheet' href='/qaczar.css'>"
+                f"<h3>{subpath.upper()} @ {mod_name.upper()}</h3>"
+                f"<p class='doc'>{func.__doc__}</p>")
+        for name, param in sig.parameters.items():
+            if not param.kind in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD): continue
+            if name.startswith('_'): continue
+            if param.annotation is param.empty: continue
+            form += f"<label for='{name}'>{name.upper()}:</label>"
+            form += _build_input_field(name, param) + "<br>"
+        form += f"<button type='submit'>EXECUTE</button></form>"
+        FORMS[module.__file__] = form, last
+        emit(f"Built {module.__file__=} {last=}.")
+    else: form = FORMS[module.__file__][0]
     return form
 
 def _execute_form(module, subpath: str, data: dict) -> str:
@@ -303,7 +311,7 @@ def process_py(fname: str, context: dict) -> str:
         return write_file(outname, _build_form(module, subpath))
     elif method == 'POST':
         data = context.get('data', {})
-        return write_file(outname, _execute_form(module, subpath, data))
+        return _execute_form(module, subpath, data)
 
 def create_app(directory: str) -> None:
     """Create a new application using SEEDS from qaczar.py."""
@@ -318,6 +326,7 @@ def create_app(directory: str) -> None:
         for ext, content in seeds.items():
             write_file(f'{directory}/{directory}.{ext}', content)
     else: emit(f"Skip existing application: {directory}")
+    return f'{directory}/{directory}.html'
 
 def _process_errors(fname: str, context: dict) -> str:
     """Handle errors by returning a custom 404 page."""
