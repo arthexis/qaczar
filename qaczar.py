@@ -336,13 +336,18 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
     return None
 
 
-#@# POST RECEIVERS
+#@# COMPONENTS
 
 def hello_world(name: str = 'World', wrapped: bool=False) -> str:
     """Say hello to the world! Useful as a smoke test."""
     if wrapped:
         return f"<div class='hello'>Hello, {name}!</div>"
     return f"Hello, {name}!"
+
+@imports('pyfiglet')
+def ascii_banner(pyfiglet, text:str) -> str:
+    """Generate a banner from ASCII text."""
+    return pyfiglet.figlet_format(text)
 
 
 #@# HTTPS SERVER
