@@ -25,8 +25,9 @@ import typing as t
 PYTHON = sys.executable
 PID = os.getpid()
 DEBUG = False  
-DIR = os.path.dirname(os.path.abspath(__file__))
 BRANCH = 'main'
+DIR = os.path.dirname(os.path.abspath(__file__))
+APP = os.path.basename(DIR)
 
 def iso8601() -> str: 
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
@@ -153,11 +154,12 @@ def _stop_py(proc: subprocess.Popen) -> tuple[tuple, dict]:
     return proc._args, proc._kwargs
 
 def _restart_py(proc: subprocess.Popen = None, opid=PID) -> subprocess.Popen:
+    global APP
     if proc and proc.poll() is None: 
         args, kwargs = _stop_py(proc)
         kwargs['opid'] = opid
     else: args, kwargs = [], {}
-    return _start_py('qaczar.py', *args, **kwargs)
+    return _start_py(f'{APP}.py', *args, **kwargs)
 
 def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:  
     assert isinstance(proc, subprocess.Popen)
@@ -186,12 +188,12 @@ def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
 
 import inspect
 
-WORKDIR = os.path.join(os.path.dirname('qaczar.py'), '.work')
+WORKDIR = os.path.join(DIR, '.work')
 TEMPLATES = {}
 
 def _set_workdir(role: str) -> None:
-    global WORKDIR
-    WORKDIR = os.path.join(os.path.dirname('qaczar.py'), f'.{role}')
+    global DIR, WORKDIR
+    WORKDIR = os.path.join(DIR, f'.{role}')
 
 def _work_path(fname: str) -> str:
     global WORKDIR
@@ -348,12 +350,20 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
     return None
 
 
+#@# DATABASE
+
+import sqlite3
+
+def _connect_db() -> sqlite3.Connection:
+    return sqlite3.connect(f'{APP}.sqlite3')
+
+
 #@# COMPONENTS
 
 import random
 
 def page_title(title: str = '') -> str:
-    return title if title else f'QACZAR @ {iso8601()}'
+    return title if title else f'{APP.upper()}'
 
 def hello_world(name: str = 'World', wrapped: bool=False) -> str:
     """Say hello to the world! Useful as a smoke test."""
