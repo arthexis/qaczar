@@ -8,7 +8,6 @@
 # - Keep the line width to less than 100 characters.
 # - Use functions, not classes, for modularity, composability and encapsulation.
 # - Functions should not reference functions or globals from later in the script.
-# - TODO items should be encapsulated in functions to simplify refactoring.
 # - Avoid using asynchrony, concurrency, multiprocessing, multithreading, etc. Use HTTPS for RPC.
 # - Use the standard library, not third-party libraries. Automate everything ourselves.
 # - Sometimes its ok to break the rules: take advantage of the language.
