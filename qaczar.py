@@ -82,7 +82,7 @@ def _pip_import(module: str) -> t.Any:
     requirements = read_file('requirements.txt', encoding='utf-8').splitlines()
     if name not in requirements:    
         subprocess.run([sys.executable, '-m', 'pip', 'install', name, '--quiet'])
-        with open('requirements.txt', 'a', encoding='utf-8') as f: f.write(f'{name}\r\n')
+        with open('requirements.txt', 'a', encoding='utf-8') as f: f.write(f'{name}\n')
     return importlib.import_module(module)
 
 def imports(*modules: tuple[str]) -> t.Callable:
