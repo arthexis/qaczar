@@ -5,12 +5,14 @@
     <!-- Use a single Python script for all pages. -->
 <head>
     <meta charset="utf-8" />
+    <title><%block name="title">QACZAR</%block></title>
     <link rel="stylesheet" href="/qaczar.css" type="text/css" />
-    <title>QACZAR</title>
+    <%block name="stylesheet">
+    </%block>
 </head>
 
-<body>
-    <h1><a href="/qaczar.html">QACZAR</a></h1>
+<body><%block name="body">
+    <h1><a href="/qaczar.html"><%block name="h1">QACZAR</%block></a></h1>
     <hr />
     <h2>API</h2><ul>${function_index()}</ul><hr />
     <h2>Roadmap</h2><ol class="ln">${list_file(filter='# TODO:')}</ol><hr />
@@ -19,5 +21,5 @@
     <footer>
         <a href="/qaczar.py">-*- Powered by qaczar.py -*-</a>
     </footer>
-</body>
+</%block></body>
 </html>
