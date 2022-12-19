@@ -249,8 +249,18 @@ def function_index(module = sys.modules[__name__]) -> str:
             f"<li><a href='{mod_name}.py/{fn.__name__}'>{fn.__name__}</a></li>" 
             for fn in extract_api(module))
 
+def _build_input_field(name: str, param: inspect.Parameter) -> str:
+    input_type = 'text'
+    if param.annotation is not param.empty:
+        if param.annotation is int: input_type = 'number'
+        elif param.annotation is bool: input_type = 'checkbox'
+    if param.default is param.empty or param.default is None:
+        return f"<input type='{input_type}' name='{name}'>"
+    return f"<input type='{input_type}' name='{name}' value='{param.default}'>"
+
 def _build_form(module, subpath: str) -> str:
     # TODO: Handle multiple subpaths by using fieldsets? Allow decorators?
+    # TODO: Exclude fields without annotations.
     func = getattr(module, subpath)
     sig, mod_name = inspect.signature(func), _module_name(module)
     form = (f"<form action='/{mod_name}.py/{subpath}' "
@@ -259,18 +269,10 @@ def _build_form(module, subpath: str) -> str:
             f"<h3>{subpath.upper()} @ {mod_name.upper()}</h3>"
             f"<p class='doc'>{func.__doc__}</p>")
     for name, param in sig.parameters.items():
-        if param.kind in (param.VAR_KEYWORD, param.VAR_POSITIONAL): continue
-        if name.startswith('_'): continue
+        if not param.kind in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD): continue
+        if not param.annotation or name.startswith('_'): continue
         form += f"<label for='{name}'>{name.upper()}:</label>"
-        input_type = 'text'
-        if param.annotation is not param.empty:
-            if param.annotation is int: input_type = 'number'
-            elif param.annotation is bool: input_type = 'checkbox'
-        if param.default is param.empty or param.default is None:
-            form += f"<input type='{input_type}' name='{name}'>"
-        else:
-            form += f"<input type='{input_type}' name='{name}' value='{param.default}'>"
-        form += f"<br>"
+        form += _build_input_field(name, param) + "<br>"
     form += f"<button type='submit'>EXECUTE</button></form>"
     return form
 
