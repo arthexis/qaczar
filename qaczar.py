@@ -261,7 +261,7 @@ def _build_input_field(name: str, param: inspect.Parameter) -> str:
         return f"<input type='{input_type}' name='{name}'>"
     return f"<input type='{input_type}' name='{name}' value='{param.default}'>"
 
-
+@functools.cache
 def _build_form(mod_name: str, subpath: str) -> str:
     # TODO: Handle multiple subpaths by using fieldsets? Allow decorators?
     # TODO: Cache forms to avoid re-parsing functions.
@@ -279,6 +279,7 @@ def _build_form(mod_name: str, subpath: str) -> str:
         form += f"<label for='{name}'>{name.upper()}:</label>"
         form += _build_input_field(name, param) + "<br>"
     form += f"<button type='submit'>EXECUTE</button></form>"
+    write_file(f"{mod_name}__{subpath}.html" , form)
     return form
 
 def _execute_form(mod_name: str, subpath: str, data: dict) -> str:
@@ -295,14 +296,13 @@ def process_py(fname: str, context: dict) -> str:
     If subpath is not specified, the entire module is extracted and rendered as HTML.
     """
     if (subpath := context.get('subpath', None)) is None: return fname
-    module = importlib.import_module(fname[:-3])
-    outname = f"{module.__name__}__{subpath}.html" 
+    mod_name = fname.split('.')[0]
     method = context.get('method', 'GET')
     if method == 'GET':
-        return write_file(outname, _build_form(module, subpath))
+        return _build_form(mod_name, subpath)
     elif method == 'POST':
         data = context.get('data', {})
-        return _execute_form(module, subpath, data)
+        return _execute_form(mod_name, subpath, data)
 
 def create_app(directory: str) -> None:
     """Create a new application using SEEDS from qaczar.py."""
@@ -541,7 +541,6 @@ def worker_role(*args, **kwargs) -> t.NoReturn:
 #@# DISPATCHER
 
 def _role_dispatcher(role: str, args: tuple, kwargs: dict) -> t.NoReturn:
-    # TODO: Consider using tomlib for role-plan configuration.
     import threading
     _set_workdir(role)
     opid = kwargs.pop('opid', None)  # If we receive opid it means we are being watched.
