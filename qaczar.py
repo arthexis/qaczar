@@ -142,7 +142,7 @@ def _start_py(script: str, *args: list[str], **kwargs: dict) -> subprocess.Popen
     # We cannot use run() for this. Remember to manually terminate the process later.
     proc = subprocess.Popen([PYTHON, script, *line_args],
                             stdout=sys.stdout, stderr=sys.stderr)
-    proc._args, proc._kwargs = args, kwargs  # Magic for restart_python.
+    proc._args, proc._kwargs = args, kwargs  # Magic for restart_py
     atexit.register(proc.terminate)
     return proc
 
@@ -199,6 +199,8 @@ def _work_path(fname: str) -> str:
     return os.path.join(WORKDIR, fname)
 
 def write_file(fname: str, content: str) -> str:
+    """Write a file to this server's work folder."""
+    # TODO: Consider if we need to override read_file() to read from work folder.
     return _write_file(_work_path(fname), content, encoding='utf-8')
 
 def list_file(
@@ -207,7 +209,8 @@ def list_file(
         for i, line in enumerate(read_file(fname, encoding='utf-8').splitlines())
         if not filter or line.strip().startswith(filter))
 
-def list_files(path: str = '.', tag: str = 'li', ext: str = None, link: bool = True) -> str:
+def list_files(
+        path: str = '.', tag: str = 'li', ext: str = None, link: bool = True) -> str:
     return '\n'.join(
         f'<{tag}>{fname}</{tag}>' if not link else f'<{tag}><a href="/{fname}">{fname}</a></{tag}>'
         for fname in os.listdir(path)
@@ -231,6 +234,7 @@ def process_html(fname: str, context: dict) -> str:
     return write_file(fname, content)
 
 def extract_api(module = sys.modules[__name__]) -> t.Generator[t.Callable, None, None]:
+    """Extract all public functions from a module."""
     for name, func in inspect.getmembers(module, inspect.isfunction):
         if name.startswith('_'): continue
         if inspect.signature(func).return_annotation in (t.NoReturn, t.Callable): continue

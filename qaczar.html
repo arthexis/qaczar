@@ -7,10 +7,10 @@
     <!-- https://docs.makotemplates.org/en/latest/inheritance.html -->
 </head>
 <body>
-<%block name="content">
     <%block name="h1"><h1><a href="/qaczar.html">QACZAR!</a></h1><hr /></%block>
     <%block name="nav">
         <nav><h2>API</h2><ul>${function_index()}</ul></nav><hr /></%block>
+    <%block name="content">
     <%block name="articles">
         <article>
         <h2>Roadmap</h2><ol class="ln">${list_file('qaczar.py', filter='# TODO:')}</ol><hr />
