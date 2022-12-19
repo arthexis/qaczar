@@ -302,7 +302,8 @@ def process_py(fname: str, context: dict) -> str:
     if method == 'GET':
         return write_file(outname, _build_form(module, subpath))
     elif method == 'POST':
-        return write_file(outname, _execute_form(module, subpath, context.get('data', {})))
+        data = context.get('data', {})
+        return write_file(outname, _execute_form(module, subpath, data))
 
 def create_app(directory: str) -> None:
     """Create a new application using SEEDS from qaczar.py."""
@@ -350,6 +351,8 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
 
 #@# COMPONENTS
 
+import random
+
 def hello_world(name: str = 'World', wrapped: bool=False) -> str:
     """Say hello to the world! Useful as a smoke test."""
     if wrapped:
@@ -359,8 +362,10 @@ def hello_world(name: str = 'World', wrapped: bool=False) -> str:
 @imports('pyfiglet')
 def ascii_banner(pyfiglet, text:str) -> str:
     """Generate a banner from ASCII text."""
-    return pyfiglet.figlet_format(text)
-
+    fonts = pyfiglet.FigletFont.getFonts()
+    font = random.choice(fonts)
+    return pyfiglet.figlet_format(text, font=font)
+    
 
 #@# HTTPS SERVER
 
