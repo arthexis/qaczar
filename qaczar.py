@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# qaczar.py: A The Poem of the Self-Inventing.
-# by R.J. Guillén (rjguillen [at] qaczar.com) 2022.
+# qaczar.py: An Hymn to the Self-Inventing.
+# by R. G. Osorio (rgo [at] qaczar [dot] com) 2022.
+# License: MIT (https://opensource.org/licenses/MIT).
 
-#   GUIDELINES
-# - Keep the line width to less than 100 characters.
-# - Use functions, not classes, for modularity, composability and encapsulation.
-# - Functions should not reference functions or globals from later in the script.
+# + A few guidelines for editing this script:
+# - Keep the line width to less than 100 characters. Aesthetics matter, but not too much.
+# - Prefer functions, instead of classes, for modularity, composability and encapsulation.
+# - Functions should not reference functions or other globals defined later in the script.
 # - Avoid using asynchrony, concurrency, multiprocessing, multithreading, etc. Use HTTPS for RPC.
-# - Use the standard library, not third-party libraries. Automate everything ourselves.
-# - Sometimes its ok to break the rules: take advantage of the language.
-# - In case of doubt, run the script and see what happens.
+# - Exploit the limits of the standard library, avoid third-party dependencies.
+# - Sometimes, its ok to break the rules: take advantage of the language but clean up after.
+# - In case of doubt, play the game to see what happens. Also, you just lost it.
 
 
 #@# LOCAL PLATFORM
@@ -311,12 +312,17 @@ def hello_world(name: str = 'World', wrapped: bool=False) -> str:
         return f"<div class='hello'>Hello, {name}!</div>"
     return f"Hello, {name}!"
 
+SEEDS = {
+    "html": r"<%inherit file='/qaczar.html'/>"
+}
 
-def seed_application(fname: str) -> None:
+def seed_application(app_name: str) -> None:
     # TODO: Generalize seed files in a constant map.
-    if not os.path.exists(fname): 
-        emit(f"Creating new landing page: {fname}")
-        _write_file(fname, f"<%inherit file='/qaczar.html'/>\n", encoding='utf-8')
+    if not os.path.exists(app_name): 
+        emit(f"Creating new application: {app_name}")
+        for ext, content in SEEDS.items():
+            write_file(f'{app_name}/{app_name}.{ext}', content, encoding='utf-8')
+    else: emit(f"Skipping existing application: {app_name}")
 
 
 #@# HTTPS SERVER
