@@ -251,7 +251,7 @@ def _build_form(module, subpath: str) -> str:
     sig, mod_name = inspect.signature(func), _module_name(module)
     form = (f"<form action='/{mod_name}.py/{subpath}' "
             f"method='POST' accept-charset='utf-8' name='{subpath}'>" 
-            f"<link rel='stylesheet' href='/qaczar.css'>"
+            f"<meta charset='utf-8' /><link rel='stylesheet' href='/qaczar.css'>"
             f"<h3>{subpath.upper()} @ {mod_name.upper()}</h3>"
             f"<p class='doc'>{func.__doc__}</p>")
     for name, param in sig.parameters.items():
