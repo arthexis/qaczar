@@ -118,7 +118,6 @@ import subprocess
 
 def _setup_environ(reset=False) -> None:
     global PYTHON
-    # TODO: Start with qaczar itself (edit mode?) in the requirements.txt file.
     if not os.path.isfile('requirements.txt'): 
         _write_file('requirements.txt', '', encoding='utf-8')
     if reset and os.path.isdir('.venv'):
@@ -236,7 +235,7 @@ def process_html(fname: str, context: dict) -> str:
 def extract_api(module = sys.modules[__name__]) -> t.Generator[t.Callable, None, None]:
     """Extract all public functions from a module."""
     for name, func in inspect.getmembers(module, inspect.isfunction):
-        if name.startswith('_'): continue
+        if name.startswith('_') or not func.__doc__: continue
         if inspect.signature(func).return_annotation in (t.NoReturn, t.Callable): continue
         yield func
 
