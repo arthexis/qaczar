@@ -231,6 +231,7 @@ def _load_template(fname: str) -> str:
     return TEMPLATES[fname][0]
 
 def process_html(fname: str, context: dict) -> str:
+    """Process a template file with context (uses mako.template)."""	
     template = _load_template(fname)
     content = template.render(**globals(), **context)
     return write_file(fname, content)
@@ -247,6 +248,7 @@ def _module_name(module) -> str:
     return module.__name__ if module.__name__ != '__main__' else 'qaczar'
 
 def function_index(module = sys.modules[__name__]) -> str:
+    """Generate a list of links to all public functions in a module."""
     mod_name = _module_name(module)
     return '\n'.join(
             f"<li><a href='{mod_name}.py/{fn.__name__}'>{fn.__name__}</a></li>" 
@@ -289,6 +291,10 @@ def _execute_form(module, subpath: str, data: dict) -> str:
     return result
 
 def process_py(fname: str, context: dict) -> str:
+    """Allows extracting or executing functions from a python module.
+    A subpath is the name of the function to extract or execute and comes from the context.
+    If subpath is not specified, the entire module is extracted and rendered as HTML.
+    """
     if (subpath := context.get('subpath', None)) is None: return fname
     module = importlib.import_module(fname[:-3])
     outname = f"{_module_name(module)}__{subpath}.html" 
