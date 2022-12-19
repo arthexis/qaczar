@@ -289,7 +289,7 @@ def process_py(fname: str, context: dict) -> str:
         return write_file(outname, _execute_form(module, subpath, context.get('data', {})))
     
 def seed_application(app_name: str) -> None:
-    """Create a new application from the SEEDS template map."""
+    """Create a new application using qaczar.py as seed."""
     global SEEDS
     if not os.path.exists(app_name): 
         emit(f"Creating new application: {app_name}")
