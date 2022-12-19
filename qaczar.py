@@ -26,6 +26,7 @@ PYTHON = sys.executable
 PID = os.getpid()
 DEBUG = False  
 DIR = os.path.dirname(os.path.abspath(__file__))
+BRANCH = 'experimental'
 
 def iso8601() -> str: 
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
@@ -500,8 +501,7 @@ def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
     emit(f"Tests for {suite} passed.")
     _commit_source()
 
-
-def deployer_role(*args, **kwargs) -> t.NoReturn:
+def worker_role(*args, **kwargs) -> t.NoReturn:
     pass
 
 

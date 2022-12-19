@@ -1,3 +1,4 @@
 cryptography
 urllib3
 mako
+pyfiglet
