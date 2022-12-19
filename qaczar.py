@@ -291,7 +291,7 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
     else: prefix, suffix = fname.split(".", 1)  # Only one dot is allowed.
     if not os.path.exists(fname): 
         emit(f"Creating new landing page: {fname}")
-        write_file(fname, f"%inherit 'qaczar.html'\n%block content\n\n")
+        _write_file(fname, f"<%inherit file='base.html'/>\n", encoding='utf-8')
     if '/' in suffix: 
         suffix, subpath = suffix.split('/')
         context['subpath'] = subpath
