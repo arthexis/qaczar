@@ -298,9 +298,11 @@ SEEDS = {
 
 def seed_application(app_name: str) -> None:
     """Create a new application using SEEDS from qaczar.py."""
+    # TODO: The directory is not being created. Fix this.
     global SEEDS
     if not os.path.exists(app_name): 
         emit(f"Create new application: {app_name}")
+        os.mkdir(app_name)
         for ext, content in SEEDS.items():
             write_file(f'{app_name}/{app_name}.{ext}', content)
     else: emit(f"Skip existing application: {app_name}")
