@@ -392,6 +392,7 @@ def _build_https_server() -> tuple:
 
     class EmitHandler(hs.SimpleHTTPRequestHandler):
         def log_message(self, format, *args):
+            # TODO: Log accesses to DB for analysis and design of the caching model.
             emit(f"Access from {self.address_string()} {format % args}")
 
         @property
