@@ -301,6 +301,10 @@ def seed_application(app_name: str) -> None:
             write_file(f'{app_name}/{app_name}.{ext}', content)
     else: emit(f"Skip existing application: {app_name}")
 
+def process_errors(fname: str, context: dict) -> str:
+    """Handle errors by returning a custom 404 page."""
+    return write_file('404.html', f"<h1>404</h1><p>Not found: {fname}</p>")
+
 @timed
 def _dispatch_processor(fname: str, context: dict) -> str | None:
     if '.' not in fname: 
@@ -312,7 +316,12 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
         suffix, subpath = suffix.split('/')
         context['subpath'] = subpath
     if (processor := globals().get(f'process_{suffix}')):
-        return processor(f'{prefix}.{suffix}', context)
+        try:
+            return processor(f'{prefix}.{suffix}', context)
+        except Exception as e:
+            emit(f"Error processing {fname}: {e}")
+            context['error'] = e
+            return process_errors(fname, context)
     return None
 
 
