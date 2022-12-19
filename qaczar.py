@@ -234,7 +234,7 @@ def process_html(fname: str, context: dict) -> str:
 
 def extract_api(module = sys.modules[__name__]) -> t.Generator[t.Callable, None, None]:
     """Extract all public functions from a module."""
-    # TODO: Consider if the first parameter should be a string instead.
+    # TODO: Consider if 1st param of extract_api et al should be a string instead of module.
     for name, func in inspect.getmembers(module, inspect.isfunction):
         if name.startswith('_') or not func.__doc__: continue
         if inspect.signature(func).return_annotation in (t.NoReturn, t.Callable): continue
