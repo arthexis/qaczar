@@ -285,6 +285,8 @@ def process_py(fname: str, context: dict) -> str:
     
 @timed
 def _dispatch_processor(fname: str, context: dict) -> str | None:
+    if '.' not in fname: 
+        raise NotImplementedError(f"Directory listing not implemented for {fname}")
     prefix, suffix = fname.split(".", 1)  # Only one dot is allowed.
     if '/' in suffix: 
         suffix, subpath = suffix.split('/')
@@ -374,7 +376,7 @@ def _build_https_server() -> tuple:
             return context
 
         def build_response(self, method: str = None) -> bool:
-            self.path = '/qaczar.html' if self.path.endswith('/') else self.path
+            self.path = '' if self.path == '/' else self.path
             context = self.build_context(self.path, method)
             self.work_path = _dispatch_processor(self.path[1:], context)
             emit(f"{context['ip']} {context['ts']} {method} {self.path} ({self.work_path})")
