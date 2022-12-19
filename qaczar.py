@@ -285,10 +285,8 @@ def process_py(fname: str, context: dict) -> str:
     
 @timed
 def _dispatch_processor(fname: str, context: dict) -> str | None:
-    if '.' not in fname: 
-        prefix, suffix = f'{fname}/{fname}', 'html'
-        raise NotImplementedError(f"Directory listing not implemented for {fname}")
-    prefix, suffix = fname.split(".", 1)  # Only one dot is allowed.
+    if '.' not in fname: prefix, suffix = f'{fname}/{fname}', 'html'
+    else: prefix, suffix = fname.split(".", 1)  # Only one dot is allowed.
     if '/' in suffix: 
         suffix, subpath = suffix.split('/')
         context['subpath'] = subpath
