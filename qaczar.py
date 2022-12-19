@@ -244,7 +244,7 @@ def _build_form(module, subpath: str) -> str:
     sig = inspect.signature(func)
     mod_name = _module_name(module)
     form = (f"<form action='/{mod_name}.py/{subpath}' "
-            f"method='POST' accept-charset='utf-8' name='{subpath}'>" \
+            f"method='POST' accept-charset='utf-8' name='{subpath}'>" 
             f"<link rel='stylesheet' href='/qaczar.css'>"
             f"<h3>{subpath.upper()} @ {mod_name.upper()}</h3>")
     for name, param in sig.parameters.items():
@@ -264,12 +264,11 @@ def _build_form(module, subpath: str) -> str:
     return form
 
 def _execute_form(module, subpath: str, data: dict) -> str:
-    # TODO: Handle POST data correctly (fields are handled as arrays)
     func = getattr(module, subpath)
-    # If each item in data is a list of length 1, convert to dict.
     if all(len(v) == 1 for v in data.values()):
         data = {k: v[0] for k, v in data.items()}
     result = func(**data)
+    if isinstance(result, str): result = f"<pre>{result}</pre>"
     return result
 
 def process_py(fname: str, context: dict) -> str:
