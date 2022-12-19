@@ -266,13 +266,12 @@ def _build_form(mod_name: str, subpath: str) -> str:
     # TODO: Handle multiple subpaths by using fieldsets? Allow decorators?
     # TODO: Cache forms to avoid re-parsing functions.
     func = getattr(sys.modules[mod_name], subpath)
-    sig = inspect.signature(func)
     form = (f"<form action='/{mod_name}.py/{subpath}' "
             f"method='POST' accept-charset='utf-8' name='{subpath}'>" 
             f"<link rel='stylesheet' href='/qaczar.css'>"
             f"<h3>{subpath.upper()} @ {mod_name.upper()}</h3>"
             f"<p class='doc'>{func.__doc__}</p>")
-    for name, param in sig.parameters.items():
+    for name, param in inspect.signature(func).parameters.items():
         if not param.kind in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD): continue
         if name.startswith('_'): continue
         if param.annotation is param.empty: continue
