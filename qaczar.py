@@ -24,7 +24,7 @@ import typing as t
 
 PYTHON = sys.executable
 PID = os.getpid()
-DEBUG = False  
+DEBUG = True  
 BRANCH = 'main'
 DIR = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.basename(DIR)
