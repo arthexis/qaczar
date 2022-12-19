@@ -323,7 +323,8 @@ def _process_errors(fname: str, context: dict) -> str:
     if '.' in fname: fname = fname.split('.', 1)[0] + '.html'
     err = context.get('error', None)
     content = (f"<h1>404</h1><p>Not found: {fname}</p><p>{err}</p>"
-               f"<p><a href='/'>Home</a></p>")
+               f"<p><a href='/'>Home</a></p>"
+               f'<link rel="stylesheet" href="/qaczar.css">')
     return write_file(fname, content)
 
 @timed
