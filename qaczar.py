@@ -265,7 +265,6 @@ def _build_input_field(name: str, param: inspect.Parameter) -> str:
 
 def _build_form(module, subpath: str) -> str:
     # TODO: Handle multiple subpaths by using fieldsets? Allow decorators?
-    # TODO: Exclude fields without annotations.
     func = getattr(module, subpath)
     sig, mod_name = inspect.signature(func), _module_name(module)
     form = (f"<form action='/{mod_name}.py/{subpath}' "
@@ -310,7 +309,7 @@ def create_app(directory: str) -> None:
     # TODO: The directory is not being created. Fix this.
     seeds = {
         "html": r"<%inherit file='/qaczar.html'/>", 
-        # TODO: Figure what other files are needed.
+        # TODO: Figure what other files are needed for seeding an app.
     }
     if not os.path.exists(directory): 
         emit(f"Create new application: {directory}")
@@ -321,7 +320,6 @@ def create_app(directory: str) -> None:
 
 def _process_errors(fname: str, context: dict) -> str:
     """Handle errors by returning a custom 404 page."""
-    # TODO: Present detailed error information and traceback.
     if '.' in fname: fname = fname.split('.', 1)[0] + '.html'
     err = context.get('error', None)
     content = (f"<h1>404</h1><p>Not found: {fname}</p><p>{err}</p>"
