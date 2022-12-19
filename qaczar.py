@@ -296,16 +296,16 @@ SEEDS = {
     "html": r"<%inherit file='/qaczar.html'/>", 
 }
 
-def seed_application(app_name: str) -> None:
+def create_app(directory: str) -> None:
     """Create a new application using SEEDS from qaczar.py."""
     # TODO: The directory is not being created. Fix this.
     global SEEDS
-    if not os.path.exists(app_name): 
-        emit(f"Create new application: {app_name}")
-        os.mkdir(app_name)
+    if not os.path.exists(directory): 
+        emit(f"Create new application: {directory}")
+        os.mkdir(directory)
         for ext, content in SEEDS.items():
-            write_file(f'{app_name}/{app_name}.{ext}', content)
-    else: emit(f"Skip existing application: {app_name}")
+            write_file(f'{directory}/{directory}.{ext}', content)
+    else: emit(f"Skip existing application: {directory}")
 
 def _process_errors(fname: str, context: dict) -> str:
     """Handle errors by returning a custom 404 page."""
@@ -321,8 +321,8 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
     if '.' not in fname: 
         prefix, suffix = f'{fname}/{fname}', 'html'
         fname = f'{prefix}.{suffix}'
+        if not os.path.exists(fname): create_app(fname)
     else: prefix, suffix = fname.split(".", 1)  # Only one dot is allowed.
-    if not os.path.exists(fname): seed_application(fname)
     if '/' in suffix: 
         suffix, subpath = suffix.split('/')
         context['subpath'] = subpath
