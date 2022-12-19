@@ -275,6 +275,7 @@ def _execute_form(module, subpath: str, data: dict) -> str:
     if all(len(v) == 1 for v in data.values()):
         data = {k: v[0] for k, v in data.items()}
     result = func(**data)
+    # TODO: Instead of returning the output, receivers should return the working URL.
     if isinstance(result, str): result = f"<pre>{result}</pre>"
     return result
 
