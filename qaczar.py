@@ -339,7 +339,7 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
 #@# POST RECEIVERS
 
 def hello_world(name: str = 'World', wrapped: bool=False) -> str:
-    """Say hello to the world!"""
+    """Say hello to the world! Useful as a smoke test."""
     if wrapped:
         return f"<div class='hello'>Hello, {name}!</div>"
     return f"Hello, {name}!"
