@@ -86,7 +86,7 @@ def _pip_import(module: str) -> t.Any:
     return importlib.import_module(module)
 
 def imports(*modules: tuple[str]) -> t.Callable:
-    # TODO: Allow specifying a version number (for self-remediation).
+    # TODO: Allow specifying version number in runtime imports (for self-remediation).
     def decorator(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
@@ -310,6 +310,13 @@ def hello_world(name: str = 'World', wrapped: bool=False) -> str:
     if wrapped:
         return f"<div class='hello'>Hello, {name}!</div>"
     return f"Hello, {name}!"
+
+
+def seed_application(fname: str) -> None:
+    # TODO: Generalize seed files in a constant map.
+    if not os.path.exists(fname): 
+        emit(f"Creating new landing page: {fname}")
+        _write_file(fname, f"<%inherit file='/qaczar.html'/>\n", encoding='utf-8')
 
 
 #@# HTTPS SERVER
