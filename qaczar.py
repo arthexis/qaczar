@@ -270,7 +270,8 @@ def _build_form(module, subpath: str) -> str:
             f"<p class='doc'>{func.__doc__}</p>")
     for name, param in sig.parameters.items():
         if not param.kind in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD): continue
-        if not param.annotation or name.startswith('_'): continue
+        if name.startswith('_'): continue
+        if param.annotation is param.empty: continue
         form += f"<label for='{name}'>{name.upper()}:</label>"
         form += _build_input_field(name, param) + "<br>"
     form += f"<button type='submit'>EXECUTE</button></form>"
