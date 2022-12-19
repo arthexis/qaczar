@@ -353,6 +353,9 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
 
 import random
 
+def page_title(title: str = '') -> str:
+    return title if title else f'QACZAR @ {iso8601()}'
+
 def hello_world(name: str = 'World', wrapped: bool=False) -> str:
     """Say hello to the world! Useful as a smoke test."""
     if wrapped:
