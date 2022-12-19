@@ -303,7 +303,12 @@ def seed_application(app_name: str) -> None:
 
 def process_errors(fname: str, context: dict) -> str:
     """Handle errors by returning a custom 404 page."""
-    return write_file('404.html', f"<h1>404</h1><p>Not found: {fname}</p>")
+    # TODO: Present detailed error information and traceback.
+    if '.' in fname: fname = fname.split('.', 1)[0] + '.html'
+    err = context.get('error', None)
+    content = (f"<h1>404</h1><p>Not found: {fname}</p><p>{err}</p>"
+               f"<p><a href='/'>Home</a></p>")
+    return write_file(fname, content)
 
 @timed
 def _dispatch_processor(fname: str, context: dict) -> str | None:
