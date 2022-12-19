@@ -248,8 +248,7 @@ def _build_form(module, subpath: str) -> str:
     # TODO: Handle multiple subpaths by using fieldsets?
     # TODO: Add function docstring to form generation.
     func = getattr(module, subpath)
-    sig = inspect.signature(func)
-    mod_name = _module_name(module)
+    sig, mod_name = inspect.signature(func), _module_name(module)
     form = (f"<form action='/{mod_name}.py/{subpath}' "
             f"method='POST' accept-charset='utf-8' name='{subpath}'>" 
             f"<link rel='stylesheet' href='/qaczar.css'>"
@@ -289,12 +288,12 @@ def process_py(fname: str, context: dict) -> str:
         return write_file(outname, _execute_form(module, subpath, context.get('data', {})))
     
 def seed_application(app_name: str) -> None:
-    """Create a new application using qaczar.py as seed."""
+    """Create a new application using SEEDS from qaczar.py."""
     global SEEDS
     if not os.path.exists(app_name): 
         emit(f"Creating new application: {app_name}")
         for ext, content in SEEDS.items():
-            write_file(f'{app_name}/{app_name}.{ext}', content, encoding='utf-8')
+            write_file(f'{app_name}/{app_name}.{ext}', content)
     else: emit(f"Skipping existing application: {app_name}")
 
 @timed
