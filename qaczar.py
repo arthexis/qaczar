@@ -246,8 +246,7 @@ def function_index(module = sys.modules[__name__]) -> str:
             for fn in extract_api(module))
 
 def _build_form(module, subpath: str) -> str:
-    # TODO: Handle multiple subpaths by using fieldsets?
-    # TODO: Add function docstring to form generation.
+    # TODO: Handle multiple subpaths by using fieldsets? Allow decorators?
     func = getattr(module, subpath)
     sig, mod_name = inspect.signature(func), _module_name(module)
     form = (f"<form action='/{mod_name}.py/{subpath}' "
