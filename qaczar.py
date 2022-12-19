@@ -245,7 +245,8 @@ def extract_api(module = sys.modules[__name__]) -> t.Generator[t.Callable, None,
         yield func
 
 def _module_name(module) -> str:
-    return module.__name__ if module.__name__ != '__main__' else 'qaczar'
+    global APP
+    return module.__name__ if module.__name__ != '__main__' else APP
 
 def function_index(module = sys.modules[__name__]) -> str:
     """Generate a list of links to all public functions in a module."""
