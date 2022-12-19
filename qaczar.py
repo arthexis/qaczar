@@ -217,10 +217,9 @@ def _load_template(fname: str) -> str:
     global TEMPLATES, DIR
     if (last := _mtime_file(fname)) != TEMPLATES.get(fname, (None, None))[1]:
         mt = _pip_import('mako.template')
-        # ml = _pip_import('mako.lookup')
-        # lookup = ml.TemplateLookup(directories=[DIR], input_encoding='utf-8')
-        # tpl = mt.Template(filename=fname, lookup=lookup)
-        tpl = mt.Template(filename=fname)
+        ml = _pip_import('mako.lookup')
+        lookup = ml.TemplateLookup(directories=[DIR], input_encoding='utf-8')
+        tpl = mt.Template(filename=fname, lookup=lookup)
         TEMPLATES[fname] = tpl, last
         emit(f"Loaded {fname=} {last=}.")
         return tpl
