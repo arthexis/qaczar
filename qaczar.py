@@ -198,9 +198,10 @@ def _work_path(fname: str) -> str:
 def write_file(fname: str, content: str) -> str:
     return _write_file(_work_path(fname), content, encoding='utf-8')
 
-def list_file(fname: str = 'qaczar.py', tag: str = 'li', filter: str = None) -> str:
-    return ''.join(f'<{tag}>{line if not filter else line.split(filter)[1]}</{tag}>'
-        for line in read_file(fname, encoding='utf-8').splitlines()
+def list_file(
+        fname: str = 'qaczar.py', tag: str = 'li', filter: str = None) -> str:
+    return ''.join(f'<{tag} data-ln="{i}">{line if not filter else line.split(filter)[1]}</{tag}>'
+        for i, line in enumerate(read_file(fname, encoding='utf-8').splitlines())
         if not filter or line.strip().startswith(filter))
 
 def list_files(path: str = '.', tag: str = 'li', ext: str = None) -> str:
