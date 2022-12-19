@@ -291,19 +291,18 @@ def process_py(fname: str, context: dict) -> str:
         return write_file(outname, _build_form(module, subpath))
     elif method == 'POST':
         return write_file(outname, _execute_form(module, subpath, context.get('data', {})))
-    
-SEEDS = {
-    "html": r"<%inherit file='/qaczar.html'/>", 
-}
 
 def create_app(directory: str) -> None:
     """Create a new application using SEEDS from qaczar.py."""
     # TODO: The directory is not being created. Fix this.
-    global SEEDS
+    seeds = {
+        "html": r"<%inherit file='/qaczar.html'/>", 
+        # TODO: Figure what other files are needed.
+    }
     if not os.path.exists(directory): 
         emit(f"Create new application: {directory}")
         os.mkdir(directory)
-        for ext, content in SEEDS.items():
+        for ext, content in seeds.items():
             write_file(f'{directory}/{directory}.{ext}', content)
     else: emit(f"Skip existing application: {directory}")
 
@@ -323,6 +322,7 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
         fname = f'{prefix}.{suffix}'
         if not os.path.exists(fname): create_app(fname)
     else: prefix, suffix = fname.split(".", 1)  # Only one dot is allowed.
+    if not prefix: return None  # Prevent dotfiles from being processed.
     if '/' in suffix: 
         suffix, subpath = suffix.split('/')
         context['subpath'] = subpath
