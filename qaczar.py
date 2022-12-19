@@ -87,6 +87,7 @@ def _pip_import(module: str) -> t.Any:
     return importlib.import_module(module)
 
 def imports(*modules: tuple[str]) -> t.Callable:
+    """Decorator to import modules at runtime, passing them as arguments."""
     # TODO: Allow specifying version number in runtime imports (for self-remediation).
     def decorator(f):
         @functools.wraps(f)
@@ -288,14 +289,18 @@ def process_py(fname: str, context: dict) -> str:
     elif method == 'POST':
         return write_file(outname, _execute_form(module, subpath, context.get('data', {})))
     
+SEEDS = {
+    "html": r"<%inherit file='/qaczar.html'/>", 
+}
+
 def seed_application(app_name: str) -> None:
     """Create a new application using SEEDS from qaczar.py."""
     global SEEDS
     if not os.path.exists(app_name): 
-        emit(f"Creating new application: {app_name}")
+        emit(f"Create new application: {app_name}")
         for ext, content in SEEDS.items():
             write_file(f'{app_name}/{app_name}.{ext}', content)
-    else: emit(f"Skipping existing application: {app_name}")
+    else: emit(f"Skip existing application: {app_name}")
 
 @timed
 def _dispatch_processor(fname: str, context: dict) -> str | None:
@@ -318,12 +323,6 @@ def hello_world(name: str = 'World', wrapped: bool=False) -> str:
     if wrapped:
         return f"<div class='hello'>Hello, {name}!</div>"
     return f"Hello, {name}!"
-
-SEEDS = {
-    "html": r"<%inherit file='/qaczar.html'/>"
-}
-
-
 
 
 #@# HTTPS SERVER

@@ -32,6 +32,9 @@ h3 {
 p {
     margin-bottom: 0.5rem;
 }
+.doc {
+    color: #66FFFF;
+}
 a:visited, a:link {
     color: #66FF66;
 }
