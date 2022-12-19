@@ -368,6 +368,7 @@ def hello_world(name: str = 'World', wrapped: bool=False) -> str:
         return f"<div class='hello'>Hello, {name}!</div>"
     return f"Hello, {name}!"
 
+@functools.cache
 @imports('pyfiglet')
 def ascii_banner(pyfiglet, text:str) -> str:
     """Generate a banner from ASCII text."""
