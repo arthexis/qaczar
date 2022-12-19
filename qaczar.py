@@ -487,6 +487,7 @@ def test_server(urllib3, *args, **kwargs) -> t.NoReturn:
 #@#  REPOSITORY
 
 def _commit_source() -> t.NoReturn:
+    # TODO: Create missing branch if not exists when pushing to git.
     global BRANCH
     os.system('git add .')
     os.system('git commit -m "auto commit"')
@@ -512,7 +513,7 @@ def server_role(*args, host='localhost', port='9443', **kwargs) -> t.NoReturn:
         httpd.serve_forever()
 
 def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
-    # TODO: Add explicit automatic tests to prevent public API regressions.
+    # TODO: Add some automatic tests to prevent public API regressions.
     emit(f"Running tests for {suite}.")
     for test in globals().keys():
         if test == f'test_{suite}': 
