@@ -205,15 +205,13 @@ def write_file(fname: str, content: str) -> str:
     # TODO: Consider if we need to override read_file() to read from work folder.
     return _write_file(_work_path(fname), content, encoding='utf-8')
 
-def enum_file(
-        fname: str = 'qaczar.py', tag: str = 'li', prefix: str = None) -> str:
+def enum_file(fname: str, tag: str = 'li', prefix: str = None) -> str:
     """Enumerate lines in a file, optionally filtering by prefix."""
     return ''.join(f'<{tag} data-ln="{i}">{line if not prefix else line.split(prefix)[1]}</{tag}>'
         for i, line in enumerate(read_file(fname, encoding='utf-8').splitlines())
         if not prefix or line.strip().startswith(prefix))
 
-def list_dir(
-        path: str = '.', tag: str = 'li', ext: str = None, link: bool = True) -> str:
+def list_dir(path: str = '.', tag: str = 'li', ext: str = None, link: bool = True) -> str:
     """List files in a directory, optionally filtering by extension."""
     return '\n'.join(
         f'<{tag}>{fname}</{tag}>' if not link else f'<{tag}><a href="/{fname}">{fname}</a></{tag}>'
@@ -491,8 +489,8 @@ def test_server(urllib3, *args, **kwargs) -> t.NoReturn:
         if r.status != 200: raise ValueError(f"Unexpected response: {r.status} {r.reason}")
         return r.data.decode('utf-8')
     
-    assert 'QACZAR' in server_request('qaczar.html')
-    assert 'QACZAR' in server_request('qaczar.py')
+    assert 'qaczar' in server_request(f'{APP}.html')
+    assert 'qaczar' in server_request(f'{APP}.py')
 
 
 #@#  REPOSITORY
@@ -509,18 +507,20 @@ def _commit_source() -> t.NoReturn:
 #@# COMMON ROLES
 
 def watcher_role(*args, next: str = None, **kwargs) -> t.NoReturn:
+    global APP
     if not next: raise ValueError('next role was not defined')
     kwargs['role'] = next
-    _watch_over(_start_py('qaczar.py', *args, **kwargs), 'qaczar.py')
+    _watch_over(_start_py(f'{APP}.py', *args, **kwargs), f'{APP}.py')
 
 def server_role(*args, host='localhost', port='9443', **kwargs) -> t.NoReturn:
+    global APP
     server_cls, handler_cls = _build_https_server()
     with server_cls((host, int(port)), handler_cls) as httpd:
         emit(f"Server ready at https://{host}:{port}")
         atexit.register(httpd.shutdown)
         kwargs['role'] = 'tester'
         kwargs['suite'] = 'server' if 'suite' not in kwargs else kwargs['suite']
-        _start_py('qaczar.py', *args, **kwargs)
+        _start_py(f'{APP}.py', *args, **kwargs)
         httpd.serve_forever()
 
 def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
