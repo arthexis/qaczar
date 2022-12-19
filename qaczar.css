@@ -48,11 +48,15 @@ ol li::before {
 ol {
     counter-reset: list;
 }
+ol.ln li::before {
+    content: attr(data-ln) ". ";
+    counter-increment: list;
+}
 hr {
     border: 0;
     border-top: 1px solid #666;
     margin: 1rem 0;
-    width: 98%;
+    width: 99%;
 }
 form {
     background-color: #444;

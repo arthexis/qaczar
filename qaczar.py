@@ -204,8 +204,9 @@ def list_file(
         for i, line in enumerate(read_file(fname, encoding='utf-8').splitlines())
         if not filter or line.strip().startswith(filter))
 
-def list_files(path: str = '.', tag: str = 'li', ext: str = None) -> str:
-    return ''.join(f'<{tag}>{fname}</{tag}>'
+def list_files(path: str = '.', tag: str = 'li', ext: str = None, link: bool = True) -> str:
+    return ''.join(
+        f'<{tag}>{fname}</{tag}>' if not link else f'<{tag}><a href="{fname}">{fname}</a></{tag}>'
         for fname in os.listdir(path)
         if (not ext or fname.endswith(ext)) and not fname.startswith('.'))
 
