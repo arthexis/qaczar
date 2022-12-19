@@ -301,7 +301,7 @@ def seed_application(app_name: str) -> None:
             write_file(f'{app_name}/{app_name}.{ext}', content)
     else: emit(f"Skip existing application: {app_name}")
 
-def process_errors(fname: str, context: dict) -> str:
+def _process_errors(fname: str, context: dict) -> str:
     """Handle errors by returning a custom 404 page."""
     # TODO: Present detailed error information and traceback.
     if '.' in fname: fname = fname.split('.', 1)[0] + '.html'
@@ -326,7 +326,7 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
         except Exception as e:
             emit(f"Error processing {fname}: {e}")
             context['error'] = e
-            return process_errors(fname, context)
+            return _process_errors(fname, context)
     return None
 
 
