@@ -275,7 +275,6 @@ def _execute_form(module, subpath: str, data: dict) -> str:
     if all(len(v) == 1 for v in data.values()):
         data = {k: v[0] for k, v in data.items()}
     result = func(**data)
-    # TODO: Instead of returning the output, receivers should return the working URL.
     if isinstance(result, str): result = f"<pre>{result}</pre>"
     return result
 
@@ -289,15 +288,21 @@ def process_py(fname: str, context: dict) -> str:
     elif method == 'POST':
         return write_file(outname, _execute_form(module, subpath, context.get('data', {})))
     
+def seed_application(app_name: str) -> None:
+    global SEEDS
+    if not os.path.exists(app_name): 
+        emit(f"Creating new application: {app_name}")
+        for ext, content in SEEDS.items():
+            write_file(f'{app_name}/{app_name}.{ext}', content, encoding='utf-8')
+    else: emit(f"Skipping existing application: {app_name}")
+
 @timed
 def _dispatch_processor(fname: str, context: dict) -> str | None:
     if '.' not in fname: 
         prefix, suffix = f'{fname}/{fname}', 'html'
         fname = f'{prefix}.{suffix}'
     else: prefix, suffix = fname.split(".", 1)  # Only one dot is allowed.
-    if not os.path.exists(fname): 
-        emit(f"Creating new landing page: {fname}")
-        _write_file(fname, f"<%inherit file='/qaczar.html'/>\n", encoding='utf-8')
+    if not os.path.exists(fname): seed_application(fname)
     if '/' in suffix: 
         suffix, subpath = suffix.split('/')
         context['subpath'] = subpath
@@ -317,13 +322,7 @@ SEEDS = {
     "html": r"<%inherit file='/qaczar.html'/>"
 }
 
-def seed_application(app_name: str) -> None:
-    global SEEDS
-    if not os.path.exists(app_name): 
-        emit(f"Creating new application: {app_name}")
-        for ext, content in SEEDS.items():
-            write_file(f'{app_name}/{app_name}.{ext}', content, encoding='utf-8')
-    else: emit(f"Skipping existing application: {app_name}")
+
 
 
 #@# HTTPS SERVER
