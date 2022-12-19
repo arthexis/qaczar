@@ -203,14 +203,16 @@ def write_file(fname: str, content: str) -> str:
     # TODO: Consider if we need to override read_file() to read from work folder.
     return _write_file(_work_path(fname), content, encoding='utf-8')
 
-def list_file(
-        fname: str = 'qaczar.py', tag: str = 'li', filter: str = None) -> str:
-    return ''.join(f'<{tag} data-ln="{i}">{line if not filter else line.split(filter)[1]}</{tag}>'
+def enum_file(
+        fname: str = 'qaczar.py', tag: str = 'li', prefix: str = None) -> str:
+    """Enumerate lines in a file, optionally filtering by prefix."""
+    return ''.join(f'<{tag} data-ln="{i}">{line if not prefix else line.split(prefix)[1]}</{tag}>'
         for i, line in enumerate(read_file(fname, encoding='utf-8').splitlines())
-        if not filter or line.strip().startswith(filter))
+        if not prefix or line.strip().startswith(prefix))
 
-def list_files(
+def list_dir(
         path: str = '.', tag: str = 'li', ext: str = None, link: bool = True) -> str:
+    """List files in a directory, optionally filtering by extension."""
     return '\n'.join(
         f'<{tag}>{fname}</{tag}>' if not link else f'<{tag}><a href="/{fname}">{fname}</a></{tag}>'
         for fname in os.listdir(path)
@@ -468,9 +470,10 @@ def test_server(urllib3, *args, **kwargs) -> t.NoReturn:
 #@#  REPOSITORY
 
 def _commit_source() -> t.NoReturn:
+    global BRANCH
     os.system('git add .')
     os.system('git commit -m "auto commit"')
-    os.system('git push')
+    os.system(f'git push origin {BRANCH}')
     emit("Source committed to repository.")
 
 

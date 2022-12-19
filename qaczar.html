@@ -15,8 +15,8 @@
     </%block>
     <%block name="content">
         <article>
-        <h2>Roadmap</h2><ol class="ln">${list_file('qaczar.py', filter='# TODO:')}</ol><hr />
-        <h2>Files</h2><ul>${list_files()}</ul>
+        <h2>Roadmap</h2><ol class="ln">${enum_file('qaczar.py', prefix='# TODO:')}</ol><hr />
+        <h2>Files</h2><ul>${list_dir()}</ul>
         </article><hr />
     </%block>
     <%block name="footer">
