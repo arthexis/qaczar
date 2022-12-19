@@ -7,11 +7,10 @@
     <meta charset="utf-8" />
     <title><%block name="title">QACZAR</%block></title>
     <link rel="stylesheet" href="/qaczar.css" type="text/css" />
-    <%block name="stylesheet">
-    </%block>
 </head>
 
-<body><%block name="body">
+<body>
+<%block name="body">
     <h1><a href="/qaczar.html"><%block name="h1">QACZAR</%block></a></h1>
     <hr />
     <h2>API</h2><ul>${function_index()}</ul><hr />
@@ -21,5 +20,6 @@
     <footer>
         <a href="/qaczar.py">-*- Powered by qaczar.py -*-</a>
     </footer>
-</%block></body>
+</%block>
+</body>
 </html>
