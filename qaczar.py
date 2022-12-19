@@ -221,6 +221,7 @@ def _load_template(fname: str) -> str:
         lookup = ml.TemplateLookup(directories=[DIR])
         tpl = mt.Template(filename=fname, lookup=lookup)
         TEMPLATES[fname] = tpl, last
+        emit(f"Loaded {fname=} {last=}.")
         return tpl
     return TEMPLATES[fname][0]
 
