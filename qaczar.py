@@ -264,7 +264,6 @@ def _build_input_field(name: str, param: inspect.Parameter) -> str:
 @functools.cache
 def _build_form(mod_name: str, subpath: str) -> str:
     # TODO: Handle multiple subpaths by using fieldsets? Allow decorators?
-    # TODO: Cache forms to avoid re-parsing functions.
     func = getattr(sys.modules[mod_name], subpath)
     form = (f"<form action='/{mod_name}.py/{subpath}' "
             f"method='POST' accept-charset='utf-8' name='{subpath}'>" 
