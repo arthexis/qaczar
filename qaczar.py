@@ -86,7 +86,7 @@ def _pip_import(module: str) -> t.Any:
     return importlib.import_module(module)
 
 def imports(*modules: tuple[str]) -> t.Callable:
-    # TODO: Allow specifying a version number (important for self-recovery).
+    # TODO: Allow specifying a version number (for self-remediation).
     def decorator(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
@@ -116,7 +116,7 @@ import subprocess
 
 def _setup_environ(reset=False) -> None:
     global PYTHON
-    # TODO: Add qaczar itself (edit mode?) to a new requirements.txt file.
+    # TODO: Start with qaczar itself (edit mode?) in the requirements.txt file.
     if not os.path.isfile('requirements.txt'): 
         _write_file('requirements.txt', '', encoding='utf-8')
     if reset and os.path.isdir('.venv'):
@@ -212,7 +212,6 @@ def list_files(path: str = '.', tag: str = 'li', ext: str = None, link: bool = T
         if (not ext or fname.endswith(ext)) and not fname.startswith(('.', '_')))
 
 def _load_template(fname: str) -> str:
-    # TODO: Fix templates not being properly rendered (DOCTYPE missing)
     global TEMPLATES, DIR
     if (last := _mtime_file(fname)) != TEMPLATES.get(fname, (None, None))[1]:
         mt = _pip_import('mako.template')
@@ -225,8 +224,6 @@ def _load_template(fname: str) -> str:
     return TEMPLATES[fname][0]
 
 def process_html(fname: str, context: dict) -> str:
-    # TODO: Make the title of the page dynamic.
-    # TODO: Fix missing DOCTYPE.
     template = _load_template(fname)
     content = template.render(**globals(), **context)
     return write_file(fname, content)
@@ -247,8 +244,8 @@ def function_index(module = sys.modules[__name__]) -> str:
             for fn in extract_api(module))
 
 def _build_form(module, subpath: str) -> str:
-    # TODO: Handle multiple subpaths by using fieldsets.
-    # TODO: Add function docstring (and give docs a style).
+    # TODO: Handle multiple subpaths by using fieldsets?
+    # TODO: Add function docstring to form generation.
     func = getattr(module, subpath)
     sig = inspect.signature(func)
     mod_name = _module_name(module)
@@ -452,7 +449,7 @@ def server_role(*args, host='localhost', port='9443', **kwargs) -> t.NoReturn:
         httpd.serve_forever()
 
 def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
-    # TODO: Use tests to prevent regressions (loss of functionality)
+    # TODO: Add explicit automatic tests to prevent public API regressions.
     emit(f"Running tests for {suite}.")
     for test in globals().keys():
         if test == f'test_{suite}': 
@@ -469,7 +466,7 @@ def deployer_role(*args, **kwargs) -> t.NoReturn:
 #@# DISPATCHER
 
 def _role_dispatcher(role: str, args: tuple, kwargs: dict) -> t.NoReturn:
-    # TODO: Consider using tomlib for configuration.
+    # TODO: Consider using tomlib for role-plan configuration.
     import threading
     _set_workdir(role)
     opid = kwargs.pop('opid', None)  # If we receive opid it means we are being watched.
