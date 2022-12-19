@@ -26,7 +26,7 @@ PYTHON = sys.executable
 PID = os.getpid()
 DEBUG = False  
 DIR = os.path.dirname(os.path.abspath(__file__))
-BRANCH = 'experimental'
+BRANCH = 'main'
 
 def iso8601() -> str: 
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
