@@ -309,10 +309,10 @@ def create_app(directory: str) -> None:
         # TODO: Figure what other files are needed for seeding an app.
     }
     if not os.path.exists(directory): 
-        emit(f"Create new application: {directory}")
+        emit(f"Create new app directory: {directory}")
         os.mkdir(directory)
-        for ext, content in seeds.items():
-            write_file(f'{directory}/{directory}.{ext}', content)
+    for ext, content in seeds.items():
+        write_file(f'{directory}/{directory}.{ext}', content)
     else: emit(f"Skip existing application: {directory}")
     return f'{directory}/{directory}.html'
 
