@@ -281,7 +281,7 @@ def _execute_form(module, subpath: str, data: dict) -> str:
 def process_py(fname: str, context: dict) -> str:
     if (subpath := context.get('subpath', None)) is None: return fname
     module = importlib.import_module(fname[:-3])
-    outname = f"{_module_name(module)}.{subpath}.html" 
+    outname = f"{_module_name(module)}__{subpath}.html" 
     method = context.get('method', 'GET')
     if method == 'GET':
         return write_file(outname, _build_form(module, subpath))
