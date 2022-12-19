@@ -207,7 +207,7 @@ def list_file(
 
 def list_files(path: str = '.', tag: str = 'li', ext: str = None, link: bool = True) -> str:
     return '\n'.join(
-        f'<{tag}>{fname}</{tag}>' if not link else f'<{tag}><a href="{fname}">{fname}</a></{tag}>'
+        f'<{tag}>{fname}</{tag}>' if not link else f'<{tag}><a href="/{fname}">{fname}</a></{tag}>'
         for fname in os.listdir(path)
         if (not ext or fname.endswith(ext)) and not fname.startswith(('.', '_')))
 
