@@ -287,9 +287,11 @@ def process_py(fname: str, context: dict) -> str:
 def _dispatch_processor(fname: str, context: dict) -> str | None:
     if '.' not in fname: 
         prefix, suffix = f'{fname}/{fname}', 'html'
-        if not os.path.exists(fname): 
-            write_file(f'{prefix}.{suffix}', f"%inherit 'qaczar.html'\n%block content\n\n")
+        fname = f'{prefix}.{suffix}'
     else: prefix, suffix = fname.split(".", 1)  # Only one dot is allowed.
+    if not os.path.exists(fname): 
+        emit(f"Creating new landing page: {fname}")
+        write_file(fname, f"%inherit 'qaczar.html'\n%block content\n\n")
     if '/' in suffix: 
         suffix, subpath = suffix.split('/')
         context['subpath'] = subpath
