@@ -358,7 +358,7 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
         fname = f'{prefix}.{suffix}'
         if not os.path.exists(fname): create_app(fname)
     else: prefix, suffix = fname.split(".", 1)  # Only one dot is allowed.
-    if not prefix or prefix == '/': return None # Ignore root and dot files.
+    if not prefix: return None  # Prevent dotfiles from being processed.
     if '/' in suffix: 
         suffix, subpath = suffix.split('/')
         context['subpath'] = subpath
