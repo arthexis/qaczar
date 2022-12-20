@@ -13,12 +13,9 @@
     </nav></header><hr />
     <!-- https://docs.makotemplates.org/en/latest/inheritance.html -->
     <%block name="content">
-        <article>
-        <h2>Roadmap</h2><ol class="ln">${enum_file('qaczar.py', prefix='# TODO:')}</ol><hr />
-        </article>
-        <article>
+        <h2>Roadmap</h2>
+        <ol class="ln">${enum_file('qaczar.py', prefix='# TODO:')}</ol><hr />
         ${render_form(sign_guestbook)}
-        </article>
     </%block>
     <%block name="footer">
         <hr /><h3>Files</h3><ul>${list_dir()}</ul>

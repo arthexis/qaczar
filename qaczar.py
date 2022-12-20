@@ -280,7 +280,10 @@ def _build_input(field: str, param: inspect.Parameter) -> str:
     if param.annotation is not param.empty:
         if param.annotation is int: input_type = 'number'
         elif param.annotation is bool: input_type = 'checkbox'
-    attrs = {'name': field, 'type': input_type, 'value': param.default}
+    attrs = {'name': field, 'type': input_type}
+    if param.default is not param.empty:
+        attrs['value'] = param.default
+        if param.annotation is bool: attrs['checked'] = 'checked'
     return elem('input', **attrs)
 
 def _active_module(mod_name: str):
