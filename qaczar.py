@@ -600,7 +600,7 @@ def _build_handler() -> type:
         
         def end_headers(self) -> None:
             duration = time.time() - self.start
-            self.send_header('Server-Timing', f'dur={duration:.3f}')
+            self.send_header('Server-Timing', f'miss;dur={duration:.3f}')
             self.send_header('Cache-Control', f'Etag: {_mtime_file(self.path)}')
             return super().end_headers()
         
