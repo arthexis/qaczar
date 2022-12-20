@@ -197,6 +197,7 @@ def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
 
 #@# CONTENT GENERATOR
 
+import shutil
 import inspect
 import traceback
 
@@ -206,6 +207,9 @@ _TEMPLATES = {}
 def _set_workdir(role: str) -> None:
     global _DIR, _WORKDIR
     _WORKDIR = os.path.join(_DIR, f'.{role}')
+    if role == 'server':
+        if os.path.isdir(_WORKDIR): shutil.rmtree(_WORKDIR)
+        os.mkdir(_WORKDIR)
 
 def _work_path(fname: str) -> str:
     global _WORKDIR
