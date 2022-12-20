@@ -603,7 +603,7 @@ def _build_handler() -> type:
             return super().end_headers()
         
         def send_header(self, keyword: str, value: str) -> None:
-            if keyword == 'Content-Type' and 'text' in value and 'encoding' not in value:
+            if keyword.lower() == 'content-type' and 'text' in value and 'encoding' not in value:
                 value = f"{value}; charset=utf-8"
             elif keyword == 'Server': value = f"{value} (qaczar.py)"
             emit(f"Sent header {keyword}: {value}")
