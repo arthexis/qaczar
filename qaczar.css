@@ -82,6 +82,9 @@ form {
     width: auto;
     display: inline-block;
 }
+input {
+    min-width: 30rem;
+}
 label {
     display: block;
     margin-top: 0.5rem;
