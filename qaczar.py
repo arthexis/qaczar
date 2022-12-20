@@ -370,12 +370,12 @@ _LOCAL = threading.local()
 def _connect_db() -> sqlite3.Connection:
     # TODO: Test for conflicts with the Threaded TCPServer.
     global APP, _LOCAL
-    if hasattr(_LOCAL, 'db'): return _LOCAL.db
+    if hasattr(_LOCAL, '{APP}_db'): return getattr(_LOCAL, '{APP}_db')
     db = sqlite3.connect(f'{APP}.sqlite3')
     db.execute("CREATE TABLE IF NOT EXISTS apps (name TEXT, ts TEXT)")
     db.execute("INSERT INTO apps VALUES (?, ?)", (APP, iso8601()))
     db.commit()
-    _LOCAL.db = db
+    setattr(_LOCAL, '{APP}_db', db)
     return db
 
 _SCHEMA = ''
