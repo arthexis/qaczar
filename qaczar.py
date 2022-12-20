@@ -368,7 +368,6 @@ import threading
 _LOCAL = threading.local()
 
 def _connect_db() -> sqlite3.Connection:
-    # TODO: Test for conflicts with the Threaded TCPServer.
     global APP, _LOCAL
     if hasattr(_LOCAL, '{APP}_db'): return getattr(_LOCAL, '{APP}_db')
     db = sqlite3.connect(f'{APP}.sqlite3')
@@ -380,9 +379,10 @@ def _connect_db() -> sqlite3.Connection:
 
 _SCHEMA = ''
 
-def _init_table(db, table: str, *cols) -> None:
-    # TODO: Define the columns based on the function signature automatically.
+def _init_table(db, table: str, cols: list[str]) -> None:
+    # TODO: Make the schema tracker work per-app by using the APP name with _LOCAL.
     global _SCHEMA
+    emit(f"Create table: {table} {cols=}")
     sql = (f"CREATE TABLE IF NOT EXISTS {table} ({', '.join(cols)}, " 
             f"ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
             f"id INTEGER PRIMARY KEY AUTOINCREMENT)")
@@ -399,20 +399,34 @@ def _insert(db, table: str, *values) -> None:
         emit(f"Error on SQL: {sql} with values: {values}")
         e.args = (f"{e.args[0]}: \n{sql}",) + e.args[1:]
         raise e
+    
+def _storage_type(type_: type) -> str | None:
+    if type_ in (int, float): return 'REAL'
+    elif type_ in (str,): return 'TEXT'
+    elif type_ in (bool,): return 'INTEGER'
+    else: raise TypeError(f"Unsupported storage type: {type_}")
+    
+def _func_params_cols(func: t.Callable) -> list[str]:
+    columns = []
+    for name, param in inspect.signature(func).parameters.items():
+        col_type = _storage_type(param.annotation)
+        if col_type: columns.append(f'{name} {col_type}')
+    return columns
 
 def recorded(func: t.Callable) -> t.Callable:
     """Decorator to record function calls and results in a database."""
     func_name = func.__name__
     with _connect_db() as db:
-        _init_table(db, f"{func_name}__params", "arg_line TEXT")
-        _init_table(db, f"{func_name}__result", "result TEXT", "params_id INTEGER")
+        # TODO: Define the columns based on the function signature automatically.
+        # TODO: Don't mix this logic with FORMS, recorded can be used for more.
+        _init_table(db, f"{func_name}__params", _func_params_cols(func))
+        _init_table(db, f"{func_name}__result", ["result TEXT", "params_id INTEGER"])
     @functools.wraps(func)
     def _recorded(*args, **kwargs):
         with _connect_db() as db:
-            params_id = _insert(db, 
-                f'{func_name}__params', ' '.join(_arg_line(*args, **kwargs)))
+            params_id = _insert(db, f'{func_name}__params', *args, *kwargs.values())
             result = func(*args, **kwargs)
-            emit(f"{func_name}({_arg_line(*args, **kwargs)}) -> {result}")
+            emit(f"{func_name}({args=} {kwargs=}) -> {result}")
             _insert(db, f'{func_name}__result', result, params_id)
             db.commit()
         return result
