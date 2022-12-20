@@ -553,7 +553,7 @@ def test_server(urllib3, *args, **kwargs) -> t.NoReturn:
     http = urllib3.PoolManager(
         cert_reqs='CERT_REQUIRED',
         ca_certs=_get_ssl_certs()[0])
-    
+
     def server_request(fname:str):
         r = http.request('GET', url := f"https://{HOST}:{PORT}/{fname}", timeout=30)
         emit(f"Server response: {url=} {r=}")
@@ -562,6 +562,10 @@ def test_server(urllib3, *args, **kwargs) -> t.NoReturn:
     
     assert 'qaczar' in server_request(f'{APP}.html')
     assert 'qaczar' in server_request(f'{APP}.py')
+
+@imports('urllib3')
+def test_server_forms(urllib3, *args, **kwargs) -> t.NoReturn:
+    pass
 
 
 #@#  REPOSITORY
