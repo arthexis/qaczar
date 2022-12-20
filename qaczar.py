@@ -397,7 +397,6 @@ def page_title(title: str = '') -> str:
 def ascii_banner(pyfiglet, text:str) -> str:
     """Generate a banner from ASCII text."""
     fonts = pyfiglet.FigletFont.getFonts()
-    emit(f"Available fonts: {fonts}")
     font = random.choice(fonts)
     return pyfiglet.figlet_format(text, font=font)
 
@@ -415,6 +414,7 @@ def hello_world(name: str = 'World', wrapped: bool=False) -> str:
 def collect_contact(email: str, message: str) -> str:
     # TODO: Consider field validation decorators for POST receiver functions.
     emit(f"Contact from {email}: {message}")
+    return f"Thanks for contacting us, {email}!"
     
 
 #@# HTTPS SERVER
