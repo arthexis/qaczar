@@ -263,10 +263,13 @@ def _build_input(field: str, param: inspect.Parameter) -> str:
         return f"<input type='{input_type}' name='{field}'>"
     return f"<input type='{input_type}' name='{field}' value='{param.default}'>"
 
+def _active_module(mod_name: str):
+    return sys.modules[mod_name if mod_name != APP else __name__]
+
 @functools.cache
 def _build_form(mod_name: str, subpath: str) -> str:
     # TODO: Handle multiple subpaths by using fieldsets? Allow decorators?
-    func = getattr(sys.modules[mod_name if mod_name != APP else __name__], subpath)
+    func = getattr(_active_module(mod_name), subpath)
     form = (f"<form action='/{mod_name}.py/{subpath}' "
             f"method='POST' accept-charset='utf-8' name='{subpath}'>" 
             f"<link rel='stylesheet' href='/qaczar.css'>"
@@ -282,7 +285,7 @@ def _build_form(mod_name: str, subpath: str) -> str:
     return write_file(f"{mod_name}__{subpath}.html" , form)
 
 def _execute_form(mod_name: str, subpath: str, data: dict) -> str:
-    func = getattr(sys.modules[mod_name], subpath)
+    func = getattr(_active_module(mod_name), subpath)
     if all(len(v) == 1 for v in data.values()):
         data = {k: v[0] for k, v in data.items()}
     result = func(**data)
