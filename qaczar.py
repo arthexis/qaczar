@@ -22,20 +22,21 @@ import sys
 import time
 import typing as t
 
-PYTHON = sys.executable
-PID = os.getpid()
-DEBUG = True  
-BRANCH = 'main'
-DIR = os.path.dirname(os.path.abspath(__file__))
-APP = os.path.basename(DIR)
+_PYTHON = sys.executable
+_PID = os.getpid()
+_DEBUG = True  
+_BRANCH = 'main'
+_DIR = os.path.dirname(os.path.abspath(__file__))
+
+APP = os.path.basename(_DIR)
 
 def iso8601() -> str: 
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
 
 def emit(msg: str, _at=None) -> None: 
-    global PID
+    global _PID
     frame = _at or sys._getframe(1)  
-    print(f'[{PID}:{frame.f_lineno} {iso8601()}] {frame.f_code.co_name}:  {msg}', file=sys.stderr)
+    print(f'[{_PID}:{frame.f_lineno} {iso8601()}] {frame.f_code.co_name}:  {msg}', file=sys.stderr)
 
 def halt(msg: str) -> t.NoReturn:
     frame = sys._getframe(1)
@@ -70,8 +71,8 @@ def dedent(code: str) -> str:
     return '\n'.join(line[indent:] for line in code.splitlines())
 
 def timed(f: t.Callable) -> t.Callable:
-    global DEBUG
-    if not DEBUG: return f
+    global _DEBUG
+    if not _DEBUG: return f
     @functools.wraps(f)
     def _timed(*args, **kwargs):
         start = time.time(); elapsed = time.time() - start
@@ -119,7 +120,7 @@ import atexit
 import subprocess 
 
 def _setup_environ(reset=False) -> None:
-    global PYTHON
+    global _PYTHON
     if not os.path.isfile('requirements.txt'): 
         _write_file('requirements.txt', '', encoding='utf-8')
     if reset and os.path.isdir('.venv'):
@@ -128,20 +129,20 @@ def _setup_environ(reset=False) -> None:
     if sys.platform.startswith('win'):
         if not os.path.isfile('.venv/Scripts/python.exe'): 
             subprocess.run([sys.executable, '-m', 'venv', '.venv'])
-        PYTHON = '.venv/Scripts/python.exe'
+        _PYTHON = '.venv/Scripts/python.exe'
     elif not os.path.isfile('.venv/bin/python3'): 
         subprocess.run([sys.executable, '-m', 'venv', '.venv'])
-        PYTHON = '.venv/bin/python3'
-    subprocess.run([PYTHON, '-m', 'pip', 'install', '--upgrade', 'pip', '--quiet'])
-    subprocess.run([PYTHON, '-m', 'pip', 'install', '-r', 'requirements.txt'])
+        _PYTHON = '.venv/bin/python3'
+    subprocess.run([_PYTHON, '-m', 'pip', 'install', '--upgrade', 'pip', '--quiet'])
+    subprocess.run([_PYTHON, '-m', 'pip', 'install', '-r', 'requirements.txt'])
 
 def _start_py(script: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
-    global PYTHON
+    global _PYTHON
     line_args = [str(a) for a in arg_line(*args, **kwargs)]
     emit(f"Starting {script=} {line_args=}.")
     # Popen is a context manager, but we want to keep proc alive and not wait for it.
     # We cannot use run() for this. Remember to manually terminate the process later.
-    proc = subprocess.Popen([PYTHON, script, *line_args],
+    proc = subprocess.Popen([_PYTHON, script, *line_args],
                             stdout=sys.stdout, stderr=sys.stderr)
     proc._args, proc._kwargs = args, kwargs  # Magic for restart_py
     atexit.register(proc.terminate)
@@ -153,7 +154,7 @@ def _stop_py(proc: subprocess.Popen) -> tuple[tuple, dict]:
     atexit.unregister(proc.terminate)
     return proc._args, proc._kwargs
 
-def _restart_py(proc: subprocess.Popen = None, opid=PID) -> subprocess.Popen:
+def _restart_py(proc: subprocess.Popen = None, opid=_PID) -> subprocess.Popen:
     global APP
     if proc and proc.poll() is None: 
         args, kwargs = _stop_py(proc)
@@ -188,17 +189,17 @@ def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
 
 import inspect
 
-WORKDIR = os.path.join(DIR, '.work')
-TEMPLATES = {}
+_WORKDIR = os.path.join(_DIR, '.work')
+_TEMPLATES = {}
 
 def _set_workdir(role: str) -> None:
-    global DIR, WORKDIR
-    WORKDIR = os.path.join(DIR, f'.{role}')
+    global _DIR, _WORKDIR
+    _WORKDIR = os.path.join(_DIR, f'.{role}')
 
 def _work_path(fname: str) -> str:
-    global WORKDIR
-    if not os.path.isdir(WORKDIR): os.mkdir(WORKDIR)
-    return os.path.join(WORKDIR, fname)
+    global _WORKDIR
+    if not os.path.isdir(_WORKDIR): os.mkdir(_WORKDIR)
+    return os.path.join(_WORKDIR, fname)
 
 def read_file(fname: str) -> str:
     """Read a file from the active work folder."""
@@ -222,21 +223,25 @@ def list_dir(directory: str = '.', tag: str = 'li', ext: str = None, link: bool 
         if (not ext or f.endswith(ext)) and not f.startswith(('.', '_')))
 
 def _load_template(fname: str) -> str:
-    global TEMPLATES, DIR
-    if (last := _mtime_file(fname)) != TEMPLATES.get(fname, (None, None))[1]:
+    global _TEMPLATES, _DIR
+    if (last := _mtime_file(fname)) != _TEMPLATES.get(fname, (None, None))[1]:
         mt = _pip_import('mako.template')
         ml = _pip_import('mako.lookup')
-        lookup = ml.TemplateLookup(directories=[DIR], input_encoding='utf-8')
+        lookup = ml.TemplateLookup(directories=[_DIR], input_encoding='utf-8')
         tpl = mt.Template(filename=fname, lookup=lookup)
-        TEMPLATES[fname] = tpl, last
+        _TEMPLATES[fname] = tpl, last
         emit(f"Loaded {fname=} {last=}.")
         return tpl
-    return TEMPLATES[fname][0]
+    return _TEMPLATES[fname][0]
+
+@functools.cache
+def _safe_globals() -> dict:
+    return {k: v for k, v in globals().items() if not k.startswith('_')}
 
 def process_html(fname: str, context: dict) -> str:
     """Process a template file with context (uses mako.template)."""	
     template = _load_template(fname)
-    content = template.render(**globals(), **context)
+    content = template.render(**_safe_globals(), **context)
     return write_file(fname, content)
 
 def extract_api() -> t.Generator[t.Callable, None, None]:
@@ -252,14 +257,14 @@ def function_index() -> str:
     return '\n'.join(f"<li><a href='{APP}.py/{fn.__name__}'>{fn.__name__}</a></li>" 
             for fn in extract_api())
 
-def _build_input_field(name: str, param: inspect.Parameter) -> str:
+def _build_input(field: str, param: inspect.Parameter) -> str:
     input_type = 'text'
     if param.annotation is not param.empty:
         if param.annotation is int: input_type = 'number'
         elif param.annotation is bool: input_type = 'checkbox'
     if param.default is param.empty or param.default is None:
-        return f"<input type='{input_type}' name='{name}'>"
-    return f"<input type='{input_type}' name='{name}' value='{param.default}'>"
+        return f"<input type='{input_type}' name='{field}'>"
+    return f"<input type='{input_type}' name='{field}' value='{param.default}'>"
 
 @functools.cache
 def _build_form(mod_name: str, subpath: str) -> str:
@@ -275,7 +280,7 @@ def _build_form(mod_name: str, subpath: str) -> str:
         if name.startswith('_'): continue
         if param.annotation is param.empty: continue
         form += f"<label for='{name}'>{name.upper()}:</label>"
-        form += _build_input_field(name, param) + "<br>"
+        form += _build_input(name, param) + "<br>"
     form += f"<button type='submit'>EXECUTE</button></form>"
     return write_file(f"{mod_name}__{subpath}.html" , form)
 
@@ -349,10 +354,38 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
 #@# DATABASE
 
 import sqlite3
+import contextlib
 
+def record(func: t.Callable) -> t.Callable:
+    """Decorator to record function calls and results in a database."""
+    func_name = func.__name__
+    with _connect_db() as db:
+        db.execute(f"CREATE TABLE IF NOT EXISTS {func_name}_params "
+                f"(args TEXT, kwargs TEXT, ts TEXT)")
+        db.execute(f"CREATE TABLE IF NOT EXISTS {func_name}_results "
+                f"(result TEXT, ts TEXT, params_id INTEGER, duration REAL)")
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        with _connect_db() as db:
+            db.execute(f"INSERT INTO {func_name}_params VALUES (?)",
+                    (args, kwargs, iso8601()))
+            start = time.time()
+            result = func(*args, **kwargs)
+            db.execute(f"INSERT INTO {func_name}_results VALUES (?)", 
+                    (result, iso8601(), db.lastrowid, time.time() - start))
+            db.commit()
+        return result
+    return wrapper
+
+_DB = None
+
+@contextlib.contextmanager
 def _connect_db() -> sqlite3.Connection:
-    return sqlite3.connect(f'{APP}.sqlite3')
-
+    global APP, _DB
+    if _DB is not None: yield _DB.cursor()
+    with sqlite3.connect(f'{APP}.sqlite3') as db:
+        yield db.cursor()
+        _DB = db
 
 #@# COMPONENTS
 
@@ -496,10 +529,10 @@ def test_server(urllib3, *args, **kwargs) -> t.NoReturn:
 
 def _commit_source() -> t.NoReturn:
     # TODO: Create missing branch if not exists when pushing to git.
-    global BRANCH
+    global _BRANCH
     os.system('git add .')
     os.system('git commit -m "auto commit"')
-    os.system(f'git push origin {BRANCH}')
+    os.system(f'git push origin {_BRANCH}')
     emit("Source committed to repository.")
 
 
@@ -560,5 +593,5 @@ if __name__ == "__main__":
         __role = __kwargs.pop('role')  # It's ok to fail if role is not defined.
         reset = False
     _setup_environ(reset=reset)
-    DEBUG = True if 'debug' in __args else DEBUG
+    _DEBUG = True if 'debug' in __args else _DEBUG
     _role_dispatcher(__role, __args, __kwargs)
