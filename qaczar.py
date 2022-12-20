@@ -369,7 +369,7 @@ def recorded(func: t.Callable) -> t.Callable:
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         with _connect_db() as db:
-            db.execute(f"INSERT INTO {func_name}_params VALUES (?)",
+            db.execute(f"INSERT INTO {func_name}_params VALUES (?, ?, ?)",
                     (args, kwargs, iso8601()))
             start = time.time()
             result = func(*args, **kwargs)
@@ -544,7 +544,7 @@ def _commit_source() -> t.NoReturn:
     os.system('git add .')
     os.system('git commit -m "auto commit"')
     os.system(f'git push origin {_BRANCH}')
-    emit("Source committed to repository.")
+    emit(f"Source committed to {_BRANCH}.")
 
 
 #@# COMMON ROLES
