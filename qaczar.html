@@ -15,10 +15,10 @@
     <%block name="content">
         <article>
         <h2>Roadmap</h2><ol class="ln">${enum_file('qaczar.py', prefix='# TODO:')}</ol><hr />
-        <h2>Files</h2><ul>${list_dir()}</ul>
-        </article><hr />
+        </article>
     </%block>
     <%block name="footer">
+        <hr /><h3>Files</h3><ul>${list_dir()}</ul>
         <footer><a href="/qaczar.py">Powered by qaczar.py</a></footer>
     </%block>
 </body>

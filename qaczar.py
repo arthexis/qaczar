@@ -539,7 +539,11 @@ def _build_handler() -> type:
         def build_context(self, path:str, method: str = None) -> dict:
             if '?' not in path: qs = ''
             else: path, qs = path.split('?', 1)
-            context = {'ip': self.client_address[0], 'ts': iso8601(), 'method': method}
+            # App is the first directory in the path, or None.
+            context = {
+                    'ip': self.client_address[0], 'ts': iso8601(), 'method': method,
+                    'APP': path.split('/')[1] if '/' in path else None
+            }
             context['query'] = parse.parse_qs(qs)
             if method == 'POST': context['data'] = parse.parse_qs(self.rfile_read())
             else: context['data'] = {}
