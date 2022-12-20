@@ -250,7 +250,9 @@ def process_html(fname: str, context: dict) -> str:
 def extract_api() -> t.Generator[t.Callable, None, None]:
     """Extract all public functions from a module."""
     for name, func in inspect.getmembers(sys.modules[__name__], inspect.isfunction):
-        if name.startswith('_') or not func.__doc__: continue
+        if name.startswith('_'): continue
+        if not func.__doc__: 
+            emit(f"Missing docstring for {name}."); continue
         if inspect.signature(func).return_annotation in (t.NoReturn, t.Callable): continue
         yield func
 
@@ -282,6 +284,7 @@ def _build_form(mod_name: str, subpath: str) -> str:
             f"<h3>{subpath.upper()} @ {mod_name.upper()}</h3>"
             f"<p class='doc'>{func.__doc__}</p>")
     for name, param in inspect.signature(func).parameters.items():
+        if not param.kind in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD): continue
         if name.startswith('_'): continue
         if param.annotation is param.empty: continue
         form += f"<label for='{name}'>{name.upper()}:</label>"
