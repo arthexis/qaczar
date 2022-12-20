@@ -371,7 +371,8 @@ def _insert(db, table: str, *values) -> None:
     sql = (f"INSERT INTO {table} VALUES " 
             f"({', '.join('?' * len(values))}, CURRENT_TIMESTAMP)")
     try:
-        db.execute(sql, values)
+        c = db.execute(sql, values)
+        return c.lastrowid
     except Exception as e:
         emit(f"Error on SQL: {sql} with values: {values}")
         e.args = (f"{e.args[0]}: \n{sql}",) + e.args[1:]
@@ -387,10 +388,11 @@ def recorded(func: t.Callable) -> t.Callable:
     @functools.wraps(func)
     def _recorded(*args, **kwargs):
         with _connect_db() as db:
-            _insert(db, f'{func_name}__params', ' '.join(arg_line(*args, **kwargs)))
+            param_id = _insert(db, 
+                f'{func_name}__params', ' '.join(arg_line(*args, **kwargs)))
             result = func(*args, **kwargs)
             emit(f"{func_name}({arg_line(*args, **kwargs)}) -> {result}")
-            _insert(db, f'{func_name}__result', result, db.lastrowid)
+            _insert(db, f'{func_name}__result', result, param_id)
             db.commit()
         return result
     return _recorded
