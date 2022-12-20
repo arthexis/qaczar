@@ -595,6 +595,17 @@ def test_server(*args, **kwargs) -> t.NoReturn:
     assert 'qaczar' in request(f'{APP}.html')
     assert 'qaczar' in request(f'{APP}.py')
 
+def test_server_load(*args, **kwargs) -> t.NoReturn:
+    global APP
+    from concurrent.futures import ThreadPoolExecutor
+    request = _request_factory()
+    # Send 10 requests in parallel using threads.
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        for _ in range(10):
+            executor.submit(request, f'{APP}.html')
+    time.sleep(1)
+    assert 'qaczar' in request(f'{APP}.html')
+
 
 #@#  REPOSITORY
 
