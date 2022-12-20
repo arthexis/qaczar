@@ -201,13 +201,13 @@ import shutil
 import inspect
 import traceback
 
-_WORKDIR = os.path.join(_DIR, '.work')
+_WORKDIR = os.path.join(_DIR, '.worker')
 _TEMPLATES = {}
 
 def _set_workdir(role: str) -> None:
     global _DIR, _WORKDIR
     _WORKDIR = os.path.join(_DIR, f'.{role}')
-    if role == 'server':
+    if role in ('server', 'worker'):
         if os.path.isdir(_WORKDIR): shutil.rmtree(_WORKDIR)
         os.mkdir(_WORKDIR)
 
