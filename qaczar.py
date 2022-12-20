@@ -420,14 +420,17 @@ def recorded(func: t.Callable) -> t.Callable:
         # TODO: Define the columns based on the function signature automatically.
         # TODO: Don't mix this logic with FORMS, recorded can be used for more.
         _init_table(db, f"{func_name}__params", _func_params_cols(func))
-        _init_table(db, f"{func_name}__result", ["result TEXT", "params_id INTEGER"])
+        _init_table(db, f"{func_name}__result", 
+            ["result TEXT", "seq INTEGER", "params_id INTEGER"])
     @functools.wraps(func)
     def _recorded(*args, **kwargs):
         with _connect_db() as db:
             params_id = _insert(db, f'{func_name}__params', *args, *kwargs.values())
-            result = func(*args, **kwargs)
-            emit(f"{func_name}({args=} {kwargs=}) -> {result}")
-            _insert(db, f'{func_name}__result', result, params_id)
+            results = func(*args, **kwargs)
+            emit(f"{func_name}({args=} {kwargs=}) -> {results}")
+            if not isinstance(results, (list, tuple)): results = [results]
+            for seq, result in enumerate(results):
+                _insert(db, f'{func_name}__result', result, seq, params_id)
             db.commit()
         return result
     return _recorded
