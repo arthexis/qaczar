@@ -388,11 +388,11 @@ def recorded(func: t.Callable) -> t.Callable:
     @functools.wraps(func)
     def _recorded(*args, **kwargs):
         with _connect_db() as db:
-            param_id = _insert(db, 
+            params_id = _insert(db, 
                 f'{func_name}__params', ' '.join(arg_line(*args, **kwargs)))
             result = func(*args, **kwargs)
             emit(f"{func_name}({arg_line(*args, **kwargs)}) -> {result}")
-            _insert(db, f'{func_name}__result', result, param_id)
+            _insert(db, f'{func_name}__result', result, params_id)
             db.commit()
         return result
     return _recorded
