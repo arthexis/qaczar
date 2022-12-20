@@ -119,13 +119,10 @@ import shutil
 import atexit
 import subprocess 
 
-def _setup_environ(reset=False) -> None:
+def _setup_environ() -> None:
     global _PYTHON
     if not os.path.isfile('requirements.txt'): 
         _write_file('requirements.txt', '', encoding='utf-8')
-    if reset and os.path.isdir('.venv'):
-        emit(f"Removing {'.venv'} directory.")
-        shutil.rmtree('.venv')
     if sys.platform.startswith('win'):
         if not os.path.isfile('.venv/Scripts/python.exe'): 
             subprocess.run([sys.executable, '-m', 'venv', '.venv'])
@@ -597,12 +594,10 @@ def _role_dispatcher(role: str, args: tuple, kwargs: dict) -> t.NoReturn:
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
+        _setup_environ()
         __role, __args, __kwargs = 'watcher', [], {'next': 'server'}
-        reset = True
     else:
         __args, __kwargs = split_arg_line(sys.argv[1:])
         __role = __kwargs.pop('role')  # It's ok to fail if role is not defined.
-        reset = False
-    _setup_environ(reset=reset)
     _DEBUG = True if 'debug' in __args else _DEBUG
     _role_dispatcher(__role, __args, __kwargs)
