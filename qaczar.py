@@ -266,13 +266,6 @@ def extract_api() -> t.Generator[t.Callable, None, None]:
             emit(f"Missing docstring for {name} (ln: {func.__code__.co_firstlineno}).")
         yield func
 
-@functools.cache
-def function_index() -> str:
-    """Generate a list of links to all public functions in a module."""
-    global APP
-    return '\n'.join(f"<li><a href='{APP}.py/{fn.__name__}'>{fn.__name__}</a></li>" 
-            for fn in extract_api())
-
 def _build_input(field: str, param: inspect.Parameter) -> str:
     input_type = 'text'
     if param.annotation is not param.empty:
@@ -442,6 +435,14 @@ def ascii_banner(pyfiglet, text:str) -> str:
     font = random.choice(fonts)
     banner = pyfiglet.figlet_format(text, font=font) 
     return f"<pre class='ascii' title='Welcome to {text} (Font: {font})'>{banner}</pre>"
+
+@functools.cache
+def nav_links() -> str:
+    """Generate a list of links to all public functions in a module."""
+    global APP
+    return '\n'.join(f"<a href='{APP}.py/{fn.__name__}'>{fn.__name__}</a>" 
+            for fn in extract_api())
+
 
 #@# COMMON FORMS
 

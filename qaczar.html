@@ -7,12 +7,10 @@
     <!-- https://docs.makotemplates.org/en/latest/inheritance.html -->
 </head>
 <body>
-    <%block name="header">
-        <header><h1>${ascii_banner('QACZAR')}</h1></header>
-    </%block>
-    <%block name="nav">
-        <nav><h2>API</h2><ul>${function_index()}</ul></nav><hr />
-    </%block>
+    <header><nav>
+        <a><h1>${ascii_banner('QACZAR')}</h1></a>
+        ${nav_links()}
+    </nav></header><hr />
     <%block name="content">
         <article>
         <h2>Roadmap</h2><ol class="ln">${enum_file('qaczar.py', prefix='# TODO:')}</ol><hr />

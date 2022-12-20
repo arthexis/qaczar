@@ -25,8 +25,9 @@ h1, h2, h3, h4, h5, h6 {
 h1 {
     font-size: 1.5rem;
 }
-h1 pre.banner {
+h1 .ascii {
     font-size: 0.7rem;
+    text-transform: none;
 }
 h2 {
     font-size: 1.5rem;
@@ -112,4 +113,15 @@ footer a, footer a:visited, footer a:link {
     overflow: auto;
     width: 98%;
     padding: 0.5rem;
+}
+/* Make header a flexbox for divs */
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+nav a, nav a:visited, nav a:link {
+    display: inline-block;
+    padding-right: 0.5rem;
+    overflow: wrap;
 }
