@@ -579,7 +579,6 @@ def test_server(*args, **kwargs) -> t.NoReturn:
 
 def _commit_source() -> t.NoReturn:
     # TODO: Create missing branch if not exists when pushing to git.
-    # TODO: Make sure git commits are not being duplicated.
     global _BRANCH
     os.system('git add .')
     os.system('git commit -m "auto commit"')
