@@ -31,14 +31,17 @@ _DIR = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.basename(_DIR)
 
 def iso8601() -> str: 
+    """Returns the current time in ISO 8601 format."""
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
 
 def emit(msg: str, _at=None) -> None: 
+    """Prints a message to stderr, enriched with time, PID and line number."""
     global _PID
     frame = _at or sys._getframe(1)  
     print(f'[{_PID}:{frame.f_lineno} {iso8601()}] {frame.f_code.co_name}:  {msg}', file=sys.stderr)
 
 def halt(msg: str) -> t.NoReturn:
+    """Stops the program and all its subprocesses, printing a final message."""
     frame = sys._getframe(1)
     emit(f"{msg} <- Final message.", _at=frame)
     emit(f"Halting all processes.", _at=frame)
@@ -69,10 +72,12 @@ import importlib
 import functools
 
 def dedent(code: str) -> str:
+    """Removes the extraneous indentation from a multi-line string."""	
     indent = len(code) - len(code.lstrip()) - 1
     return '\n'.join(line[indent:] for line in code.splitlines())
 
 def timed(f: t.Callable) -> t.Callable:
+    """Decorator to time a function, emitting a message to stderr."""
     global _DEBUG
     if not _DEBUG: return f
     @functools.wraps(f)
