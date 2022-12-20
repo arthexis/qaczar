@@ -441,7 +441,8 @@ def nav_links() -> str:
     """Generate a list of links to all public functions in a module."""
     global APP
     return '\n'.join(
-            f"<a href='{APP}.py/{fn.__name__}' title='{fn.__doc__}'>{fn.__name__}</a>" 
+            f"<a href='{APP}.py/{fn.__name__}' title='{fn.__doc__} "
+            f"({fn.__code__.co_firstlineno})'>{fn.__name__}</a>" 
             for fn in extract_api())
 
 
