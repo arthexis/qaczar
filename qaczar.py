@@ -370,7 +370,7 @@ def _init_table(db, table: str, *cols) -> None:
     global _SCHEMA
     sql = (f"CREATE TABLE IF NOT EXISTS {table} ({', '.join(cols)}, " 
             f"ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
-            f"id PRIMARY KEY AUTOINCREMENT)")
+            f"id INTEGER PRIMARY KEY AUTOINCREMENT)")
     _SCHEMA += f'{sql};\n'
     db.execute(sql)
 
