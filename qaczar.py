@@ -373,7 +373,7 @@ def _insert(db, table: str, *values) -> None:
         db.execute(sql, values)
     except Exception as e:
         emit(f"Error on SQL: {sql} with values: {values}")
-        e.args = (f"{e.args[0]}: {sql}",) + e.args[1:]
+        e.args = (f"{e.args[0]}: \n{sql}",) + e.args[1:]
         raise e
 
 def recorded(func: t.Callable) -> t.Callable:
