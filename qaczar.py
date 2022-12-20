@@ -249,6 +249,7 @@ def process_html(fname: str, context: dict) -> str:
     content = template.render(**_safe_globals(), **context)
     return write_file(fname, content)
 
+@functools.cache
 def extract_api() -> t.Generator[t.Callable, None, None]:
     """Extract all public functions from a module."""
     for name, func in inspect.getmembers(sys.modules[__name__], inspect.isfunction):
@@ -258,6 +259,7 @@ def extract_api() -> t.Generator[t.Callable, None, None]:
         if inspect.signature(func).return_annotation in (t.NoReturn, t.Callable): continue
         yield func
 
+@functools.cache
 def function_index() -> str:
     """Generate a list of links to all public functions in a module."""
     global APP
