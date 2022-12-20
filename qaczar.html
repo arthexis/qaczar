@@ -16,6 +16,9 @@
         <article>
         <h2>Roadmap</h2><ol class="ln">${enum_file('qaczar.py', prefix='# TODO:')}</ol><hr />
         </article>
+        <article>
+        <h2>Contact Us</h2>${contact_form()}
+        </article>
     </%block>
     <%block name="footer">
         <hr /><h3>Files</h3><ul>${list_dir()}</ul>

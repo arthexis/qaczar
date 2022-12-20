@@ -478,7 +478,7 @@ def hello_world(name: str = 'World') -> str:
     return f"<div class='hello'>Hello, {name}!</div>"
 
 @recorded
-def collect_contact(email: str, message: str) -> str:
+def contact_form(email: str, message: str) -> str:
     """Thanks for your interest in QACZAR, you will be hearing from us."""
     # TODO: Consider field validation decorators for POST receiver functions.
     emit(f"Contact from {email}: {message}")
