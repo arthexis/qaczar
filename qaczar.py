@@ -362,7 +362,8 @@ SCHEMA = ''
 
 def _init_table(db, table: str, *cols) -> None:
     global SCHEMA
-    sql = f"CREATE TABLE IF NOT EXISTS {table} ({', '.join(cols)})"
+    sql = (f"CREATE TABLE IF NOT EXISTS {table} ({', '.join(cols)}, " 
+            f"ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
     SCHEMA += f'{sql};\n'
     db.execute(sql)
 
@@ -375,18 +376,18 @@ def recorded(func: t.Callable) -> t.Callable:
     # TODO: Handle database errors and schema changes.
     func_name = func.__name__
     with _connect_db() as db:
-        _init_table(db, f"{func_name}_params", "arg_line TEXT", "ts TEXT")
-        _init_table(db, f"{func_name}_results", "result TEXT", "ts TEXT", "params_id INTEGER")
+        _init_table(db, f"{func_name}_params", "arg_line TEXT")
+        _init_table(db, f"{func_name}_results", "result TEXT", "params_id INTEGER")
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
+    def _recorded(*args, **kwargs):
         with _connect_db() as db:
-            _insert(db, f'{func_name}_params', ' '.join(arg_line(*args, **kwargs)), iso8601())
+            _insert(db, f'{func_name}_params', ' '.join(arg_line(*args, **kwargs)))
             result = func(*args, **kwargs)
             emit(f"{func_name}({arg_line(*args, **kwargs)}) -> {result}")
-            _insert(db, f'{func_name}_results', result, iso8601(), db.lastrowid)
+            _insert(db, f'{func_name}_results', result, db.lastrowid)
             db.commit()
         return result
-    return wrapper
+    return _recorded
 
 _DB = None
 
