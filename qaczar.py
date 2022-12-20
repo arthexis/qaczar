@@ -323,7 +323,7 @@ def create_app(directory: str) -> None:
     else: emit(f"Skip existing application: {directory}")
     return f'{directory}/{directory}.html'
 
-def _process_errors(fname: str, context: dict) -> str:
+def _process_error(fname: str, context: dict) -> str:
     """Handle errors by returning a custom 404 page."""
     if '.' in fname: fname = fname.split('.', 1)[0] + '.html'
     err = context.get('error', None)
@@ -349,7 +349,7 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
         except Exception as e:
             emit(f"Error processing {fname}: {e}")
             context['error'] = e
-            return _process_errors(fname, context)
+            return _process_error(fname, context)
     return None
 
 
@@ -396,6 +396,7 @@ import random
 def page_title(title: str = '') -> str:
     return title if title else f'{APP.upper()}'
 
+@record
 def hello_world(name: str = 'World', wrapped: bool=False) -> str:
     """Say hello to the world! Useful as a smoke test."""
     if wrapped:
