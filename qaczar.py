@@ -602,7 +602,7 @@ def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
     emit(f"Running test suite for '{suite}'.")
     passed = 0
     for test in globals().keys():
-        if test == f'test_{suite}': 
+        if test.startswith(f'test_{suite}'): 
             emit(f"Running {test=}...")
             globals()[test](*args, **kwargs)
             passed += 1
