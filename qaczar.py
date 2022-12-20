@@ -318,7 +318,7 @@ def process_py(fname: str, context: dict) -> str:
 
 def create_app(directory: str) -> None:
     """Create a new application using SEEDS from qaczar.py."""
-    # TODO: The directory is not being created. Fix this.
+    # TODO: The app is being created in the .server directory. Fix this.
     seeds = {
         "html": r"<%inherit file='/qaczar.html'/>", 
         # TODO: Figure what other files are needed for seeding an app.
