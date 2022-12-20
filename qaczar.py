@@ -115,7 +115,6 @@ def split_arg_line(args: list[str]) -> tuple[tuple, dict]:
 
 #@# SUBPROCESSING
 
-import shutil
 import atexit
 import subprocess 
 
@@ -267,7 +266,7 @@ def _build_input(field: str, param: inspect.Parameter) -> str:
 @functools.cache
 def _build_form(mod_name: str, subpath: str) -> str:
     # TODO: Handle multiple subpaths by using fieldsets? Allow decorators?
-    func = getattr(sys.modules[mod_name], subpath)
+    func = getattr(sys.modules[mod_name if mod_name != APP else __name__], subpath)
     form = (f"<form action='/{mod_name}.py/{subpath}' "
             f"method='POST' accept-charset='utf-8' name='{subpath}'>" 
             f"<link rel='stylesheet' href='/qaczar.css'>"
