@@ -381,6 +381,7 @@ def _connect_db() -> sqlite3.Connection:
 _SCHEMA = ''
 
 def _init_table(db, table: str, *cols) -> None:
+    # TODO: Define the columns based on the function signature automatically.
     global _SCHEMA
     sql = (f"CREATE TABLE IF NOT EXISTS {table} ({', '.join(cols)}, " 
             f"ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
