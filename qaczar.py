@@ -554,6 +554,12 @@ def _build_https_server() -> tuple:
         
         def do_POST(self) -> None:
             self.build_response('POST'); return super().do_GET()
+        
+        # Inject extra headers
+        def end_headers(self) -> None:
+            self.send_header('Server-Timing', 'test;dur=0.1')
+            self.send_header('Cache-Control', f'Etag: {_mtime_file(self.path)}')
+            return super().end_headers()
 
     return SSLServer, EmitHandler
 
