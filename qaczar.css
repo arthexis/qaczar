@@ -114,14 +114,3 @@ footer a, footer a:visited, footer a:link {
     width: 98%;
     padding: 0.5rem;
 }
-/* Make header a flexbox for divs */
-nav {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-}
-nav a, nav a:visited, nav a:link {
-    display: inline-block;
-    padding-right: 0.5rem;
-    overflow: wrap;
-}
