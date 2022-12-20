@@ -559,11 +559,14 @@ def _build_handler() -> type:
         def do_POST(self) -> None:
             self.build_response('POST'); return super().do_GET()
         
-        # Inject extra headers
         def end_headers(self) -> None:
             self.send_header('Server-Timing', 'test;dur=0.1')
             self.send_header('Cache-Control', f'Etag: {_mtime_file(self.path)}')
             return super().end_headers()
+        
+        def send_header(self, keyword: str, value: str) -> None:
+            emit(f"Sent header {keyword}: {value}")
+            return super().send_header(keyword, value)
 
     return EmitHandler
 
