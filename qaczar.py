@@ -356,7 +356,6 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
 #@# DATABASE
 
 import sqlite3
-import contextlib
 
 def recorded(func: t.Callable) -> t.Callable:
     """Decorator to record function calls and results in a database."""
@@ -381,27 +380,22 @@ def recorded(func: t.Callable) -> t.Callable:
 
 _DB = None
 
-@contextlib.contextmanager
 def _connect_db() -> sqlite3.Connection:
     global APP, _DB
-    if _DB is not None: yield _DB.cursor()
-    with sqlite3.connect(f'{APP}.sqlite3') as db:
-        yield db.cursor()
-        _DB = db
+    if _DB is not None: return _DB
+    _DB = sqlite3.connect(f'{APP}.sqlite3')
+    _DB.execute("CREATE TABLE IF NOT EXISTS apps (name TEXT, ts TEXT)")
+    _DB.execute("INSERT INTO apps VALUES (?, ?)", (APP, iso8601()))
+    _DB.commit()
+    return _DB
 
-#@# COMPONENTS
+
+#@# WEB COMPONENTS
 
 import random
 
 def page_title(title: str = '') -> str:
     return title if title else f'{APP.upper()}'
-
-@recorded
-def hello_world(name: str = 'World', wrapped: bool=False) -> str:
-    """Say hello to the world! Useful as a smoke test."""
-    if wrapped:
-        return f"<div class='hello'>Hello, {name}!</div>"
-    return f"Hello, {name}!"
 
 @functools.cache
 @imports('pyfiglet')
@@ -412,6 +406,17 @@ def ascii_banner(pyfiglet, text:str) -> str:
     font = random.choice(fonts)
     return pyfiglet.figlet_format(text, font=font)
 
+
+#@# FORM RECEIVERS
+
+@recorded
+def hello_world(name: str = 'World', wrapped: bool=False) -> str:
+    """Say hello to the world! Useful as a smoke test."""
+    if wrapped:
+        return f"<div class='hello'>Hello, {name}!</div>"
+    return f"Hello, {name}!"
+
+@recorded
 def collect_contact(email: str, message: str) -> str:
     # TODO: Consider field validation decorators for POST receiver functions.
     emit(f"Contact from {email}: {message}")
