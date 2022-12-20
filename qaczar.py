@@ -100,10 +100,13 @@ def imports(*modules: tuple[str]) -> t.Callable:
         return wrapper
     return decorator
 
-def arg_line(*args: tuple[str], **kwargs: dict) -> tuple[str]:
+def _arg_line(*args: tuple[str], **kwargs: dict) -> tuple[str]:
     for k, v in kwargs.items(): 
         args += (f'--{k}=\'{v}\'',) if isinstance(v, str) else (f'--{k}={v}',)
     return args
+
+def join_arg_line(args: tuple[str], kwargs: dict) -> str:
+    return ' '.join(_arg_line(*args, **kwargs))
 
 def split_arg_line(args: list[str]) -> tuple[tuple, dict]:
     largs, kwargs = [], {}
@@ -137,7 +140,7 @@ def _setup_environ() -> None:
 
 def _start_py(script: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
     global _PYTHON
-    line_args = [str(a) for a in arg_line(*args, **kwargs)]
+    line_args = [str(a) for a in _arg_line(*args, **kwargs)]
     emit(f"Starting {script=} {line_args=}.")
     # Popen is a context manager, but we want to keep proc alive and not wait for it.
     # We cannot use run() for this. Remember to manually terminate the process later.
@@ -392,9 +395,9 @@ def recorded(func: t.Callable) -> t.Callable:
     def _recorded(*args, **kwargs):
         with _connect_db() as db:
             params_id = _insert(db, 
-                f'{func_name}__params', ' '.join(arg_line(*args, **kwargs)))
+                f'{func_name}__params', ' '.join(_arg_line(*args, **kwargs)))
             result = func(*args, **kwargs)
-            emit(f"{func_name}({arg_line(*args, **kwargs)}) -> {result}")
+            emit(f"{func_name}({_arg_line(*args, **kwargs)}) -> {result}")
             _insert(db, f'{func_name}__result', result, params_id)
             db.commit()
         return result
