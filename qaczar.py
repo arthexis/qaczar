@@ -246,14 +246,10 @@ def _load_template(fname: str) -> str:
         return tpl
     return _TEMPLATES[fname][0]
 
-@functools.cache
-def _safe_globals() -> dict:
-    return {k: v for k, v in globals().items() if not k.startswith('_')}
-
 def process_html(fname: str, context: dict) -> str:
     """Process a template file with context (uses mako.template)."""	
     template = _load_template(fname)
-    content = template.render(**_safe_globals(), **context)
+    content = template.render(**context)
     return write_file(fname, content)
 
 @functools.cache
@@ -474,6 +470,10 @@ import urllib.parse as parse
 
 HOST, PORT, SITE = 'localhost', 9443, 'qaczar.com'
 
+@functools.cache
+def _safe_globals() -> dict:
+    return {k: v for k, v in globals().items() if not k.startswith('_')}
+
 @imports('cryptography.x509',
     'cryptography.hazmat.primitives.asymmetric.rsa',
     'cryptography.hazmat.primitives.hashes',
@@ -539,10 +539,9 @@ def _build_handler() -> type:
         def build_context(self, path:str, method: str = None) -> dict:
             if '?' not in path: qs = ''
             else: path, qs = path.split('?', 1)
-            # App is the first directory in the path, or None.
-            context = {
-                    'ip': self.client_address[0], 'ts': iso8601(), 'method': method,
-                    'APP': path.split('/')[1] if '/' in path else None
+            context = {**_safe_globals(), 
+                'ip': self.client_address[0], 'ts': iso8601(), 'method': method,
+                'APP': path.split('/')[1] if '/' in path else None,
             }
             context['query'] = parse.parse_qs(qs)
             if method == 'POST': context['data'] = parse.parse_qs(self.rfile_read())
