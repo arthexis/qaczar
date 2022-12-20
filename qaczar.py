@@ -569,6 +569,8 @@ def _build_handler() -> type:
             return super().end_headers()
         
         def send_header(self, keyword: str, value: str) -> None:
+            if keyword == 'Content-Type' and 'text' in value and 'encoding' not in value:
+                value = f"{value}; charset=utf-8"
             emit(f"Sent header {keyword}: {value}")
             return super().send_header(keyword, value)
 
