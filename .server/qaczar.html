@@ -5,7 +5,7 @@
 \____   |  \_____  /\____   | 
      |__|        \/      |__| 
 </pre></h1><p>Not found: qaczar.html</p><pre class='traceback'>Traceback (most recent call last):
-  File "C:\Users\arthe\Desktop\qaczar\qaczar.py", line 357, in _dispatch_processor
+  File "C:\Users\arthe\Desktop\qaczar\qaczar.py", line 364, in _dispatch_processor
     return processor(f'{prefix}.{suffix}', context)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "C:\Users\arthe\Desktop\qaczar\qaczar.py", line 255, in process_html
@@ -22,14 +22,5 @@
     callable_(context, *args, **kwargs)
   File "qaczar_html", line 41, in render_body
   File "qaczar_html", line 66, in render_content
-  File "C:\Users\arthe\Desktop\qaczar\qaczar.py", line 433, in _recorded
-    params_id = _insert(db, f'{func_name}__params', *args, *kwargs.values())
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\arthe\Desktop\qaczar\qaczar.py", line 392, in _insert
-    raise e
-  File "C:\Users\arthe\Desktop\qaczar\qaczar.py", line 387, in _insert
-    c = _db.execute(sql, values)
-        ^^^^^^^^^^^^^^^^^^^^^^^^
-sqlite3.OperationalError: near ",": syntax error: 
-INSERT INTO contact_form__params VALUES (, CURRENT_TIMESTAMP, NULL)
+TypeError: 'Undefined' object is not callable
 </pre><hr /><p><a href='/'>Home</a></p>

@@ -278,8 +278,9 @@ def _active_module(mod_name: str):
     return sys.modules[mod_name if mod_name != APP else __name__]
 
 @functools.cache
-def _build_form(mod_name: str, subpath: str) -> str:
-    # TODO: Handle multiple subpaths by using fieldsets? Allow decorators?
+def render_form(subpath: str, mod_name: str=None) -> str:
+    global APP
+    if not mod_name: mod_name = APP
     func = getattr(_active_module(mod_name), subpath)
     form = (f"<form action='/{mod_name}.py/{subpath}' "
             f"method='POST' accept-charset='utf-8' name='{subpath}'>" 
@@ -292,6 +293,12 @@ def _build_form(mod_name: str, subpath: str) -> str:
         form += f"<label for='{name}'>{name.upper()}:</label>"
         form += _build_input(name, param) + "<br>"
     form += f"<button type='submit'>EXECUTE</button></form>"
+    return form
+
+@functools.cache
+def _build_form(mod_name: str, subpath: str) -> str:
+    # TODO: Handle multiple subpaths by using fieldsets? Allow decorators?
+    form = render_form(subpath, mod_name)
     return write_file(f"{mod_name}__{subpath}.html" , form)
 
 def _execute_form(mod_name: str, subpath: str, data: dict) -> str:
@@ -478,7 +485,7 @@ def hello_world(name: str = 'World') -> str:
     return f"<div class='hello'>Hello, {name}!</div>"
 
 @recorded
-def contact_form(email: str, message: str) -> str:
+def receive_contact(email: str, message: str) -> str:
     """Thanks for your interest in QACZAR, you will be hearing from us."""
     # TODO: Consider field validation decorators for POST receiver functions.
     emit(f"Contact from {email}: {message}")
