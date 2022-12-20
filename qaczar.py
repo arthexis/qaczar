@@ -548,24 +548,26 @@ def _build_https_server() -> tuple:
 #@#  SELF TESTING
 
 @imports('urllib3')
-def test_server(urllib3, *args, **kwargs) -> t.NoReturn:
-    global APP, HOST, PORT
-    http = urllib3.PoolManager(
-        cert_reqs='CERT_REQUIRED',
-        ca_certs=_get_ssl_certs()[0])
-
-    def server_request(fname:str):
-        r = http.request('GET', url := f"https://{HOST}:{PORT}/{fname}", timeout=30)
-        emit(f"Server response: {url=} {r=}")
-        if r.status != 200: raise ValueError(f"Unexpected response: {r.status} {r.reason}")
+def _request_factory(urllib3, app:str=None):
+    global HOST, PORT
+    http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=_get_ssl_certs()[0])
+    def _request(fname:str, data:dict = None, status:int = 200):
+        if app: fname = f"{app}/{fname}"
+        url = f"https://{HOST}:{PORT}/{fname}"
+        r = http.request('POST' if data else 'GET', url, fields=data, timeout=30)
+        assert r.status == status, f"Request to {url} failed with status {r.status}"
         return r.data.decode('utf-8')
+    return _request
     
-    assert 'qaczar' in server_request(f'{APP}.html')
-    assert 'qaczar' in server_request(f'{APP}.py')
+def test_server(*args, **kwargs) -> t.NoReturn:
+    global APP
+    request = _request_factory()
+    assert 'qaczar' in request(f'{APP}.html')
+    assert 'qaczar' in request(f'{APP}.py')
 
 @imports('urllib3')
 def test_server_forms(urllib3, *args, **kwargs) -> t.NoReturn:
-    pass
+    request = _request_factory()
 
 
 #@#  REPOSITORY
