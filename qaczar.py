@@ -583,17 +583,12 @@ def worker_role(*args, **kwargs) -> t.NoReturn:
 #@# DISPATCHER
 
 def _role_dispatcher(role: str, args: tuple, kwargs: dict) -> t.NoReturn:
-    import threading
     _set_workdir(role)
     opid = kwargs.pop('opid', None)  # If we receive opid it means we are being watched.
     emit(f"Assuming role='{__role}' args={__args} kwargs={__kwargs} watch by {opid=}.")
-    def dispatch():
-        function = globals().get(f"{role}_role")
-        if function is None: raise ValueError(f"Role '{role}' is not defined.")
-        function(*args, **kwargs)
-    threading.Thread(target=dispatch, daemon=True).start()
-    # We can do other stuff here, like launching another role.
-    while threading.active_count() > 1: time.sleep(1)
+    function = globals().get(f"{role}_role")
+    if function is None: raise ValueError(f"Role '{role}' is not defined.")
+    function(*args, **kwargs)
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
