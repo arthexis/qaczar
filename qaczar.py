@@ -504,7 +504,7 @@ def _safe_globals() -> dict:
     'cryptography.hazmat.primitives.asymmetric.rsa',
     'cryptography.hazmat.primitives.hashes',
     'cryptography.hazmat.primitives.serialization')
-def _get_ssl_certs(x509, rsa, hashes, ser, site=None) -> tuple[str, str]:
+def _build_ssl_certs(x509, rsa, hashes, ser, site=None) -> tuple[str, str]:
     global HOST, SITE
     if site is None: site = HOST if HOST == 'localhost' else SITE
     if not os.path.exists('.ssl'): os.mkdir('.ssl')
@@ -536,7 +536,7 @@ def _get_ssl_certs(x509, rsa, hashes, ser, site=None) -> tuple[str, str]:
 def _build_server(https: bool = True) -> type:
     if not https: return ss.ThreadingTCPServer
     ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    ssl_ctx.load_cert_chain(*_get_ssl_certs())
+    ssl_ctx.load_cert_chain(*_build_ssl_certs())
 
     class SSLServer(ss.ThreadingTCPServer):
         def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True):
@@ -619,7 +619,7 @@ _COUNTER = 0
 @imports('urllib3')
 def _request_factory(urllib3, app:str=None):
     global HOST, PORT
-    http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=_get_ssl_certs()[0])
+    http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=_build_ssl_certs()[0])
     def _request(fname:str, data:dict = None, status:int = 200):
         global _COUNTER
         if app: fname = f"{app}/{fname}"
