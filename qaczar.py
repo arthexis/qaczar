@@ -411,6 +411,7 @@ def recorded(func: t.Callable) -> t.Callable:
 _DB = None
 
 def _connect_db() -> sqlite3.Connection:
+    # TODO: Test for conflicts with the Threaded TCPServer.
     global APP, _DB
     if _DB is not None: return _DB
     _DB = sqlite3.connect(f'{APP}.sqlite3')
