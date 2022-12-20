@@ -185,6 +185,7 @@ def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
 #@# CONTENT GENERATOR
 
 import inspect
+import traceback
 
 _WORKDIR = os.path.join(_DIR, '.work')
 _TEMPLATES = {}
@@ -323,7 +324,9 @@ def _process_error(fname: str, context: dict) -> str:
     if '.' in fname: fname = fname.split('.', 1)[0] + '.html'
     err = context.get('error', None)
     banner = ascii_banner(f"404")
+    # Include the full traceback in the error page.
     content = (f"<h1><pre>{banner}</pre></h1><p>Not found: {fname}</p><p>{err}</p>"
+                f"Traceback:<pre>{traceback.format_exc()}</pre>"
                f"<p><a href='/'>Home</a></p>"
                f'<link rel="stylesheet" href="/qaczar.css">')
     return write_file(fname, content)
