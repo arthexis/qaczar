@@ -436,7 +436,7 @@ def ascii_banner(pyfiglet, text:str) -> str:
     return pyfiglet.figlet_format(text, font=font)
 
 
-#@# FORM RECEIVERS
+#@# COMMON FORMS
 
 @recorded
 def hello_world(name: str = 'World', wrapped: bool=True) -> str:
