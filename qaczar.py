@@ -254,7 +254,7 @@ def extract_api() -> t.Generator[t.Callable, None, None]:
     for name, func in inspect.getmembers(sys.modules[__name__], inspect.isfunction):
         if name.startswith('_'): continue
         if not func.__doc__: 
-            emit(f"Missing docstring for {name} (ln: {func.__code__.co_firstlineno}")
+            emit(f"Missing docstring for {name} (ln: {func.__code__.co_firstlineno}).")
         if inspect.signature(func).return_annotation in (t.NoReturn, t.Callable): continue
         yield func
 
