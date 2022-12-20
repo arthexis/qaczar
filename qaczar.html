@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${page_title()}</title>
     <style>${app_styles()}</style>
-    <!-- https://docs.makotemplates.org/en/latest/inheritance.html -->
 </head>
 <body>
     <header><nav>
         <a href='/qaczar.html'><h1>${ascii_banner('QACZAR')}</h1></a>
         ${nav_links()}
     </nav></header><hr />
+    <!-- https://docs.makotemplates.org/en/latest/inheritance.html -->
     <%block name="content">
         <article>
         <h2>Roadmap</h2><ol class="ln">${enum_file('qaczar.py', prefix='# TODO:')}</ol><hr />

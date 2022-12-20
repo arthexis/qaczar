@@ -283,7 +283,6 @@ def _build_form(mod_name: str, subpath: str) -> str:
     func = getattr(_active_module(mod_name), subpath)
     form = (f"<form action='/{mod_name}.py/{subpath}' "
             f"method='POST' accept-charset='utf-8' name='{subpath}'>" 
-            f"<link rel='stylesheet' href='/qaczar.css'>"
             f"<h3>{subpath.upper()} @ {mod_name.upper()}</h3>"
             f"<p class='doc'>{func.__doc__}</p>")
     for name, param in inspect.signature(func).parameters.items():
@@ -339,8 +338,7 @@ def _process_error(fname: str, context: dict) -> str:
     # Include the full traceback in the error page.
     content = (f"<h1 class='banner'>{banner}</h1><p>Not found: {fname}</p>"
             f"<pre class='traceback'>{traceback.format_exc()}</pre>"
-            f"<hr /><p><a href='/'>Home</a></p>"
-            f'<link rel="stylesheet" href="/qaczar.css">')
+            f"<hr /><p><a href='/'>Home</a></p>")
     return write_file(fname, content)
 
 @timed
