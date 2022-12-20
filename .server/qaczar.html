@@ -4,7 +4,129 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>QACZAR</title>
-    <link rel="stylesheet" href="/qaczar.css" type="text/css" />
+    <style>* {
+    margin: 0;
+    padding: 0;
+}
+html, input {
+    background-color: #333;
+    font-family: monospace;
+    font-size: 1rem;
+    color: #93c572;
+    padding: 0.5rem;
+}
+body {
+    margin-right: 0.5rem;
+    margin-left: 0.5rem;
+    width: 100%;
+    height: 100%;
+}
+header {
+    max-width: 98%;
+}
+h1, h2, h3, h4, h5, h6 {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    text-transform: capitalize;
+    color: goldenrod;
+    display: inline-block;
+}
+h1 {
+    font-size: 1.8rem;
+}
+h1 .ascii {
+    font-size: 0.8rem;
+    text-transform: none;
+}
+h2 {
+    font-size: 1.5rem;
+}
+h3 {
+    font-size: 1.2rem;
+}
+p {
+    margin-bottom: 0.5rem;
+}
+.doc {
+    color: #66FFFF;
+}
+a:visited, a:link {
+    color: #66FF66;
+}
+a:hover {
+    color: goldenrod;
+}
+ol, ul {
+    list-style-type: none;
+}
+ul li {
+    display: inline;
+}
+ol li::before {
+    content: counter(list) ". ";
+    counter-increment: list;
+    color: #666;
+}
+ol {
+    counter-reset: list;
+}
+ol.ln li::before {
+    content: attr(data-ln) ". ";
+    counter-increment: list;
+}
+ol.ln li:hover {
+    color: #66FFFF;
+}
+hr {
+    border: 0;
+    border-top: 1px solid #666;
+    margin: 1rem 0;
+    width: 99%;
+}
+form {
+    background-color: #444;
+    border: 1px solid #666;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    width: auto;
+    display: inline-block;
+}
+input {
+    min-width: 30rem;
+}
+label {
+    display: block;
+    margin-top: 0.5rem;
+    margin-bottom: 0.2rem;
+}
+button {
+    margin-top: 0.5rem;
+    color: #93c572;
+    background-color: #333;
+    border: 1px solid #666;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    font-size: 1rem;
+}
+button:hover {
+    background-color: #430;
+}
+footer {
+    margin-top: 1rem;
+    width: 98%;
+}
+footer a, footer a:visited, footer a:link {
+    color: #702973;
+}
+.traceback {
+    color: #FF6666;
+    background-color: #222;
+    font-size: 0.8rem;
+    overflow: auto;
+    width: 98%;
+    padding: 0.5rem;
+}
+</style>
     <!-- https://docs.makotemplates.org/en/latest/inheritance.html -->
 </head>
 <body>
@@ -17,6 +139,7 @@
        \__>        \/        \/        \/       \/       \/ 
 </pre></h1></a>
         <a href='qaczar.py/access_log' title='Log an access to the server. (432)'>access_log</a>
+<a href='qaczar.py/app_styles' title='None (454)'>app_styles</a>
 <a href='qaczar.py/ascii_banner' title='Generate a banner from ASCII text in a random font. (102)'>ascii_banner</a>
 <a href='qaczar.py/collect_contact' title='Thanks for your interest in QACZAR, you will be hearing from us. (432)'>collect_contact</a>
 <a href='qaczar.py/create_app' title='Create a new application using SEEDS from qaczar.py. (319)'>create_app</a>
@@ -39,7 +162,7 @@
     </nav></header><hr />
     
         <article>
-        <h2>Roadmap</h2><ol class="ln"><li data-ln="99"> Allow specifying version number in runtime imports (for self-remediation).</li><li data-ln="281"> Handle multiple subpaths by using fieldsets? Allow decorators?</li><li data-ln="320"> The app is being created in the .server directory. Fix this.</li><li data-ln="323"> Figure what other files are needed for seeding an app.</li><li data-ln="375"> Make the schema tracker work per-app by using the APP name with _LOCAL.</li><li data-ln="426"> Define the columns based on the function signature automatically.</li><li data-ln="427"> Don't mix this logic with FORMS, recorded can be used for more.</li><li data-ln="481"> Consider field validation decorators for POST receiver functions.</li><li data-ln="656"> Create missing branch if not exists when pushing to git.</li><li data-ln="685"> Add some automatic tests to prevent public API regressions.</li></ol><hr />
+        <h2>Roadmap</h2><ol class="ln"><li data-ln="99"> Allow specifying version number in runtime imports (for self-remediation).</li><li data-ln="281"> Handle multiple subpaths by using fieldsets? Allow decorators?</li><li data-ln="320"> The app is being created in the .server directory. Fix this.</li><li data-ln="323"> Figure what other files are needed for seeding an app.</li><li data-ln="375"> Make the schema tracker work per-app by using the APP name with _LOCAL.</li><li data-ln="426"> Define the columns based on the function signature automatically.</li><li data-ln="427"> Don't mix this logic with FORMS, recorded can be used for more.</li><li data-ln="484"> Consider field validation decorators for POST receiver functions.</li><li data-ln="659"> Create missing branch if not exists when pushing to git.</li><li data-ln="688"> Add some automatic tests to prevent public API regressions.</li></ol><hr />
         </article>
     
     

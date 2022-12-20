@@ -451,6 +451,9 @@ def page_title(title: str = '') -> str:
     """Return a page title, or the default if none is provided."""
     return title if title else f'{APP.upper()}'
 
+def app_styles():
+    return _read_file(f'qaczar.css', encoding='utf-8')
+
 @imports('pyfiglet')
 def ascii_banner(pyfiglet, text:str, font: str='graffiti') -> str:
     """Generate a banner from ASCII text in a random font."""
