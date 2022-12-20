@@ -398,11 +398,11 @@ def _connect_db() -> sqlite3.Connection:
     if hasattr(_LOCAL, '{APP}_db'): return getattr(_LOCAL, '{APP}_db')
     _db = sqlite3.connect(f'{APP}.sqlite3')
     _init_table(_db, f'{APP}_instances', ['app_name TEXT', 'pid TEXT'])
-    # Check if our PID is already the last one in the table.
     last_pid = _db.execute(
             f"SELECT pid FROM {APP}_instances ORDER BY id DESC LIMIT 1").fetchone()
     if last_pid and last_pid[0] != _PID:
         _insert(_db, f'{APP}_instances', APP, _PID)
+        # Run other code that should only run once per app instance here.
         _db.commit()
     setattr(_LOCAL, '{APP}_db', _db)
     return _db
