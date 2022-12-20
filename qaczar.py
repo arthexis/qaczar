@@ -432,7 +432,9 @@ HOST, PORT, SITE = 'localhost', 9443, 'qaczar.com'
     'cryptography.hazmat.primitives.asymmetric.rsa',
     'cryptography.hazmat.primitives.hashes',
     'cryptography.hazmat.primitives.serialization')
-def _get_ssl_certs(x509, rsa, hashes, ser, site=HOST) -> tuple[str, str]:
+def _get_ssl_certs(x509, rsa, hashes, ser, site=None) -> tuple[str, str]:
+    global HOST, SITE
+    if site is None: site = HOST if HOST == 'localhost' else SITE
     if not os.path.exists('.ssl'): os.mkdir('.ssl')
     certname, keyname = '.ssl/cert.pem', '.ssl/key.pem'
     if os.path.exists(certname) and os.path.exists(keyname):
@@ -514,6 +516,7 @@ def _build_https_server() -> tuple:
 
 @imports('urllib3')
 def test_server(urllib3, *args, **kwargs) -> t.NoReturn:
+    global APP, HOST, PORT
     http = urllib3.PoolManager(
         cert_reqs='CERT_REQUIRED',
         ca_certs=_get_ssl_certs()[0])
@@ -547,7 +550,7 @@ def watcher_role(*args, next: str = None, **kwargs) -> t.NoReturn:
     kwargs['role'] = next
     _watch_over(_start_py(f'{APP}.py', *args, **kwargs), f'{APP}.py')
 
-def server_role(*args, host='localhost', port='9443', **kwargs) -> t.NoReturn:
+def server_role(*args, host=HOST, port=PORT, **kwargs) -> t.NoReturn:
     global APP
     server_cls, handler_cls = _build_https_server()
     with server_cls((host, int(port)), handler_cls) as httpd:
