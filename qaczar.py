@@ -322,7 +322,8 @@ def _process_error(fname: str, context: dict) -> str:
     """Handle errors by returning a custom 404 page."""
     if '.' in fname: fname = fname.split('.', 1)[0] + '.html'
     err = context.get('error', None)
-    content = (f"<h1>404</h1><p>Not found: {fname}</p><p>{err}</p>"
+    banner = ascii_banner(f"404?")
+    content = (f"<h1>{banner}</h1><p>Not found: {fname}</p><p>{err}</p>"
                f"<p><a href='/'>Home</a></p>"
                f'<link rel="stylesheet" href="/qaczar.css">')
     return write_file(fname, content)
