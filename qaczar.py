@@ -577,15 +577,20 @@ def _build_handler() -> type:
 
 #@#  SELF TESTING
 
+_COUNTER = 0
+
 @imports('urllib3')
 def _request_factory(urllib3, app:str=None):
     global HOST, PORT
     http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=_get_ssl_certs()[0])
     def _request(fname:str, data:dict = None, status:int = 200):
+        global _COUNTER
         if app: fname = f"{app}/{fname}"
         url = f"https://{HOST}:{PORT}/{fname}"
         r = http.request('POST' if data else 'GET', url, fields=data, timeout=30)
         assert r.status == status, f"Request to {url} failed with status {r.status}"
+        emit(f"Request {_COUNTER} to {url} succeeded with status {r.status}")
+        _COUNTER += 1
         return r.data.decode('utf-8')
     return _request
     
