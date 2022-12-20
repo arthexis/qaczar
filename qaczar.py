@@ -360,17 +360,18 @@ import sqlite3
 
 def recorded(func: t.Callable) -> t.Callable:
     """Decorator to record function calls and results in a database."""
+    # TODO: Handle database errors and schema changes.
     func_name = func.__name__
     with _connect_db() as db:
         db.execute(f"CREATE TABLE IF NOT EXISTS {func_name}_params "
-                f"(args TEXT, kwargs TEXT, ts TEXT)")
+                f"(arg_line TEXT, ts TEXT)")
         db.execute(f"CREATE TABLE IF NOT EXISTS {func_name}_results "
                 f"(result TEXT, ts TEXT, params_id INTEGER, duration REAL)")
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         with _connect_db() as db:
             db.execute(f"INSERT INTO {func_name}_params VALUES (?, ?, ?)",
-                    (args, kwargs, iso8601()))
+                    (' '.join(arg_line(*args, **kwargs)), iso8601(), db.lastrowid))
             start = time.time()
             result = func(*args, **kwargs)
             db.execute(f"INSERT INTO {func_name}_results VALUES (?)", 
