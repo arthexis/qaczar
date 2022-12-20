@@ -429,10 +429,10 @@ def page_title(title: str = '') -> str:
     return title if title else f'{APP.upper()}'
 
 @imports('pyfiglet')
-def ascii_banner(pyfiglet, text:str) -> str:
+def ascii_banner(pyfiglet, text:str, font: str='graffiti') -> str:
     """Generate a banner from ASCII text in a random font."""
-    fonts = pyfiglet.FigletFont.getFonts()
-    font = random.choice(fonts)
+    if font == 'random':
+        font = random.choice(pyfiglet.FigletFont.getFonts())
     banner = pyfiglet.figlet_format(text, font=font) 
     return f"<pre class='ascii' title='Welcome to {text} (Font: {font})'>{banner}</pre>"
 

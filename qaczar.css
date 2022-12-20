@@ -23,10 +23,10 @@ h1, h2, h3, h4, h5, h6 {
     display: inline-block;
 }
 h1 {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
 }
 h1 .ascii {
-    font-size: 0.7rem;
+    font-size: 1.5rem;
     text-transform: none;
 }
 h2 {
