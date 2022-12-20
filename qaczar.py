@@ -506,15 +506,19 @@ def _get_ssl_certs(x509, rsa, hashes, ser, site=None) -> tuple[str, str]:
     _write_file(certname, cert.public_bytes(ser.Encoding.PEM))
     return certname, keyname
 
-def _build_https_server() -> tuple:
+def _build_server(https: bool = True) -> type:
+    if not https: return ss.TCPServer
     ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     ssl_ctx.load_cert_chain(*_get_ssl_certs())
-    
+
     class SSLServer(ss.TCPServer):
         def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True):
             ss.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate)
             self.socket = ssl_ctx.wrap_socket(self.socket, server_side=True) 
 
+    return SSLServer
+
+def _build_handler() -> type:
     class EmitHandler(hs.SimpleHTTPRequestHandler):
         def log_message(self, format, *args):
             # TODO: Log accesses to DB for analysis and design of the caching model.
@@ -561,7 +565,7 @@ def _build_https_server() -> tuple:
             self.send_header('Cache-Control', f'Etag: {_mtime_file(self.path)}')
             return super().end_headers()
 
-    return SSLServer, EmitHandler
+    return EmitHandler
 
 
 #@#  SELF TESTING
@@ -606,7 +610,8 @@ def watcher_role(*args, next: str = None, **kwargs) -> t.NoReturn:
 
 def server_role(*args, host=HOST, port=PORT, **kwargs) -> t.NoReturn:
     global APP
-    server_cls, handler_cls = _build_https_server()
+    server_cls = _build_server()
+    handler_cls = _build_handler()
     with server_cls((host, int(port)), handler_cls) as httpd:
         emit(f"Server ready at https://{host}:{port}")
         atexit.register(httpd.shutdown)
