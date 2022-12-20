@@ -282,7 +282,6 @@ def _build_form(mod_name: str, subpath: str) -> str:
             f"<h3>{subpath.upper()} @ {mod_name.upper()}</h3>"
             f"<p class='doc'>{func.__doc__}</p>")
     for name, param in inspect.signature(func).parameters.items():
-        if not param.kind in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD): continue
         if name.startswith('_'): continue
         if param.annotation is param.empty: continue
         form += f"<label for='{name}'>{name.upper()}:</label>"
