@@ -346,7 +346,7 @@ def _process_error(fname: str, context: dict) -> str:
     banner = ascii_banner(f"404")
     # Include the full traceback in the error page.
     content = (f"<h1 class='banner'>{banner}</h1><p>Not found: {fname}</p>"
-            f"<hr /><pre class='traceback'>{traceback.format_exc()}</pre>"
+            f"<pre class='traceback'>{traceback.format_exc()}</pre>"
             f"<hr /><p><a href='/'>Home</a></p>"
             f'<link rel="stylesheet" href="/qaczar.css">')
     return write_file(fname, content)
