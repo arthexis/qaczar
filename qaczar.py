@@ -293,7 +293,6 @@ def render_form(subpath: str, mod_name: str=None) -> str:
     func = getattr(_active_module(mod_name), subpath)
     form = (f"<form action='/{mod_name}.py/{subpath}' "
             f"method='POST' accept-charset='utf-8' name='{subpath}'>" 
-            f"<h3>{subpath.upper()} @ {mod_name.upper()}</h3>"
             f"<p class='doc'>{func.__doc__}</p>")
     for name, param in inspect.signature(func).parameters.items():
         if not param.kind in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD): continue
