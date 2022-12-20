@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# qaczar.py: An Hymn to the Self-Inventing.
+# qaczar.py: An Hymn to the Self-Inventing, the Celestial Ladder of the Pythonic Arts.
 # by R. G. Osorio (rgo [at] qaczar [dot] com) 2022.
 # License: MIT (https://opensource.org/licenses/MIT).
 
-# + A few guidelines for editing this script:
-# - Keep the line width to less than 100 characters. Aesthetics matter, but not too much.
-# - Prefer functions, instead of classes, for modularity, composability and encapsulation.
-# - Functions should not reference functions or other globals defined later in the script.
-# - Exploit the standard library to its fullest, avoid fancy third-party dependencies.
-# - Sometimes, its ok to break the rules: take advantage of the language but clean up after.
-# - In case of doubt, play the game to see what happens. Also, you just lost it.
+#   Guidelines:
+# 1 One Script. Keep line width to less than 100 characters. Aesthetics matter, but not too much.
+# 2 Prefer functions, instead of classes, for modularity, composability and encapsulation.
+# 3 Functions should not reference functions or other globals defined later in the script.
+# 4 Exploit the standard library to its fullest, avoid fancy third-party dependencies.
+# 5 Sometimes, its ok to break the rules: take advantage of the language but clean up after.
+# 6 In case of doubt, play the game to see what happens. Also, you just lost it.
+# 7 There is no seventh.
 
 
 #@# LOCAL PLATFORM
@@ -224,6 +225,15 @@ def write_file(fname: str, content: str) -> str:
     """Write a file to the active work folder."""
     return _write_file(_work_path(fname), content, encoding='utf-8')
 
+def elem(tag: str, content: str=None, **attrs) -> str:
+    if 'data' in attrs: 
+        for k, v in attrs['data'].items(): attrs[f'data-{k}'] = v
+        del attrs['data']
+    attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
+    if attrs and not content: return f'<{tag} {attrs}/>'
+    if not content: return f'<{tag}/>'
+    return f'<{tag} {attrs}>{content}</{tag}>'
+
 def enum_file(fname: str, tag: str = 'li', prefix: str = None) -> str:
     """Enumerate lines in a file, optionally filtering by prefix."""
     return ''.join(f'<{tag} data-ln="{i}">{line if not prefix else line.split(prefix)[1]}</{tag}>'
@@ -270,9 +280,8 @@ def _build_input(field: str, param: inspect.Parameter) -> str:
     if param.annotation is not param.empty:
         if param.annotation is int: input_type = 'number'
         elif param.annotation is bool: input_type = 'checkbox'
-    if param.default is param.empty or param.default is None:
-        return f"<input type='{input_type}' name='{field}'>"
-    return f"<input type='{input_type}' name='{field}' value='{param.default}'>"
+    attrs = {'name': field, 'type': input_type, 'value': param.default}
+    return elem('input', **attrs)
 
 def _active_module(mod_name: str):
     return sys.modules[mod_name if mod_name != APP else __name__]
