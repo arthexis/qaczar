@@ -369,13 +369,14 @@ _SCHEMA = ''
 def _init_table(db, table: str, *cols) -> None:
     global _SCHEMA
     sql = (f"CREATE TABLE IF NOT EXISTS {table} ({', '.join(cols)}, " 
-            f"ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
+            f"ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
+            f"id PRIMARY KEY AUTOINCREMENT)")
     _SCHEMA += f'{sql};\n'
     db.execute(sql)
 
 def _insert(db, table: str, *values) -> None:
     sql = (f"INSERT INTO {table} VALUES " 
-            f"({', '.join('?' * len(values))}, CURRENT_TIMESTAMP)")
+            f"({', '.join('?' * len(values))}, CURRENT_TIMESTAMP, NULL)")
     try:
         c = db.execute(sql, values)
         return c.lastrowid
