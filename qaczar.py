@@ -101,14 +101,17 @@ def imports(*modules: tuple[str]) -> t.Callable:
     return decorator
 
 def arg_line(*args: tuple[str], **kwargs: dict) -> tuple[str]:
-    for k, v in kwargs.items(): args += (f'--{k}={str(v)}', )
+    for k, v in kwargs.items(): 
+        args += (f'--{k}=\'{v}\'',) if isinstance(v, str) else (f'--{k}={v}',)
     return args
 
 def split_arg_line(args: list[str]) -> tuple[tuple, dict]:
     largs, kwargs = [], {}
     for arg in args:
         if '=' in arg: 
-            __key, __value = arg[2:].split('='); kwargs[__key] = __value
+            __key, __value = arg[2:].split('=')
+            if __value.startswith("'") and __value.endswith("'"): __value = __value[1:-1]
+            kwargs[__key] = __value
         else: largs.append(arg)
     return tuple(largs), kwargs
 
