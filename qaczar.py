@@ -368,7 +368,8 @@ def _init_table(db, table: str, *cols) -> None:
     db.execute(sql)
 
 def _insert(db, table: str, *values) -> None:
-    sql = f"INSERT INTO {table} VALUES ({', '.join('?' * len(values))})"
+    sql = (f"INSERT INTO {table} VALUES " 
+            f"({', '.join('?' * len(values))}, CURRENT_TIMESTAMP)")
     try:
         db.execute(sql, values)
     except Exception as e:
