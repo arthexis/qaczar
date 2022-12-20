@@ -370,20 +370,9 @@ import sqlite3
 import threading
 
 _LOCAL = threading.local()
-
-def _connect_db() -> sqlite3.Connection:
-    global APP, _LOCAL
-    if hasattr(_LOCAL, '{APP}_db'): return getattr(_LOCAL, '{APP}_db')
-    db = sqlite3.connect(f'{APP}.sqlite3')
-    db.execute("CREATE TABLE IF NOT EXISTS apps (name TEXT, ts TEXT)")
-    db.execute("INSERT INTO apps VALUES (?, ?)", (APP, iso8601()))
-    db.commit()
-    setattr(_LOCAL, '{APP}_db', db)
-    return db
-
 _SCHEMA = ''
 
-def _init_table(db, table: str, cols: list[str]) -> None:
+def _init_table(_db, table: str, cols: list[str]) -> None:
     # TODO: Make the schema tracker work per-app by using the APP name with _LOCAL.
     global _SCHEMA
     emit(f"Create table: {table} {cols=}")
@@ -391,18 +380,28 @@ def _init_table(db, table: str, cols: list[str]) -> None:
             f"ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
             f"id INTEGER PRIMARY KEY AUTOINCREMENT)")
     _SCHEMA += f'{sql};\n'
-    db.execute(sql)
+    _db.execute(sql)
 
-def _insert(db, table: str, *values) -> None:
+def _insert(_db, table: str, *values) -> None:
     sql = (f"INSERT INTO {table} VALUES " 
             f"({', '.join('?' * len(values))}, CURRENT_TIMESTAMP, NULL)")
     try:
-        c = db.execute(sql, values)
+        c = _db.execute(sql, values)
         return c.lastrowid
     except Exception as e:
         emit(f"Error on SQL: {sql} with values: {values}")
         e.args = (f"{e.args[0]}: \n{sql}",) + e.args[1:]
         raise e
+
+def _connect_db() -> sqlite3.Connection:
+    global APP, _LOCAL
+    if hasattr(_LOCAL, '{APP}_db'): return getattr(_LOCAL, '{APP}_db')
+    _db = sqlite3.connect(f'{APP}.sqlite3')
+    _init_table(_db, f'{APP}_instances', ['app_name TEXT', 'pid TEXT'])
+    _insert(_db, f'{APP}_instances', APP, os.getpid())
+    _db.commit()
+    setattr(_LOCAL, '{APP}_db', _db)
+    return _db
     
 def _storage_type(type_: type) -> str | None:
     if type_ in (int, float): return 'REAL'
