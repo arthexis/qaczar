@@ -524,11 +524,15 @@ def _build_server(https: bool = True) -> type:
 
     return SSLServer
 
+@recorded
+def access_log(address: str, message: str) -> None:
+    """Log an access to the server."""
+    emit(f"Access from {address} {message}")
+    
 def _build_handler() -> type:
     class EmitHandler(hs.SimpleHTTPRequestHandler):
         def log_message(self, format, *args):
-            # TODO: Log accesses to DB for analysis and design of the caching model.
-            emit(f"Access from {self.address_string()} {format % args}")
+            access_log(self.address_string(), format % args)
 
         @property
         def content_length(self) -> int:
