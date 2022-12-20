@@ -579,6 +579,7 @@ def _build_handler() -> type:
             return context
 
         def build_response(self, method: str = None) -> bool:
+            self.start = time.time()
             self.path = '' if self.path == '/' else self.path
             if not self.path: self.path = f'/{APP}.html'
             context = self.build_context(self.path, method)
@@ -598,7 +599,8 @@ def _build_handler() -> type:
             self.build_response('POST'); return super().do_GET()
         
         def end_headers(self) -> None:
-            self.send_header('Server-Timing', 'test;dur=0.1')
+            duration = time.time() - self.start
+            self.send_header('Server-Timing', f'dur={duration:.3f}')
             self.send_header('Cache-Control', f'Etag: {_mtime_file(self.path)}')
             return super().end_headers()
         
