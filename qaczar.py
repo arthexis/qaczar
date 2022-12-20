@@ -358,33 +358,38 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
 
 import sqlite3
 
-SCHEMA = ''
+_SCHEMA = ''
 
 def _init_table(db, table: str, *cols) -> None:
-    global SCHEMA
+    global _SCHEMA
     sql = (f"CREATE TABLE IF NOT EXISTS {table} ({', '.join(cols)}, " 
             f"ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
-    SCHEMA += f'{sql};\n'
+    _SCHEMA += f'{sql};\n'
     db.execute(sql)
 
 def _insert(db, table: str, *values) -> None:
     sql = f"INSERT INTO {table} VALUES ({', '.join('?' * len(values))})"
-    db.execute(sql, values)
+    try:
+        db.execute(sql, values)
+    except Exception as e:
+        emit(f"Error on SQL: {sql} with values: {values}")
+        e.args = (f"{e.args[0]}: {sql}",) + e.args[1:]
+        raise e
 
 def recorded(func: t.Callable) -> t.Callable:
     """Decorator to record function calls and results in a database."""
     # TODO: Handle database errors and schema changes.
     func_name = func.__name__
     with _connect_db() as db:
-        _init_table(db, f"{func_name}_params", "arg_line TEXT")
-        _init_table(db, f"{func_name}_results", "result TEXT", "params_id INTEGER")
+        _init_table(db, f"{func_name}__params", "arg_line TEXT")
+        _init_table(db, f"{func_name}__result", "result TEXT", "params_id INTEGER")
     @functools.wraps(func)
     def _recorded(*args, **kwargs):
         with _connect_db() as db:
-            _insert(db, f'{func_name}_params', ' '.join(arg_line(*args, **kwargs)))
+            _insert(db, f'{func_name}__params', ' '.join(arg_line(*args, **kwargs)))
             result = func(*args, **kwargs)
             emit(f"{func_name}({arg_line(*args, **kwargs)}) -> {result}")
-            _insert(db, f'{func_name}_results', result, db.lastrowid)
+            _insert(db, f'{func_name}__result', result, db.lastrowid)
             db.commit()
         return result
     return _recorded

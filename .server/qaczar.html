@@ -1,52 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <title>QACZAR</title>
-    <link rel="stylesheet" href="/qaczar.css" type="text/css" />
-    <!-- https://docs.makotemplates.org/en/latest/inheritance.html -->
-</head>
-<body>
-    
-        <header><h1><pre> .d88888b.        d8888 .d8888b. 8888888888P       d88888888888b.  
-d88P" "Y88b      d88888d88P  Y88b      d88P       d88888888   Y88b 
-888     888     d88P888888    888     d88P       d88P888888    888 
-888     888    d88P 888888           d88P       d88P 888888   d88P 
-888     888   d88P  888888          d88P       d88P  8888888888P"  
-888 Y8b 888  d88P   888888    888  d88P       d88P   888888 T88b   
-Y88b.Y8b88P d8888888888Y88b  d88P d88P       d8888888888888  T88b  
- "Y888888" d88P     888 "Y8888P" d8888888888d88P     888888   T88b 
-       Y8b                                                         
-                                                                   
-                                                                   
-</pre></h1></header>
-    
-    
-        <nav><h2>API</h2><ul><li><a href='qaczar.py/ascii_banner'>ascii_banner</a></li>
-<li><a href='qaczar.py/create_app'>create_app</a></li>
-<li><a href='qaczar.py/enum_file'>enum_file</a></li>
-<li><a href='qaczar.py/extract_api'>extract_api</a></li>
-<li><a href='qaczar.py/function_index'>function_index</a></li>
-<li><a href='qaczar.py/hello_world'>hello_world</a></li>
-<li><a href='qaczar.py/list_dir'>list_dir</a></li>
-<li><a href='qaczar.py/process_html'>process_html</a></li>
-<li><a href='qaczar.py/process_py'>process_py</a></li>
-<li><a href='qaczar.py/read_file'>read_file</a></li>
-<li><a href='qaczar.py/write_file'>write_file</a></li></ul></nav><hr />
-    
-    
-        <article>
-        <h2>Roadmap</h2><ol class="ln"><li data-ln="93"> Allow specifying version number in runtime imports (for self-remediation).</li><li data-ln="270"> Handle multiple subpaths by using fieldsets? Allow decorators?</li><li data-ln="310"> The directory is not being created. Fix this.</li><li data-ln="313"> Figure what other files are needed for seeding an app.</li><li data-ln="375"> Handle database errors and schema changes.</li><li data-ln="429"> Consider field validation decorators for POST receiver functions.</li><li data-ln="489"> Log accesses to DB for analysis and design of the caching model.</li><li data-ln="551"> Create missing branch if not exists when pushing to git.</li><li data-ln="579"> Add some automatic tests to prevent public API regressions.</li></ol><hr />
-        <h2>Files</h2><ul><li><a href="/powertome">powertome</a></li>
-<li><a href="/qaczar.css">qaczar.css</a></li>
-<li><a href="/qaczar.html">qaczar.html</a></li>
-<li><a href="/qaczar.py">qaczar.py</a></li>
-<li><a href="/qaczar.sqlite3">qaczar.sqlite3</a></li>
-<li><a href="/requirements.txt">requirements.txt</a></li></ul>
-        </article><hr />
-    
-    
-        <footer><a href="/qaczar.py">Powered by qaczar.py</a></footer>
-    
-</body>
-</html>
+<h1><pre>/| /\/| 
+~|~\/~|~
+</pre></h1><p>Not found: qaczar.html</p><p>table hello_world__params has 2 columns but 1 values were supplied: INSERT INTO hello_world__params VALUES (?)</p>Traceback:<pre>Traceback (most recent call last):
+  File "C:\Users\arthe\Desktop\qaczar\qaczar.py", line 349, in _dispatch_processor
+    return processor(f'{prefix}.{suffix}', context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\arthe\Desktop\qaczar\qaczar.py", line 307, in process_py
+    return _execute_form(mod_name, subpath, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\arthe\Desktop\qaczar\qaczar.py", line 291, in _execute_form
+    result = func(**data)
+             ^^^^^^^^^^^^
+  File "C:\Users\arthe\Desktop\qaczar\qaczar.py", line 389, in _recorded
+    _insert(db, f'{func_name}__params', ' '.join(arg_line(*args, **kwargs)))
+  File "C:\Users\arthe\Desktop\qaczar\qaczar.py", line 377, in _insert
+    raise e
+  File "C:\Users\arthe\Desktop\qaczar\qaczar.py", line 373, in _insert
+    db.execute(sql, values)
+sqlite3.OperationalError: table hello_world__params has 2 columns but 1 values were supplied: INSERT INTO hello_world__params VALUES (?)
+</pre><p><a href='/'>Home</a></p><link rel="stylesheet" href="/qaczar.css">
