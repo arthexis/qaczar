@@ -440,7 +440,8 @@ def ascii_banner(pyfiglet, text:str, font: str='graffiti') -> str:
 def nav_links() -> str:
     """Generate a list of links to all public functions in a module."""
     global APP
-    return '\n'.join(f"<a href='{APP}.py/{fn.__name__}'>{fn.__name__}</a>" 
+    return '\n'.join(
+            f"<a href='{APP}.py/{fn.__name__}' title='{fn.__doc__}'>{fn.__name__}</a>" 
             for fn in extract_api())
 
 
