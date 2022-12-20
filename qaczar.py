@@ -113,9 +113,11 @@ def _arg_line(*args: tuple[str], **kwargs: dict) -> tuple[str]:
     return args
 
 def join_arg_line(args: tuple[str], kwargs: dict) -> str:
+    """Joins a list of command-line arguments into a single string."""
     return ' '.join(_arg_line(*args, **kwargs))
 
 def split_arg_line(args: list[str]) -> tuple[tuple, dict]:
+    """Converts a command-line list of strings to python function arguments."""
     largs, kwargs = [], {}
     for arg in args:
         if '=' in arg: 
@@ -434,7 +436,7 @@ def page_title(title: str = '') -> str:
 
 @imports('pyfiglet')
 def ascii_banner(pyfiglet, text:str) -> str:
-    """Generate a banner from ASCII text."""
+    """Generate a banner from ASCII text in a random font."""
     fonts = pyfiglet.FigletFont.getFonts()
     font = random.choice(fonts)
     return pyfiglet.figlet_format(text, font=font)
@@ -571,10 +573,6 @@ def test_server(*args, **kwargs) -> t.NoReturn:
     request = _request_factory()
     assert 'qaczar' in request(f'{APP}.html')
     assert 'qaczar' in request(f'{APP}.py')
-
-@imports('urllib3')
-def test_server_forms(urllib3, *args, **kwargs) -> t.NoReturn:
-    request = _request_factory()
 
 
 #@#  REPOSITORY
