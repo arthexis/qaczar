@@ -535,6 +535,7 @@ def _build_https_server() -> tuple:
 
         def build_response(self, method: str = None) -> bool:
             self.path = '' if self.path == '/' else self.path
+            if not self.path: self.path = f'/{APP}.html'
             context = self.build_context(self.path, method)
             self.work_path = _dispatch_processor(self.path[1:], context)
             emit(f"{context['ip']} {context['ts']} {method} {self.path} ({self.work_path})")
