@@ -595,13 +595,16 @@ def server_role(*args, host=HOST, port=PORT, **kwargs) -> t.NoReturn:
 
 def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
     # TODO: Add some automatic tests to prevent public API regressions.
+    time.sleep(1)  # Wait for server to start.
     emit(f"Running tests for {suite}.")
+    completed = 0
     for test in globals().keys():
         if test == f'test_{suite}': 
             emit(f"Running {test=}...")
             globals()[test](*args, **kwargs)
+            completed += 1
     emit(f"Tests for {suite} passed.")
-    _commit_source()
+    if completed: _commit_source()
 
 def worker_role(*args, **kwargs) -> t.NoReturn:
     pass
