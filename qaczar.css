@@ -108,4 +108,5 @@ footer a, footer a:visited, footer a:link {
 .traceback {
     color: #FF6666;
     font-size: 0.8rem;
+    overflow: auto;
 }
