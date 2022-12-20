@@ -287,8 +287,9 @@ def _active_module(mod_name: str):
     return sys.modules[mod_name if mod_name != APP else __name__]
 
 @functools.cache
-def render_form(subpath: str, mod_name: str=None) -> str:
+def render_form(subpath: str | t.Callable, mod_name: str=None) -> str:
     global APP
+    if callable(subpath): subpath = subpath.__name__
     if not mod_name: mod_name = APP
     func = getattr(_active_module(mod_name), subpath)
     form = (f"<form action='/{mod_name}.py/{subpath}' "
@@ -493,8 +494,8 @@ def hello_world(name: str = 'World') -> str:
     return f"<div class='hello'>Hello, {name}!</div>"
 
 @recorded
-def contact_us(email: str, message: str) -> str:
-    """Thanks for your interest in QACZAR, you will be hearing from us."""
+def sign_guestbook(email: str, message: str) -> str:
+    """Thanks for your visit, please sign our guestbook."""
     # TODO: Consider field validation decorators for POST receiver functions.
     emit(f"Contact from {email}: {message}")
     # return f"Thanks for contacting us, {email}!"
