@@ -261,9 +261,9 @@ def extract_api() -> t.Generator[t.Callable, None, None]:
     """Extract all public functions from a module."""
     for name, func in inspect.getmembers(sys.modules[__name__], inspect.isfunction):
         if name.startswith('_'): continue
+        if inspect.signature(func).return_annotation in (t.NoReturn, t.Callable): continue
         if not func.__doc__: 
             emit(f"Missing docstring for {name} (ln: {func.__code__.co_firstlineno}).")
-        if inspect.signature(func).return_annotation in (t.NoReturn, t.Callable): continue
         yield func
 
 @functools.cache
@@ -432,6 +432,7 @@ def _connect_db() -> sqlite3.Connection:
 import random
 
 def page_title(title: str = '') -> str:
+    """Return a page title, or the default if none is provided."""
     return title if title else f'{APP.upper()}'
 
 @imports('pyfiglet')
