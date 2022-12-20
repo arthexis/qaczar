@@ -441,7 +441,7 @@ def ascii_banner(pyfiglet, text:str) -> str:
     fonts = pyfiglet.FigletFont.getFonts()
     font = random.choice(fonts)
     banner = pyfiglet.figlet_format(text, font=font) 
-    return f"<pre title='text (Font: {font})'>{banner}</pre>"
+    return f"<pre title='Welcome to {text} (Font: {font})'>{banner}</pre>"
 
 #@# COMMON FORMS
 
