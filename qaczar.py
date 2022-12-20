@@ -446,18 +446,17 @@ def ascii_banner(pyfiglet, text:str) -> str:
 #@# COMMON FORMS
 
 @recorded
-def hello_world(name: str = 'World', wrapped: bool=True) -> str:
+def hello_world(name: str = 'World') -> str:
     """Say hello to the world! Useful as a smoke test."""
-    if wrapped:
-        return f"<div class='hello'>Hello, {name}!</div>"
-    return f"Hello, {name}!"
+    return f"<div class='hello'>Hello, {name}!</div>"
 
 @recorded
 def collect_contact(email: str, message: str) -> str:
     """Thanks for your interest in QACZAR, you will be hearing from us."""
     # TODO: Consider field validation decorators for POST receiver functions.
     emit(f"Contact from {email}: {message}")
-    return f"Thanks for contacting us, {email}!"
+    # return f"Thanks for contacting us, {email}!"
+    return f"<p>Thanks for contacting us, {email}! We will be in touch.<p>"
     
 
 #@# HTTPS SERVER
