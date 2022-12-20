@@ -358,24 +358,32 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
 
 import sqlite3
 
+SCHEMA = ''
+
+def _init_table(cur, table: str, *cols) -> None:
+    global SCHEMA
+    sql = f"CREATE TABLE IF NOT EXISTS {table} ({', '.join(cols)})"
+    SCHEMA += f'{sql};\n'
+    cur.execute(sql)
+
+def _insert(cur, table: str, *values) -> None:
+    sql = f"INSERT INTO {table} VALUES ({', '.join('?' * len(values))})"
+    cur.execute(sql, values)
+
 def recorded(func: t.Callable) -> t.Callable:
     """Decorator to record function calls and results in a database."""
     # TODO: Handle database errors and schema changes.
     func_name = func.__name__
     with _connect_db() as db:
-        db.execute(f"CREATE TABLE IF NOT EXISTS {func_name}_params "
-                f"(arg_line TEXT, ts TEXT)")
-        db.execute(f"CREATE TABLE IF NOT EXISTS {func_name}_results "
-                f"(result TEXT, ts TEXT, params_id INTEGER, duration REAL)")
+        _init_table(db, f"{func_name}_params", "arg_line TEXT", "ts TEXT")
+        _init_table(db, f"{func_name}_results", "result TEXT", "ts TEXT", "params_id INTEGER")
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         with _connect_db() as db:
-            db.execute(f"INSERT INTO {func_name}_params VALUES (?, ?, ?)",
-                    (' '.join(arg_line(*args, **kwargs)), iso8601(), db.lastrowid))
-            start = time.time()
+            _insert(f'{func_name}_params', ' '.join(arg_line(*args, **kwargs)), iso8601())
             result = func(*args, **kwargs)
-            db.execute(f"INSERT INTO {func_name}_results VALUES (?)", 
-                    (result, iso8601(), db.lastrowid, time.time() - start))
+            emit(f"{func_name}({arg_line(*args, **kwargs)}) -> {result}")
+            _insert(f'{func_name}_results', result, iso8601(), db.lastrowid)
             db.commit()
         return result
     return wrapper
