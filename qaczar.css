@@ -25,6 +25,9 @@ h1, h2, h3, h4, h5, h6 {
 h1 {
     font-size: 1.7rem;
 }
+.banner {
+    font-size: 0.7rem;
+}
 h2 {
     font-size: 1.5rem;
 }
@@ -101,4 +104,8 @@ footer {
 }
 footer a, footer a:visited, footer a:link {
     color: #702973;
+}
+.traceback {
+    color: #FF6666;
+    font-size: 0.8rem;
 }
