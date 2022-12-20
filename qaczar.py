@@ -386,7 +386,6 @@ def _insert(db, table: str, *values) -> None:
 
 def recorded(func: t.Callable) -> t.Callable:
     """Decorator to record function calls and results in a database."""
-    # TODO: Handle database errors and schema changes.
     func_name = func.__name__
     with _connect_db() as db:
         _init_table(db, f"{func_name}__params", "arg_line TEXT")
