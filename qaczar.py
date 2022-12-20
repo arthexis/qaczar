@@ -394,12 +394,16 @@ def _insert(_db, table: str, *values) -> None:
         raise e
 
 def _connect_db() -> sqlite3.Connection:
-    global APP, _LOCAL
+    global APP, _LOCAL, _PID
     if hasattr(_LOCAL, '{APP}_db'): return getattr(_LOCAL, '{APP}_db')
     _db = sqlite3.connect(f'{APP}.sqlite3')
     _init_table(_db, f'{APP}_instances', ['app_name TEXT', 'pid TEXT'])
-    _insert(_db, f'{APP}_instances', APP, os.getpid())
-    _db.commit()
+    # Check if our PID is already the last one in the table.
+    last_pid = _db.execute(
+            f"SELECT pid FROM {APP}_instances ORDER BY id DESC LIMIT 1").fetchone()
+    if last_pid and last_pid[0] != _PID:
+        _insert(_db, f'{APP}_instances', APP, _PID)
+        _db.commit()
     setattr(_LOCAL, '{APP}_db', _db)
     return _db
     
