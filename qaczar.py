@@ -9,8 +9,7 @@
 # - Keep the line width to less than 100 characters. Aesthetics matter, but not too much.
 # - Prefer functions, instead of classes, for modularity, composability and encapsulation.
 # - Functions should not reference functions or other globals defined later in the script.
-# - Avoid using asynchrony, concurrency, multiprocessing, multithreading, etc. Use HTTPS for RPC.
-# - Exploit the limits of the standard library, avoid third-party dependencies.
+# - Exploit the standard library to its fullest, avoid fancy third-party dependencies.
 # - Sometimes, its ok to break the rules: take advantage of the language but clean up after.
 # - In case of doubt, play the game to see what happens. Also, you just lost it.
 
@@ -364,6 +363,20 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
 #@# DATABASE
 
 import sqlite3
+import threading
+
+_LOCAL = threading.local()
+
+def _connect_db() -> sqlite3.Connection:
+    # TODO: Test for conflicts with the Threaded TCPServer.
+    global APP, _LOCAL
+    if hasattr(_LOCAL, 'db'): return _LOCAL.db
+    db = sqlite3.connect(f'{APP}.sqlite3')
+    db.execute("CREATE TABLE IF NOT EXISTS apps (name TEXT, ts TEXT)")
+    db.execute("INSERT INTO apps VALUES (?, ?)", (APP, iso8601()))
+    db.commit()
+    _LOCAL.db = db
+    return db
 
 _SCHEMA = ''
 
@@ -403,18 +416,6 @@ def recorded(func: t.Callable) -> t.Callable:
             db.commit()
         return result
     return _recorded
-
-_DB = None
-
-def _connect_db() -> sqlite3.Connection:
-    # TODO: Test for conflicts with the Threaded TCPServer.
-    global APP, _DB
-    if _DB is not None: return _DB
-    _DB = sqlite3.connect(f'{APP}.sqlite3')
-    _DB.execute("CREATE TABLE IF NOT EXISTS apps (name TEXT, ts TEXT)")
-    _DB.execute("INSERT INTO apps VALUES (?, ?)", (APP, iso8601()))
-    _DB.commit()
-    return _DB
 
 
 #@# WEB COMPONENTS
