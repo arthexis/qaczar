@@ -48,6 +48,8 @@ def _mtime_file(fname: str) -> float:
     if not os.path.isfile(fname): return 0.0
     return os.path.getmtime(fname)
 
+_MTIME = _mtime_file(__file__)
+
 def _read_file(fname: str, encoding=None) -> bytes:
     if '__' in fname: fname = fname.replace('__', '.')
     with open(fname, 'rb' if not encoding else 'r', encoding=encoding) as f: return f.read()
@@ -595,16 +597,19 @@ def server_role(*args, host=HOST, port=PORT, **kwargs) -> t.NoReturn:
 
 def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
     # TODO: Add some automatic tests to prevent public API regressions.
+    global _MTIME
     time.sleep(1)  # Wait for server to start.
-    emit(f"Running tests for {suite}.")
-    completed = 0
+    emit(f"Running test suite for '{suite}'.")
+    passed = 0
     for test in globals().keys():
         if test == f'test_{suite}': 
             emit(f"Running {test=}...")
             globals()[test](*args, **kwargs)
-            completed += 1
-    emit(f"Tests for {suite} passed.")
-    if completed: _commit_source()
+            passed += 1
+        if _mtime_file(f'{APP}.py') != _MTIME: break
+    else:
+        emit(f"Tests for '{suite}' passed: {passed}.")
+        _commit_source()
 
 def worker_role(*args, **kwargs) -> t.NoReturn:
     pass
