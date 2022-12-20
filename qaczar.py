@@ -507,11 +507,11 @@ def _get_ssl_certs(x509, rsa, hashes, ser, site=None) -> tuple[str, str]:
     return certname, keyname
 
 def _build_server(https: bool = True) -> type:
-    if not https: return ss.TCPServer
+    if not https: return ss.ThreadingTCPServer
     ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     ssl_ctx.load_cert_chain(*_get_ssl_certs())
 
-    class SSLServer(ss.TCPServer):
+    class SSLServer(ss.ThreadingTCPServer):
         def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True):
             ss.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate)
             self.socket = ssl_ctx.wrap_socket(self.socket, server_side=True) 
