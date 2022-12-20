@@ -404,7 +404,7 @@ def ascii_banner(pyfiglet, text:str) -> str:
 #@# FORM RECEIVERS
 
 @recorded
-def hello_world(name: str = 'World', wrapped: bool=False) -> str:
+def hello_world(name: str = 'World', wrapped: bool=True) -> str:
     """Say hello to the world! Useful as a smoke test."""
     if wrapped:
         return f"<div class='hello'>Hello, {name}!</div>"
