@@ -594,13 +594,11 @@ def _build_handler() -> type:
             return self.rfile.read(self.content_length).decode(encoding)
 
         def _build_response(self, method: str = None) -> bool:
-            # COM EDU GOV NET ORG
             self.start = time.time()
             if '//' in self.path: self.path = self.path.replace('//', '/')
             if self.path.endswith('/'): self.path = f'{self.path}{APP}.html'
             if '?' not in self.path: path, qs = self.path, ''
             else: path, qs = self.path.split('?', 1)
-            emit(f"Request from {self.client_address[0]}: {method} {path} {qs}")
             context = {
                     **_safe_globals(), 
                     'ip': self.client_address[0], 'ts': iso8601(), 'method': method,
