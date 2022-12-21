@@ -280,13 +280,14 @@ def list_dir(directory: str = '.', tag: str = 'li', ext: str = None, link: bool 
 
 def _load_template(fname: str) -> object:
     global _TEMPLATES, _DIR, _BASE_HTML
-    last = _mtime_file(fname)
-    if fname == 'qaczar.html' or last != _TEMPLATES.get(fname, (None, None))[1]:
+    cached, last = _TEMPLATES.get(fname, (None, None)), 0
+    if fname == 'qaczar.html' or (last := _mtime_file(fname)) != cached[1]:
         mt = _pip_import('mako.template')
-        ml = _pip_import('mako.lookup')
-        lookup = ml.TemplateLookup(directories=[_DIR], input_encoding='utf-8')
-        if fname == 'qaczar.html': tpl = mt.Template(_BASE_HTML, lookup=lookup)
-        else: tpl = mt.Template(filename=fname, lookup=lookup)
+        if fname == 'qaczar.html': tpl = mt.Template(_BASE_HTML)
+        else: 
+            ml = _pip_import('mako.lookup')
+            lookup = ml.TemplateLookup(directories=[_DIR], input_encoding='utf-8')
+            tpl = mt.Template(filename=fname, lookup=lookup)
         _TEMPLATES[fname] = tpl, last
         emit(f"Loaded {fname=} {last=}.")
         return tpl
