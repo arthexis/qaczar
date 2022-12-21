@@ -290,7 +290,7 @@ def _load_template(fname: str) -> object:
                 lookup = ml.TemplateLookup(directories=[_DIR], input_encoding='utf-8')
                 tpl = mt.Template(filename=fname, lookup=lookup)
             _TEMPLATES[fname] = tpl, new_mtime
-            emit(f"Loaded {fname=} {new_mtime=}.")
+            emit(f"Template cache miss {fname=} {new_mtime=}.")
             return tpl
     return _TEMPLATES[fname][0]
 
