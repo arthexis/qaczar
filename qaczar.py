@@ -392,7 +392,7 @@ _SCHEMA = ''
 def _init_table(_db, table: str, cols: list[str]) -> None:
     # TODO: Make the schema tracker work per-app by using the APP name with _LOCAL.
     global _SCHEMA
-    emit(f"Create table: {table} {cols=}")
+    # emit(f"Create table: {table} {cols=}")
     sql = (f"CREATE TABLE IF NOT EXISTS {table} ({', '.join(cols)}, " 
             f"ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
             f"id INTEGER PRIMARY KEY AUTOINCREMENT)")
