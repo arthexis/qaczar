@@ -690,7 +690,8 @@ def _build_handler() -> type:
             # I tried to split off building the entire context, but it was a bad idea.
             context = {
                     'q': _q, 'method': method, 'ip': self.client_address[0], 'ts': iso8601(), 
-                    'query': parse.parse_qs(qs), 'path': path,
+                    'query': parse.parse_qs(qs), 'path': path, 
+                    'form': parse.parse_qs(self._rfile_read()),
                     'APP': path.split('/')[1] if '/' in path else None,
             }
             self.work_path = _dispatch_processor(path[1:], context)
