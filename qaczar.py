@@ -30,7 +30,7 @@ _PID = os.getpid()
 _BRANCH = 'main'
 _DIR = os.path.dirname(os.path.abspath(__file__))
 
-DEBUG = False  
+DEBUG = False
 APP = os.path.basename(_DIR)
 
 def iso8601() -> str: 
@@ -130,6 +130,27 @@ def split_arg_line(args: list[str]) -> tuple[tuple, dict]:
         else: largs.append(arg)
     return tuple(largs), kwargs
 
+def _read_const(const:str, fname: str = __file__, ln: int = False) -> str | int | None:
+    if not os.path.isfile(fname): return None
+    with open(fname, 'r', encoding='utf-8') as f: lines = f.readlines()
+    const = f'{const.upper()} ='
+    for i, line in enumerate(lines):
+        if line.startswith(const): 
+            if ln: return i+1
+            return line.split(const)[1].strip()
+    return None
+
+def _mutate_const(const:str, value: str, fname: str = __file__) -> None:
+    # Finds a constant in the source code and replaces it with a new value.
+    emit(f"Mutating {const} to {value} in {fname}.")
+    if not os.path.isfile(fname): return
+    with open(fname, 'r', encoding='utf-8') as f: lines = f.readlines()
+    const = f'{const.upper()} ='
+    for i, line in enumerate(lines):
+        if line.startswith(const):
+            lines[i] = f'{const} {value}\n'; break
+    with open(fname, 'w', encoding='utf-8') as f: f.writelines(lines)
+
 
 #@# SUBPROCESSING
 
@@ -169,7 +190,8 @@ def _stop_py(proc: subprocess.Popen) -> tuple[tuple, dict]:
     return proc._args, proc._kwargs
 
 def _restart_py(proc: subprocess.Popen = None, opid=_PID) -> subprocess.Popen:
-    global APP
+    global APP, DEBUG
+    DEBUG = _read_const('DEBUG') == 'True'
     if proc and proc.poll() is None: 
         args, kwargs = _stop_py(proc)
         kwargs['opid'] = opid
@@ -177,6 +199,7 @@ def _restart_py(proc: subprocess.Popen = None, opid=_PID) -> subprocess.Popen:
     return _start_py(f'{APP}.py', *args, **kwargs)
 
 def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:  
+    global DEBUG
     source, old_mtime, stable = _read_file(fn), _mtime_file(fn), True
     while True:
         time.sleep(2.6)
@@ -190,11 +213,13 @@ def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
             if proc.returncode == 0: sys.exit(0)  # Halt from below.
             if stable:
                 emit(f"Script died {proc.returncode=}. Restart and mark unstable.")
+                if not DEBUG: _mutate_const('DEBUG', 'True')
                 proc, stable = _restart_py(proc), False
                 continue
             halt(f"Script died twice. Stopping watcher.")  # Halt from above.
         if not stable:
             emit(f"Stabilizing {proc.pid=}.")
+            if DEBUG: _mutate_const('DEBUG', 'False')
             source, stable = _read_file(fn), True
             
 
@@ -279,6 +304,7 @@ def list_dir(directory: str = '.', tag: str = 'li', ext: str = None, link: bool 
 
 def _load_template(fname: str) -> object:
     global _TEMPLATES, _DIR, _BASE_HTML
+    emit(f"Loading template {fname=}.", div='-')
     cached, old_mtime = _TEMPLATES.get(fname, (None, None))
     if fname == 'qaczar.html':
         if cached: return cached
@@ -629,10 +655,6 @@ def _build_handler() -> type:
     class Q():
         def __init__(self):
             for k, v in _safe_globals().items(): setattr(self, k, v) 
-        def __repr__(self):
-            global DEBUG
-            if not DEBUG: return f"Q(...)"
-            return f"Q({', '.join(f'{k}={v}' for k, v in self.__dict__.items())})"
 
     q = Q()
 
@@ -640,6 +662,7 @@ def _build_handler() -> type:
         def log_message(self, format, *args):
             access_log(self.address_string(), format % args)
 
+    class Handler(EmitHandler if DEBUG else hs.SimpleHTTPRequestHandler):
         @property
         def content_length(self) -> int:
             return int(self.headers.get('content-length', 0))
@@ -649,6 +672,7 @@ def _build_handler() -> type:
 
         def _build_response(self, method: str = None, _q=q) -> bool:
             global APP
+            emit(f"Dispatch {self.client_address[0]} to {self.path}.", div="-")
             self.start = time.time()
             if '//' in self.path: self.path = self.path.replace('//', '/')
             if self.path.endswith('/'): self.path = f'{self.path}{APP}.html'
@@ -656,13 +680,11 @@ def _build_handler() -> type:
             else: path, qs = self.path.split('?', 1)
             if not path or path == '/': path = f'/{APP}.html'
             # I tried to split off building the entire context, but it was a bad idea.
-            # TODO: Use a class for q, so that it can be used for attribute access.
             context = {
                     'q': _q, 'method': method, 'ip': self.client_address[0], 'ts': iso8601(), 
                     'query': parse.parse_qs(qs), 'path': path,
                     'APP': path.split('/')[1] if '/' in path else None,
             }
-            # emit(f"Request from {self.client_address[0]} for {self.path} -> {path}")
             self.work_path = _dispatch_processor(path[1:], context)
             
         def translate_path(self, path: str = None) -> str:
@@ -690,7 +712,7 @@ def _build_handler() -> type:
             # emit(f"Sent header {keyword}: {value}")
             return super().send_header(keyword, value)
 
-    return EmitHandler
+    return Handler
 
 
 #@#  SELF TESTING
@@ -780,6 +802,7 @@ def worker_role(*args, **kwargs) -> t.NoReturn:
 #@# DISPATCHER
 
 def _role_dispatcher(role: str, args: tuple, kwargs: dict) -> t.NoReturn:
+    global DEBUG
     _set_workdir(role)
     opid = kwargs.pop('opid', None)  # If we receive opid it means we are being watched.
     emit(f"Dispatch role='{__role}' args={__args} kwargs={__kwargs} watch by {opid=}.")
@@ -788,7 +811,7 @@ def _role_dispatcher(role: str, args: tuple, kwargs: dict) -> t.NoReturn:
     try:
         function(*args, **kwargs)
     except AssertionError as e:
-        halt(f"Assertion failed: {e}")
+        (halt if DEBUG else emit)(f"Assertion failed: {e}")
     except KeyboardInterrupt:
         halt("Interrupted by user.")
 
@@ -799,5 +822,4 @@ if __name__ == "__main__":
     else:
         __args, __kwargs = split_arg_line(sys.argv[1:])
         __role = __kwargs.pop('role')  # It's ok to fail if role is not defined.
-    DEBUG = True if 'debug' in __args else DEBUG
     _role_dispatcher(__role, __args, __kwargs)
