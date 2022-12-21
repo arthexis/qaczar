@@ -180,8 +180,8 @@ def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
         if (new_mtime := _mtime_file(fn)) != old_mtime:
             mutation, old_mtime = _read_file(fn), new_mtime
             if mutation != source:
-                emit(f"Mutation detected. Optimistic restart.")
-                proc, stable = _restart_py(proc), True
+                emit(f"Mutation detected. Restart and mark unstable.")
+                proc, stable = _restart_py(proc), False
             continue
         if proc.poll() is not None:  
             if proc.returncode == 0: sys.exit(0)  # Halt from below.
