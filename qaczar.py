@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 # qaczar.py: An Hymn to the Self-Inventing, the Celestial Ladder of Web Systems.
-# by R. G. Osorio (rgo [at] qaczar [dot] com) 2022.
+# by R. J. Guillén-Osorio (r [at] qaczar [dot] com) 2022-2023.
+
 # License: MIT (https://opensource.org/licenses/MIT).
 
-#   Guidelines:
+#   Coding Guidelines:
 # 1 One Script. Keep line width to less than 100 characters. Aesthetics matter, but not too much.
 # 2 Prefer functions, instead of classes, for modularity, composability and encapsulation.
 # 3 Functions should not reference functions or other globals defined later in the script.
@@ -592,25 +593,18 @@ def _build_handler() -> type:
         def _rfile_read(self, encoding: str = 'utf-8') -> bytes:
             return self.rfile.read(self.content_length).decode(encoding)
 
-        def _build_context(self, path:str, method: str = None) -> dict:
-            if '?' not in path: qs = ''
-            else: path, qs = path.split('?', 1)
-            context = {**_safe_globals(), 
-                'ip': self.client_address[0], 'ts': iso8601(), 'method': method,
-                'APP': path.split('/')[1] if '/' in path else None,
-            }
-            context['query'] = parse.parse_qs(qs)
-            if method == 'POST': context['data'] = parse.parse_qs(self._rfile_read())
-            else: context['data'] = {}
-            return context
-
         def _build_response(self, method: str = None) -> bool:
             self.start = time.time()
-            self.path = '' if self.path == '/' else self.path
-            if not self.path: self.path = f'/{APP}.html'
-            context = self._build_context(self.path, method)
+            self.path = f'/{APP}.html' if (not self.path or self.path == '/') else self.path
+            if '?' not in self.path: qs = ''
+            else: self.path, qs = self.path.split('?', 1)
+            context = {
+                    **_safe_globals(), 
+                    'ip': self.client_address[0], 'ts': iso8601(), 'method': method,
+                    'query': parse.parse_qs(qs), 'path': self.path,
+                    'APP': self.path.split('/')[1] if '/' in self.path else None,
+            }
             self.work_path = _dispatch_processor(self.path[1:], context)
-            # emit(f"{context['ip']} {context['ts']} {method} {self.path} ({self.work_path})")
             
         def translate_path(self, path: str = None) -> str:
             return super().translate_path(path) if not self.work_path else self.work_path
