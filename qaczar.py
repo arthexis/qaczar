@@ -659,7 +659,7 @@ def test_server(*args, **kwargs) -> t.NoReturn:
     assert 'qaczar' in request(f'{APP}.html')
     assert 'qaczar' in request(f'{APP}.py')
 
-def test_server_load(*args, **kwargs) -> t.NoReturn:
+def _test_server_load(*args, **kwargs) -> t.NoReturn:
     global APP
     from concurrent.futures import ThreadPoolExecutor
     request = _request_factory()
