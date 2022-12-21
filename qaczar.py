@@ -639,7 +639,7 @@ def _build_server(https: bool = True) -> type:
     class SSLServer(ss.ThreadingTCPServer):
         # TODO: This creates 1 thread per request, which is not ideal. Implement a thread pool.
         def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True):
-            ss.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate)
+            ss.ThreadingTCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate)
             self.socket = ssl_ctx.wrap_socket(self.socket, server_side=True) 
 
     return SSLServer
