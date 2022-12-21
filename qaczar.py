@@ -360,7 +360,7 @@ def _process_error(fname: str, context: dict) -> str:
             f"<hr /><p><a href='/'>Home</a></p>")
     return write_file(fname, content)
 
-@timed
+# @timed
 def _dispatch_processor(fname: str, context: dict) -> str | None:
     if '.' not in fname: 
         prefix, suffix = f'{fname}/{fname}', 'html'
