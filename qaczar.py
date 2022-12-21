@@ -256,6 +256,7 @@ def write_file(fname: str, content: str) -> str:
     return _write_file(_work_path(fname), content, encoding='utf-8')
 
 def elem(tag: str, content: str=None, **attrs) -> str:
+    """Generate an HTML element with optional attributes."""
     if 'data' in attrs: 
         for k, v in attrs['data'].items(): attrs[f'data-{k}'] = v
         del attrs['data']
