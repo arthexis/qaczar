@@ -677,8 +677,8 @@ def _commit_source() -> t.NoReturn:
     # TODO: Create missing branch if not exists when pushing to git.
     global _BRANCH
     os.system('git add .')
-    os.system('git commit -m "auto commit"')
-    os.system(f'git push origin {_BRANCH}')
+    os.system('git commit -m "auto commit" -q')
+    os.system(f'git push origin {_BRANCH} -q')
     emit(f"Source committed to {_BRANCH}.")
 
 
