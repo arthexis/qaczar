@@ -174,7 +174,6 @@ def _restart_py(proc: subprocess.Popen = None, opid=_PID) -> subprocess.Popen:
     return _start_py(f'{APP}.py', *args, **kwargs)
 
 def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:  
-    assert isinstance(proc, subprocess.Popen)
     source, old_mtime, stable = _read_file(fn), _mtime_file(fn), True
     while True:
         time.sleep(2.6)
@@ -363,6 +362,7 @@ def _process_error(fname: str, context: dict) -> str:
 
 @timed
 def _dispatch_processor(fname: str, context: dict) -> str | None:
+    assert isinstance(fname, str), f"Invalid file name: {fname}"
     if '.' not in fname: 
         prefix, suffix = f'{fname}/{fname}', 'html'
         fname = f'{prefix}.{suffix}'
@@ -731,7 +731,12 @@ def _role_dispatcher(role: str, args: tuple, kwargs: dict) -> t.NoReturn:
     emit(f"Assuming role='{__role}' args={__args} kwargs={__kwargs} watch by {opid=}.")
     function = globals().get(f"{role}_role")
     if function is None: raise ValueError(f"Role '{role}' is not defined.")
-    function(*args, **kwargs)
+    try:
+        function(*args, **kwargs)
+    except AssertionError as e:
+        halt(f"Assertion failed: {e}")
+    except KeyboardInterrupt:
+        halt("Interrupted by user.")
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:

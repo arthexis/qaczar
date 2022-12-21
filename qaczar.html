@@ -17,7 +17,8 @@
     <%block name="content">
         <h2>Roadmap</h2>
         <ol class="ln">${enum_file('qaczar.py', prefix='# TODO:')}</ol><hr />
-        ${render_form(sign_guestbook)}
+        <!-- Change the form being rendered based on the query param 'form' if it exists -->
+        ${render_form(query.get('form', 'sign_guestbook'))}
     </%block>
     <%block name="footer">
         <hr /><h3>Files</h3><ul>${list_dir()}</ul>
