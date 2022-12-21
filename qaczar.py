@@ -35,10 +35,11 @@ def iso8601() -> str:
     """Returns the current time in ISO 8601 format."""
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
 
-def emit(msg: str, _at=None) -> None: 
+def emit(msg: str, div:bool=False, _at=None) -> None: 
     """Prints a message to stderr, enriched with time, PID and line number."""
     global _PID
     frame = _at or sys._getframe(1)  
+    if div: print('-' * 80, file=sys.stderr)
     print(f'[{_PID}:{frame.f_lineno} {iso8601()}] {frame.f_code.co_name}:  {msg}', file=sys.stderr)
 
 def halt(msg: str) -> t.NoReturn:
