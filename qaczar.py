@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# qaczar.py: An Hymn to the Self-Inventing, the Celestial Ladder of the Pythonic Arts.
+# qaczar.py: An Hymn to the Self-Inventing, the Celestial Ladder of Web Systems.
 # by R. G. Osorio (rgo [at] qaczar [dot] com) 2022.
 # License: MIT (https://opensource.org/licenses/MIT).
 
