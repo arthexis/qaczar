@@ -130,7 +130,9 @@ footer a, footer a:visited, footer a:link {
 </head>
 <body>
     <header><nav>
-        <a href='/qaczar.html'><h1><pre class='ascii' title='Welcome to QACZAR (Font: graffiti)'>________      _____  _________ __________  _____ __________ 
+        <a href='/qaczar.html'>
+        <img src="/qaczar.png" alt="QACZAR" width="80" height="80" />
+        <h1><pre class='ascii' title='Welcome to QACZAR (Font: graffiti)'>________      _____  _________ __________  _____ __________ 
 \_____  \    /  _  \ \_   ___ \\____    / /  _  \\______   \
  /  / \  \  /  /_\  \/    \  \/  /     / /  /_\  \|       _/
 /   \_/.  \/    |    \     \____/     /_/    |    \    |   \
@@ -164,12 +166,13 @@ footer a, footer a:visited, footer a:link {
     
         <h2>Roadmap</h2>
         <ol class="ln"><li data-ln="100"> Allow specifying version number in runtime imports (for self-remediation).</li><li data-ln="311"> Handle multiple subpaths by using fieldsets? Allow decorators?</li><li data-ln="338"> The app is being created in the .server directory. Fix this.</li><li data-ln="341"> Figure what other files are needed for seeding an app.</li><li data-ln="392"> Make the schema tracker work per-app by using the APP name with _LOCAL.</li><li data-ln="443"> Define the columns based on the function signature automatically.</li><li data-ln="444"> Don't mix this logic with FORMS, recorded can be used for more.</li><li data-ln="501"> Consider field validation decorators for POST receiver functions.</li><li data-ln="676"> Create missing branch if not exists when pushing to git.</li><li data-ln="705"> Add some automatic tests to prevent public API regressions.</li></ol><hr />
-        <form action='/qaczar.py/sign_guestbook' method='POST' accept-charset='utf-8' name='sign_guestbook'><p class='doc'>Thanks for your visit, please sign our guestbook.</p><label for='email'>EMAIL:</label><input name="email" type="text" title="str"/><br><label for='message'>MESSAGE:</label><input name="message" type="text" title="str"/><br><button type='submit'>EXECUTE</button></form>
+        <form action='/qaczar.py/sign_guestbook' method='POST' accept-charset='utf-8' name='sign_guestbook'><p class='doc'>Thanks for your visit, please sign our guestbook.</p><label for='email'>EMAIL:</label><input name="email" type="text" title="email"/><br><label for='message'>MESSAGE:</label><input name="message" type="text" title="message"/><br><button type='submit'>EXECUTE</button></form>
     
     
         <hr /><h3>Files</h3><ul><li><a href="/powertome">powertome</a></li>
 <li><a href="/qaczar.css">qaczar.css</a></li>
 <li><a href="/qaczar.html">qaczar.html</a></li>
+<li><a href="/qaczar.png">qaczar.png</a></li>
 <li><a href="/qaczar.py">qaczar.py</a></li>
 <li><a href="/qaczar.sqlite3">qaczar.sqlite3</a></li>
 <li><a href="/requirements.txt">requirements.txt</a></li></ul>

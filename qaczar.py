@@ -184,13 +184,13 @@ def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
                 emit(f"Mutation detected. Optimistic restart.")
                 proc, stable = _restart_py(proc), True
             continue
-        if proc.poll() is not None:  # Script terminated.
+        if proc.poll() is not None:  
             if proc.returncode == 0: sys.exit(0)  # Halt from below.
             if stable:
                 emit(f"Script died {proc.returncode=}. Restart and mark unstable.")
                 proc, stable = _restart_py(proc), False
                 continue
-            halt(f"Script died twice. Stopping watcher.")
+            halt(f"Script died twice. Stopping watcher.")  # Halt from above.
         if not stable:
             emit(f"Stabilizing {proc.pid=}.")
             source, stable = _read_file(fn), True
@@ -280,7 +280,7 @@ def _build_input(field: str, param: inspect.Parameter) -> str:
     if param.annotation is not param.empty:
         if param.annotation is int: input_type = 'number'
         elif param.annotation is bool: input_type = 'checkbox'
-    attrs = {'name': field, 'type': input_type, 'title': param.annotation.__name__}
+    attrs = {'name': field, 'type': input_type, 'title': field}
     if param.default is not param.empty:
         attrs['value'] = param.default
         if param.annotation is bool: attrs['checked'] = 'checked'
