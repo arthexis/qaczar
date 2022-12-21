@@ -440,7 +440,7 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
             # This error happens when using a query string with a form.
             return processor(f'{prefix}.{suffix}', context)
         except Exception as e:
-            emit(f"Error processing {fname}: {e}")
+            emit(f"Error processing {fname}: {type(e)} {e}")
             context['error'] = e
             return _process_error(fname, context)
     return None
