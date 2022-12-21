@@ -595,11 +595,13 @@ def _build_handler() -> type:
             return self.rfile.read(self.content_length).decode(encoding)
 
         def _build_response(self, method: str = None) -> bool:
+            global APP
             self.start = time.time()
             if '//' in self.path: self.path = self.path.replace('//', '/')
             if self.path.endswith('/'): self.path = f'{self.path}{APP}.html'
             if '?' not in self.path: path, qs = self.path, ''
             else: path, qs = self.path.split('?', 1)
+            if not path or path == '/': path = f'/{APP}.html'
             # I tried to split off building the entire context, but it was a bad idea.
             context = {
                     **_safe_globals(), 
