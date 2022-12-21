@@ -692,7 +692,7 @@ def _build_handler() -> type:
                     'q': _q, 'method': method, 'ts': iso8601(), 
                     'ip': self.client_address[0], 'path': path, 
                     'query': parse.parse_qs(qs), 
-                    'form': parse.parse_qs(self._rfile_read()),
+                    'form_data': parse.parse_qs(self._rfile_read()),
                     'APP': path.split('/')[1] if '/' in path else None,
             }
             self.work_path = _dispatch_processor(path[1:], context)
