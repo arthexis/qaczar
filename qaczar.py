@@ -594,8 +594,9 @@ def _build_handler() -> type:
             return self.rfile.read(self.content_length).decode(encoding)
 
         def _build_response(self, method: str = None) -> bool:
+            # COM EDU GOV NET ORG
             self.start = time.time()
-            self.path = f'/{APP}.html' if (not self.path or self.path == '/') else self.path
+            if self.path.endswith('/'): self.path = f'{self.path}/{APP}.html'
             if '?' not in self.path: qs = ''
             else: self.path, qs = self.path.split('?', 1)
             context = {
