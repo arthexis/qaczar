@@ -451,7 +451,7 @@ def recorded(func: t.Callable) -> t.Callable:
         with _connect_db() as db:
             params_id = _insert(db, f'{func_name}__params', *args, *kwargs.values())
             results = func(*args, **kwargs)
-            emit(f"{func_name}({args=} {kwargs=}) -> {results}")
+            # emit(f"{func_name}({args=} {kwargs=}) -> {results}")
             if not isinstance(results, (list, tuple)): results = [results]
             for seq, result in enumerate(results):
                 _insert(db, f'{func_name}__result', result, seq, params_id)
