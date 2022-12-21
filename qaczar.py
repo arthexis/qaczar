@@ -146,7 +146,7 @@ def _setup_environ() -> None:
         subprocess.run([sys.executable, '-m', 'venv', '.venv'])
         _PYTHON = '.venv/bin/python3'
     subprocess.run([_PYTHON, '-m', 'pip', 'install', '--upgrade', 'pip', '--quiet'])
-    subprocess.run([_PYTHON, '-m', 'pip', 'install', '-r', 'requirements.txt'])
+    subprocess.run([_PYTHON, '-m', 'pip', 'install', '-r', 'requirements.txt', '--quiet'])
 
 def _start_py(script: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
     global _PYTHON
@@ -697,7 +697,6 @@ def watcher_role(*args, next: str = None, **kwargs) -> t.NoReturn:
     global APP
     if not next: raise ValueError('next role was not defined')
     kwargs['role'] = next
-    emit(f"Watching {APP}.py for changes...", div='=')
     _watch_over(_start_py(f'{APP}.py', *args, **kwargs), f'{APP}.py')
 
 def server_role(*args, host=HOST, port=PORT, **kwargs) -> t.NoReturn:
