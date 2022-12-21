@@ -683,6 +683,7 @@ _COUNTER = 0
 
 @imports('urllib3')
 def _request_factory(urllib3, app:str=None):
+    # TODO: Design a string for the user-agent and use it to track tests.
     global HOST, PORT
     http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=_build_ssl_certs()[0])
     def _request(fname:str, data:dict = None, status:int = 200):
