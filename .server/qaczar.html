@@ -1,9 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>QACZAR</title>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>QACZAR</title>
     <style>* {
     margin: 0;
     padding: 0;
@@ -126,58 +127,57 @@ footer a, footer a:visited, footer a:link {
     width: 98%;
     padding: 0.5rem;
 }
-</style>
-</head>
-<body>
-    <header><nav>
-        <a href='/qaczar.html'>
-        <img src="/qaczar.png" alt="QACZAR" width="90" height="90" />
+</style>
+</head>
+<body>
+    <header><nav>
+        <a href='/qaczar.html'>
+        <img src="/qaczar.png" alt="QACZAR" width="90" height="90" />
         <h1><pre class='ascii' title='Welcome to QACZAR (Font: graffiti)'>________      _____  _________ __________  _____ __________ 
 \_____  \    /  _  \ \_   ___ \\____    / /  _  \\______   \
  /  / \  \  /  /_\  \/    \  \/  /     / /  /_\  \|       _/
 /   \_/.  \/    |    \     \____/     /_/    |    \    |   \
 \_____\ \_/\____|__  /\______  /_______ \____|__  /____|_  /
        \__>        \/        \/        \/       \/       \/ 
-</pre></h1></a>
-        <a href='/qaczar.html?form=access_log' title='Log an access to the server. (451)'>access_log</a>
-<a href='/qaczar.html?form=app_styles' title='None (483)'>app_styles</a>
+</pre></h1></a>
+        <a href='/qaczar.html?form=access_log' title='Log an access to the server. (484)'>access_log</a>
+<a href='/qaczar.html?form=app_styles' title='None (517)'>app_styles</a>
 <a href='/qaczar.html?form=ascii_banner' title='Generate a banner from ASCII text in a random font. (104)'>ascii_banner</a>
-<a href='/qaczar.html?form=create_app' title='Create a new application using SEEDS from qaczar.py. (337)'>create_app</a>
+<a href='/qaczar.html?form=create_app' title='Create a new application using SEEDS from qaczar.py. (370)'>create_app</a>
 <a href='/qaczar.html?form=dedent' title='Removes the extraneous indentation from a multi-line string. (76)'>dedent</a>
-<a href='/qaczar.html?form=elem' title='None (228)'>elem</a>
+<a href='/qaczar.html?form=elem' title='None (259)'>elem</a>
 <a href='/qaczar.html?form=emit' title='Prints a message to stderr, enriched with time, PID and line number. (38)'>emit</a>
-<a href='/qaczar.html?form=enum_file' title='Enumerate lines in a file, optionally filtering by prefix. (237)'>enum_file</a>
-<a href='/qaczar.html?form=hello_world' title='Say hello to the world! Useful as a smoke test. (451)'>hello_world</a>
+<a href='/qaczar.html?form=enum_file' title='Enumerate lines in a file, optionally filtering by prefix. (268)'>enum_file</a>
+<a href='/qaczar.html?form=hello_world' title='Say hello to the world! Useful as a smoke test. (484)'>hello_world</a>
 <a href='/qaczar.html?form=iso8601' title='Returns the current time in ISO 8601 format. (34)'>iso8601</a>
 <a href='/qaczar.html?form=join_arg_line' title='Joins a list of command-line arguments into a single string. (116)'>join_arg_line</a>
-<a href='/qaczar.html?form=list_dir' title='List files in a directory, optionally filtering by extension. (243)'>list_dir</a>
-<a href='/qaczar.html?form=page_title' title='Return a page title, or the default if none is provided. (479)'>page_title</a>
-<a href='/qaczar.html?form=process_html' title='Process a template file with context (uses mako.template). (262)'>process_html</a>
+<a href='/qaczar.html?form=list_dir' title='List files in a directory, optionally filtering by extension. (274)'>list_dir</a>
+<a href='/qaczar.html?form=page_title' title='Return a page title, or the default if none is provided. (513)'>page_title</a>
+<a href='/qaczar.html?form=process_html' title='Process a template file with context (uses mako.template). (295)'>process_html</a>
 <a href='/qaczar.html?form=process_py' title='Allows extracting or executing functions from a python module.
     A subpath is the name of the function to extract or execute and comes from the context.
     If subpath is not specified, the entire module is extracted and rendered as HTML.
-     (323)'>process_py</a>
-<a href='/qaczar.html?form=read_file' title='Read a file from the active work folder. (220)'>read_file</a>
-<a href='/qaczar.html?form=sign_guestbook' title='Thanks for your visit, please sign our guestbook. (451)'>sign_guestbook</a>
+     (356)'>process_py</a>
+<a href='/qaczar.html?form=read_file' title='Read a file from the active work folder. (251)'>read_file</a>
+<a href='/qaczar.html?form=sign_guestbook' title='Thanks for your visit, please sign our guestbook. (484)'>sign_guestbook</a>
 <a href='/qaczar.html?form=split_arg_line' title='Converts a command-line list of strings to python function arguments. (120)'>split_arg_line</a>
-<a href='/qaczar.html?form=write_file' title='Write a file to the active work folder. (224)'>write_file</a>
-    </nav></header><hr />
-    <!-- https://docs.makotemplates.org/en/latest/inheritance.html -->
-    
-        <h2>Roadmap</h2>
-        <ol class="ln"><li data-ln="263"> Test changing the html based on query params.</li><li data-ln="338"> The app is being created in the .server directory. Fix this.</li><li data-ln="341"> Figure what other files are needed for seeding an app.</li><li data-ln="414"> Test this with multiple requests that write to the database.</li><li data-ln="445"> Define the columns based on the function signature automatically.</li><li data-ln="446"> Don't mix this logic with FORMS, recorded can be used for more.</li><li data-ln="513"> Consider field validation decorators for POST receiver functions.</li><li data-ln="573"> This creates 1 thread per request, which is not ideal. Implement a thread pool.</li><li data-ln="663"> Test other special paths such as blank, /, etc.</li><li data-ln="664"> Test submitting a form (ie. sign_guestbook).</li><li data-ln="685"> Create missing branch if not exists when pushing to git.</li><li data-ln="715"> Add some automatic tests to prevent public API regressions.</li></ol><hr />
-        <!-- Change the form being rendered based on the query param 'form' if it exists -->
-        <form action='/qaczar.py/sign_guestbook' method='POST' accept-charset='utf-8' name='sign_guestbook'><p class='doc'>Thanks for your visit, please sign our guestbook.</p><label for='email'>EMAIL:</label><input name="email" type="text" title="email"/><br><label for='message'>MESSAGE:</label><input name="message" type="text" title="message"/><br><button type='submit'>EXECUTE</button></form>
-    
-    
+<a href='/qaczar.html?form=write_file' title='Write a file to the active work folder. (255)'>write_file</a>
+    </nav></header><hr />
+    <!-- https://docs.makotemplates.org/en/latest/inheritance.html -->
+    
+        <h2>Roadmap</h2>
+        <ol class="ln"><li data-ln="296"> Test changing the html based on query params.</li><li data-ln="371"> The app is being created in the .server directory. Fix this.</li><li data-ln="374"> Figure what other files are needed for seeding an app.</li><li data-ln="447"> Test this with multiple requests that write to the database.</li><li data-ln="478"> Define the columns based on the function signature automatically.</li><li data-ln="479"> Don't mix this logic with FORMS, recorded can be used for more.</li><li data-ln="547"> Consider field validation decorators for POST receiver functions.</li><li data-ln="607"> This creates 1 thread per request, which is not ideal. Implement a thread pool.</li><li data-ln="697"> Test other special paths such as blank, /, etc.</li><li data-ln="698"> Test submitting a form (ie. sign_guestbook).</li><li data-ln="719"> Create missing branch if not exists when pushing to git.</li><li data-ln="749"> Add some automatic tests to prevent public API regressions.</li></ol><hr />
+        <!-- Change the form being rendered based on the query param 'form' if it exists -->
+        <form action='/qaczar.py/sign_guestbook' method='POST' accept-charset='utf-8' name='sign_guestbook'><p class='doc'>Thanks for your visit, please sign our guestbook.</p><label for='email'>EMAIL:</label><input name="email" type="text" title="email"/><br><label for='message'>MESSAGE:</label><input name="message" type="text" title="message"/><br><button type='submit'>EXECUTE</button></form>
+    
+    
         <hr /><h3>Files</h3><ul><li><a href="/powertome">powertome</a></li>
 <li><a href="/qaczar.css">qaczar.css</a></li>
-<li><a href="/qaczar.html">qaczar.html</a></li>
 <li><a href="/qaczar.png">qaczar.png</a></li>
 <li><a href="/qaczar.py">qaczar.py</a></li>
 <li><a href="/qaczar.sqlite3">qaczar.sqlite3</a></li>
-<li><a href="/requirements.txt">requirements.txt</a></li></ul>
-        <footer><a href="/qaczar.py">Powered by the qaczar.py web system.</a></footer>
-    
-</body>
+<li><a href="/requirements.txt">requirements.txt</a></li></ul>
+        <footer><a href="/qaczar.py">Powered by the qaczar.py web system.</a></footer>
+    
+</body>
 </html>

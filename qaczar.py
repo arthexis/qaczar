@@ -205,6 +205,37 @@ import traceback
 _WORKDIR = os.path.join(_DIR, '.worker')
 _TEMPLATES = {}
 
+_BASE_HTML = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${page_title()}</title>
+    <style>${app_styles()}</style>
+</head>
+<body>
+    <header><nav>
+        <a href='/qaczar.html'>
+        <img src="/qaczar.png" alt="QACZAR" width="90" height="90" />
+        <h1>${ascii_banner('QACZAR')}</h1></a>
+        ${nav_links()}
+    </nav></header><hr />
+    <!-- https://docs.makotemplates.org/en/latest/inheritance.html -->
+    <%block name="content">
+        <h2>Roadmap</h2>
+        <ol class="ln">${enum_file('qaczar.py', prefix='# TODO:')}</ol><hr />
+        <!-- Change the form being rendered based on the query param 'form' if it exists -->
+        ${render_form(query.get('form', 'sign_guestbook'))}
+    </%block>
+    <%block name="footer">
+        <hr /><h3>Files</h3><ul>${list_dir()}</ul>
+        <footer><a href="/qaczar.py">Powered by the qaczar.py web system.</a></footer>
+    </%block>
+</body>
+</html>
+"""	
+
 def _set_workdir(role: str) -> None:
     global _DIR, _WORKDIR
     _WORKDIR = os.path.join(_DIR, f'.{role}')
@@ -247,13 +278,15 @@ def list_dir(directory: str = '.', tag: str = 'li', ext: str = None, link: bool 
         for f in os.listdir(directory)
         if (not ext or f.endswith(ext)) and not f.startswith(('.', '_')))
 
-def _load_template(fname: str) -> str:
-    global _TEMPLATES, _DIR
-    if (last := _mtime_file(fname)) != _TEMPLATES.get(fname, (None, None))[1]:
+def _load_template(fname: str) -> object:
+    global _TEMPLATES, _DIR, _BASE_HTML
+    last = _mtime_file(fname)
+    if fname == 'qaczar.html' or last != _TEMPLATES.get(fname, (None, None))[1]:
         mt = _pip_import('mako.template')
         ml = _pip_import('mako.lookup')
         lookup = ml.TemplateLookup(directories=[_DIR], input_encoding='utf-8')
-        tpl = mt.Template(filename=fname, lookup=lookup)
+        if fname == 'qaczar.html': tpl = mt.Template(_BASE_HTML, lookup=lookup)
+        else: tpl = mt.Template(filename=fname, lookup=lookup)
         _TEMPLATES[fname] = tpl, last
         emit(f"Loaded {fname=} {last=}.")
         return tpl
@@ -471,6 +504,7 @@ def _purge_tables():
             emit(f"Purge unused table: {table[0]}")
             db.execute(f"DROP TABLE {table[0]}")
         db.commit()
+
 
 #@# WEB COMPONENTS
 
