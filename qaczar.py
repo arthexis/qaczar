@@ -213,22 +213,22 @@ _BASE_HTML = """
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${page_title()}</title><style>${app_styles()}</style>
+    <title>${q.page_title()}</title><style>${q.app_styles()}</style>
 </head>
 <body>
     <header><nav>
         <a href='/qaczar.html'>
         <img src="/qaczar.png" alt="QACZAR" width="90" height="90" />
-        <h1>${ascii_banner('QACZAR')}</h1></a> ${nav_links()}
+        <h1>${q.ascii_banner('QACZAR')}</h1></a> ${q.nav_links()}
     </nav></header><hr />
     <%block name="content">
         <h2>Roadmap</h2>
-        <ol class="ln">${enum_file('qaczar.py', prefix='# TODO:')}</ol><hr />
+        <ol class="ln">${q.enum_file('qaczar.py', prefix='# TODO:')}</ol><hr />
         <!-- Change the form being rendered based on the query param 'form' if it exists -->
-        ${render_form(query.get('form', 'sign_guestbook'))}
+        ${q.render_form(query.get('form', 'sign_guestbook'))}
     </%block>
     <%block name="footer">
-        <hr /><h3>Files</h3><ul>${list_dir()}</ul>
+        <hr /><h3>Files</h3><ul>${q.list_dir()}</ul>
         <footer><a href="/qaczar.py">Powered by the qaczar.py web system.</a></footer>
     </%block>
 </body>
