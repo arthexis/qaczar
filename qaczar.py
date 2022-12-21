@@ -251,7 +251,7 @@ _BASE_HTML = """
         <h2>Roadmap</h2>
         <ol class="ln">${q.enum_file('qaczar.py', prefix='# TODO:')}</ol><hr />
         <!-- ERROR -->
-        ${q.render_form(query['form'] if 'form' in query else 'sign_guestbook')}
+        ${q.render_form(query['form'][0] if 'form' in query else 'sign_guestbook')}
     </%block>
     <%block name="footer">
         <hr /><h3>Files</h3><ul>${q.list_dir()}</ul>
