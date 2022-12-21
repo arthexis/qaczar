@@ -362,7 +362,7 @@ def _process_error(fname: str, context: dict) -> str:
 
 @timed
 def _dispatch_processor(fname: str, context: dict) -> str | None:
-    assert isinstance(fname, str), f"Invalid file name: {fname}"
+    assert '?' not in fname, f'Invalid file name: {fname}'	
     if '.' not in fname: 
         prefix, suffix = f'{fname}/{fname}', 'html'
         fname = f'{prefix}.{suffix}'
