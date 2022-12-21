@@ -400,7 +400,7 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
         fname = f'{prefix}.{suffix}'
         if not os.path.exists(fname): create_app(fname)
     else: prefix, suffix = fname.split(".", 1)  # Only one dot is allowed.
-    emit(f"Dispatch processor: {fname} {prefix} {suffix}", div='-')
+    # emit(f"Dispatch processor: {fname} {prefix} {suffix}", div='-')
     if not prefix: return None  # Prevent dotfiles from being processed.
     if '/' in suffix: 
         suffix, subpath = suffix.split('/')
