@@ -423,16 +423,17 @@ def _process_error(fname: str, context: dict) -> str:
 
 # @timed
 def _dispatch_processor(fname: str, context: dict) -> str | None:
+    global APP
     if '.' not in fname: 
         prefix, suffix = f'{fname}/{fname}', 'html'
         fname = f'{prefix}.{suffix}'
         if not os.path.exists(fname): create_app(fname)
     else: prefix, suffix = fname.split(".", 1)  # Only one dot is allowed.
     # emit(f"Dispatch processor: {fname} {prefix} {suffix}", div='-')
-    if not prefix: return None  # Prevent dotfiles from being processed.
     if '/' in suffix: 
         suffix, subpath = suffix.split('/')
         context['subpath'] = subpath
+    if not prefix: prefix = APP
     if (processor := globals().get(f'process_{suffix}')):
         try:
             # TODO: Fix template error: TypeError: unhashable type: 'list'
