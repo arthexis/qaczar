@@ -27,10 +27,10 @@ import typing as t
 
 _PYTHON = sys.executable
 _PID = os.getpid()
-_DEBUG = True  
 _BRANCH = 'main'
 _DIR = os.path.dirname(os.path.abspath(__file__))
 
+DEBUG = True  
 APP = os.path.basename(_DIR)
 
 def iso8601() -> str: 
@@ -82,8 +82,8 @@ def dedent(code: str) -> str:
 
 def timed(f: t.Callable) -> t.Callable:
     """Decorator to time a function, emitting a message to stderr."""
-    global _DEBUG
-    if not _DEBUG: return f
+    global DEBUG
+    if not DEBUG: return f
     @functools.wraps(f)
     def _timed(*args, **kwargs):
         start = time.time(); elapsed = time.time() - start
@@ -622,8 +622,20 @@ def _build_server(https: bool = True) -> type:
 def access_log(address: str, message: str) -> None:
     """Log an access to the server."""
     emit(f"Access from {address} {message}")
+
     
 def _build_handler() -> type:
+
+    class Q():
+        def __init__(self):
+            for k, v in _safe_globals().items(): setattr(self, k, v) 
+        def __repr__(self):
+            global DEBUG
+            if not DEBUG: return f"Q(...)"
+            return f"Q({', '.join(f'{k}={v}' for k, v in self.__dict__.items())})"
+
+    q = Q()
+
     class EmitHandler(hs.SimpleHTTPRequestHandler):
         def log_message(self, format, *args):
             access_log(self.address_string(), format % args)
@@ -635,7 +647,7 @@ def _build_handler() -> type:
         def _rfile_read(self, encoding: str = 'utf-8') -> bytes:
             return self.rfile.read(self.content_length).decode(encoding)
 
-        def _build_response(self, method: str = None) -> bool:
+        def _build_response(self, method: str = None, _q=q) -> bool:
             global APP
             self.start = time.time()
             if '//' in self.path: self.path = self.path.replace('//', '/')
@@ -644,9 +656,9 @@ def _build_handler() -> type:
             else: path, qs = self.path.split('?', 1)
             if not path or path == '/': path = f'/{APP}.html'
             # I tried to split off building the entire context, but it was a bad idea.
+            # TODO: Use a class for q, so that it can be used for attribute access.
             context = {
-                    'q': _safe_globals(), 'method': method,
-                    'ip': self.client_address[0], 'ts': iso8601(), 
+                    'q': _q, 'method': method, 'ip': self.client_address[0], 'ts': iso8601(), 
                     'query': parse.parse_qs(qs), 'path': path,
                     'APP': path.split('/')[1] if '/' in path else None,
             }
@@ -787,5 +799,5 @@ if __name__ == "__main__":
     else:
         __args, __kwargs = split_arg_line(sys.argv[1:])
         __role = __kwargs.pop('role')  # It's ok to fail if role is not defined.
-    _DEBUG = True if 'debug' in __args else _DEBUG
+    DEBUG = True if 'debug' in __args else DEBUG
     _role_dispatcher(__role, __args, __kwargs)
