@@ -689,8 +689,9 @@ def _build_handler() -> type:
             if not path or path == '/': path = f'/{APP}.html'
             # I tried to split off building the entire context, but it was a bad idea.
             context = {
-                    'q': _q, 'method': method, 'ip': self.client_address[0], 'ts': iso8601(), 
-                    'query': parse.parse_qs(qs), 'path': path, 
+                    'q': _q, 'method': method, 'ts': iso8601(), 
+                    'ip': self.client_address[0], 'path': path, 
+                    'query': parse.parse_qs(qs), 
                     'form': parse.parse_qs(self._rfile_read()),
                     'APP': path.split('/')[1] if '/' in path else None,
             }
