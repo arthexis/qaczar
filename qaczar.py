@@ -316,6 +316,7 @@ def _load_template(fname: str) -> object:
             else: 
                 ml = _pip_import('mako.lookup')
                 lookup = ml.TemplateLookup(directories=[_DIR], input_encoding='utf-8')
+                # TODO: Consider subclassing mako.template.Template to track more info.
                 tpl = mt.Template(filename=fname, lookup=lookup)
             _TEMPLATES[fname] = tpl, new_mtime
             emit(f"Template cache miss {fname=} {new_mtime=}.")
