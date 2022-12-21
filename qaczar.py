@@ -261,6 +261,7 @@ def _load_template(fname: str) -> str:
 
 def process_html(fname: str, context: dict) -> str:
     """Process a template file with context (uses mako.template)."""	
+    # TODO: Test changing the html based on query params.
     template = _load_template(fname)
     content = template.render(**context)
     return write_file(fname, content)
@@ -583,10 +584,10 @@ def _build_handler() -> type:
         def content_length(self) -> int:
             return int(self.headers.get('content-length', 0))
         
-        def rfile_read(self, encoding: str = 'utf-8') -> bytes:
+        def _rfile_read(self, encoding: str = 'utf-8') -> bytes:
             return self.rfile.read(self.content_length).decode(encoding)
 
-        def build_context(self, path:str, method: str = None) -> dict:
+        def _build_context(self, path:str, method: str = None) -> dict:
             if '?' not in path: qs = ''
             else: path, qs = path.split('?', 1)
             context = {**_safe_globals(), 
@@ -594,15 +595,15 @@ def _build_handler() -> type:
                 'APP': path.split('/')[1] if '/' in path else None,
             }
             context['query'] = parse.parse_qs(qs)
-            if method == 'POST': context['data'] = parse.parse_qs(self.rfile_read())
+            if method == 'POST': context['data'] = parse.parse_qs(self._rfile_read())
             else: context['data'] = {}
             return context
 
-        def build_response(self, method: str = None) -> bool:
+        def _build_response(self, method: str = None) -> bool:
             self.start = time.time()
             self.path = '' if self.path == '/' else self.path
             if not self.path: self.path = f'/{APP}.html'
-            context = self.build_context(self.path, method)
+            context = self._build_context(self.path, method)
             self.work_path = _dispatch_processor(self.path[1:], context)
             emit(f"{context['ip']} {context['ts']} {method} {self.path} ({self.work_path})")
             
@@ -610,13 +611,13 @@ def _build_handler() -> type:
             return super().translate_path(path) if not self.work_path else self.work_path
 
         def do_HEAD(self) -> None:
-            self.build_response('HEAD'); return super().do_HEAD()
+            self._build_response('HEAD'); return super().do_HEAD()
             
         def do_GET(self) -> None:
-            self.build_response('GET'); return super().do_GET()
+            self._build_response('GET'); return super().do_GET()
         
         def do_POST(self) -> None:
-            self.build_response('POST'); return super().do_GET()
+            self._build_response('POST'); return super().do_GET()
         
         def end_headers(self) -> None:
             duration = time.time() - self.start
