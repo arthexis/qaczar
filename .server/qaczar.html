@@ -1,179 +1,28 @@
-
-<!DOCTYPE html><html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>QACZAR</title><style>* {
-    margin: 0;
-    padding: 0;
-}
-html, input {
-    background-color: #333;
-    font-family: monospace;
-    font-size: 1rem;
-    color: #93c572;
-    padding: 0.5rem;
-}
-body {
-    margin-right: 0.5rem;
-    margin-left: 0.5rem;
-    width: 100%;
-    height: 100%;
-}
-header {
-    max-width: 98%;
-}
-h1, h2, h3, h4, h5, h6 {
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-    text-transform: capitalize;
-    color: goldenrod;
-    display: inline-block;
-}
-h1 {
-    font-size: 1.8rem;
-}
-h1 .ascii {
-    font-size: 0.8rem;
-    text-transform: none;
-}
-h2 {
-    font-size: 1.5rem;
-}
-h3 {
-    font-size: 1.2rem;
-}
-p {
-    margin-bottom: 0.5rem;
-}
-.doc {
-    color: #66FFFF;
-}
-a:visited, a:link {
-    color: #66FF66;
-}
-a:hover {
-    color: goldenrod;
-}
-ol, ul {
-    list-style-type: none;
-}
-ul li {
-    display: inline;
-}
-ol li::before {
-    content: counter(list) ". ";
-    counter-increment: list;
-    color: #666;
-}
-ol {
-    counter-reset: list;
-}
-ol.ln li::before {
-    content: attr(data-ln) ". ";
-    counter-increment: list;
-}
-ol.ln li:hover {
-    color: #66FFFF;
-}
-hr {
-    border: 0;
-    border-top: 1px solid #666;
-    margin: 1rem 0;
-    width: 99%;
-}
-form {
-    background-color: #444;
-    border: 1px solid #666;
-    border-radius: 0.5rem;
-    padding: 0.5rem;
-    width: auto;
-    display: inline-block;
-}
-input {
-    min-width: 30rem;
-}
-label {
-    display: block;
-    margin-top: 0.5rem;
-    margin-bottom: 0.2rem;
-}
-button {
-    margin-top: 0.5rem;
-    color: #93c572;
-    background-color: #333;
-    border: 1px solid #666;
-    border-radius: 0.5rem;
-    padding: 0.5rem;
-    font-size: 1rem;
-}
-button:hover {
-    background-color: #430;
-}
-footer {
-    margin-top: 1rem;
-    width: 98%;
-}
-footer a, footer a:visited, footer a:link {
-    color: #702973;
-}
-.traceback {
-    color: #FF6666;
-    background-color: #222;
-    font-size: 0.8rem;
-    overflow: auto;
-    width: 98%;
-    padding: 0.5rem;
-}
-</style>
-</head>
-<body>
-    <header><nav>
-        <a href='/qaczar.html'>
-        <img src="/qaczar.png" alt="QACZAR" width="90" height="90" />
-        <h1><pre class='ascii' title='Welcome to QACZAR (Font: graffiti)'>________      _____  _________ __________  _____ __________ 
-\_____  \    /  _  \ \_   ___ \\____    / /  _  \\______   \
- /  / \  \  /  /_\  \/    \  \/  /     / /  /_\  \|       _/
-/   \_/.  \/    |    \     \____/     /_/    |    \    |   \
-\_____\ \_/\____|__  /\______  /_______ \____|__  /____|_  /
-       \__>        \/        \/        \/       \/       \/ 
-</pre></h1></a> <a href='/qaczar.html?form=access_log' title='Log an access to the server. (518)'>access_log</a>
-<a href='/qaczar.html?form=app_styles' title='Return the CSS styles for the app. (551)'>app_styles</a>
-<a href='/qaczar.html?form=ascii_banner' title='Generate a banner from ASCII text in a random font. (108)'>ascii_banner</a>
-<a href='/qaczar.html?form=create_app' title='Create a new application using SEEDS from qaczar.py. (401)'>create_app</a>
-<a href='/qaczar.html?form=dedent' title='Removes the extraneous indentation from a multi-line string. (80)'>dedent</a>
-<a href='/qaczar.html?form=elem' title='Generate an HTML element with optional attributes. (284)'>elem</a>
-<a href='/qaczar.html?form=emit' title='Prints a message to stderr, enriched with time, PID and line number. (41)'>emit</a>
-<a href='/qaczar.html?form=enum_file' title='Enumerate lines in a file, optionally filtering by prefix. (294)'>enum_file</a>
-<a href='/qaczar.html?form=hello_world' title='Say hello to the world! Useful as a smoke test. (518)'>hello_world</a>
-<a href='/qaczar.html?form=iso8601' title='Returns the current time in ISO 8601 format. (37)'>iso8601</a>
-<a href='/qaczar.html?form=join_arg_line' title='Joins a list of command-line arguments into a single string. (120)'>join_arg_line</a>
-<a href='/qaczar.html?form=list_dir' title='List files in a directory, optionally filtering by extension. (300)'>list_dir</a>
-<a href='/qaczar.html?form=page_title' title='Return a page title, or the default if none is provided. (547)'>page_title</a>
-<a href='/qaczar.html?form=process_html' title='Process a template file with context (uses mako.template). (326)'>process_html</a>
-<a href='/qaczar.html?form=process_py' title='Allows extracting or executing functions from a python module.
-    A subpath is the name of the function to extract or execute and comes from the context.
-    If subpath is not specified, the entire module is extracted and rendered as HTML.
-     (387)'>process_py</a>
-<a href='/qaczar.html?form=read_file' title='Read a file from the active work folder. (276)'>read_file</a>
-<a href='/qaczar.html?form=sign_guestbook' title='Thanks for your visit, please sign our guestbook. (518)'>sign_guestbook</a>
-<a href='/qaczar.html?form=split_arg_line' title='Converts a command-line list of strings to python function arguments. (124)'>split_arg_line</a>
-<a href='/qaczar.html?form=write_file' title='Write a file to the active work folder. (280)'>write_file</a>
-    </nav></header><hr />
-    
-        <h2>Roadmap</h2>
-        <ol class="ln"><li data-ln="318"> Consider subclassing mako.template.Template to track more info.</li><li data-ln="327"> Test changing the html based on query params.</li><li data-ln="402"> The app is being created in the .server directory. Fix this.</li><li data-ln="405"> Figure what other files are needed for seeding an app.</li><li data-ln="440"> Fix template error: TypeError: unhashable type: 'list'</li><li data-ln="481"> Test this with multiple requests that write to the database.</li><li data-ln="512"> Define the columns based on the function signature automatically.</li><li data-ln="513"> Don't mix this logic with FORMS, recorded can be used for more.</li><li data-ln="582"> Consider field validation decorators for POST receiver functions.</li><li data-ln="642"> This creates 1 thread per request, which is not ideal. Implement a thread pool.</li><li data-ln="661"> See if we can include additional information about the caller.</li><li data-ln="730"> Design a string for the user-agent and use it to track tests.</li><li data-ln="745"> Test other special paths such as blank, /, etc.</li><li data-ln="746"> Test submitting a form (ie. sign_guestbook).</li><li data-ln="759"> Create missing branch if not exists when pushing to git.</li><li data-ln="789"> Add some automatic tests to prevent public API regressions.</li></ol><hr />
-        <!-- ERROR -->
-        <form action='/qaczar.py/sign_guestbook' method='POST' accept-charset='utf-8' name='sign_guestbook'><p class='doc'>Thanks for your visit, please sign our guestbook.</p><label for='email'>EMAIL:</label><input name="email" type="text" title="email"/><br><label for='message'>MESSAGE:</label><input name="message" type="text" title="message"/><br><button type='submit'>EXECUTE</button></form>
-    
-    
-        <hr /><h3>Files</h3><ul><li><a href="/powertome">powertome</a></li>
-<li><a href="/qaczar.css">qaczar.css</a></li>
-<li><a href="/qaczar.png">qaczar.png</a></li>
-<li><a href="/qaczar.py">qaczar.py</a></li>
-<li><a href="/qaczar.sqlite3">qaczar.sqlite3</a></li>
-<li><a href="/requirements.txt">requirements.txt</a></li></ul>
-        <footer><a href="/qaczar.py">Powered by the qaczar.py web system.</a></footer>
-    
-</body>
-</html>
+<h1 class='banner'><pre class='ascii' title='Welcome to 404 (Font: graffiti)'>   _____  _______      _____  
+  /  |  | \   _  \    /  |  | 
+ /   |  |_/  /_\  \  /   |  |_
+/    ^   /\  \_/   \/    ^   /
+\____   |  \_____  /\____   | 
+     |__|        \/      |__| 
+</pre></h1><p>Not found: qaczar.html</p><pre class='traceback'>Traceback (most recent call last):
+  File "C:\Users\arthe\Desktop\qaczar\qaczar.py", line 445, in _dispatch_processor
+    return processor(f'{prefix}.{suffix}', context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\arthe\Desktop\qaczar\qaczar.py", line 331, in process_html
+    content = template.render(**context)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\arthe\Desktop\qaczar\.venv\Lib\site-packages\mako\template.py", line 439, in render
+    return runtime._render(self, self.callable_, args, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\arthe\Desktop\qaczar\.venv\Lib\site-packages\mako\runtime.py", line 874, in _render
+    _render_context(
+  File "C:\Users\arthe\Desktop\qaczar\.venv\Lib\site-packages\mako\runtime.py", line 916, in _render_context
+    _exec_template(inherit, lclcontext, args=args, kwargs=kwargs)
+  File "C:\Users\arthe\Desktop\qaczar\.venv\Lib\site-packages\mako\runtime.py", line 943, in _exec_template
+    callable_(context, *args, **kwargs)
+  File "memory:0x1ee84d75110", line 36, in render_body
+  File "memory:0x1ee84d75110", line 61, in render_content
+  File "C:\Users\arthe\Desktop\qaczar\.venv\Lib\site-packages\mako\runtime.py", line 230, in __str__
+    raise NameError("Undefined")
+NameError: Undefined
+</pre><hr /><p><a href='/'>Home</a></p>
