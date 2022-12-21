@@ -604,7 +604,7 @@ def _build_handler() -> type:
             if not self.path: self.path = f'/{APP}.html'
             context = self._build_context(self.path, method)
             self.work_path = _dispatch_processor(self.path[1:], context)
-            emit(f"{context['ip']} {context['ts']} {method} {self.path} ({self.work_path})")
+            # emit(f"{context['ip']} {context['ts']} {method} {self.path} ({self.work_path})")
             
         def translate_path(self, path: str = None) -> str:
             return super().translate_path(path) if not self.work_path else self.work_path
