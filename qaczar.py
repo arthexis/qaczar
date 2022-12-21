@@ -224,7 +224,6 @@ _BASE_HTML = """
     <%block name="content">
         <h2>Roadmap</h2>
         <ol class="ln">${q.enum_file('qaczar.py', prefix='# TODO:')}</ol><hr />
-        <!-- Change the form being rendered based on the query param 'form' if it exists -->
         ${q.render_form(query.get('form', 'sign_guestbook'))}
     </%block>
     <%block name="footer">
