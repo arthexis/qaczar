@@ -697,6 +697,7 @@ def watcher_role(*args, next: str = None, **kwargs) -> t.NoReturn:
     global APP
     if not next: raise ValueError('next role was not defined')
     kwargs['role'] = next
+    emit(f"Watching {APP}.py for changes...", div='=')
     _watch_over(_start_py(f'{APP}.py', *args, **kwargs), f'{APP}.py')
 
 def server_role(*args, host=HOST, port=PORT, **kwargs) -> t.NoReturn:
@@ -737,7 +738,7 @@ def worker_role(*args, **kwargs) -> t.NoReturn:
 def _role_dispatcher(role: str, args: tuple, kwargs: dict) -> t.NoReturn:
     _set_workdir(role)
     opid = kwargs.pop('opid', None)  # If we receive opid it means we are being watched.
-    emit(f"Assuming role='{__role}' args={__args} kwargs={__kwargs} watch by {opid=}.")
+    emit(f"Dispatch role='{__role}' args={__args} kwargs={__kwargs} watch by {opid=}.")
     function = globals().get(f"{role}_role")
     if function is None: raise ValueError(f"Role '{role}' is not defined.")
     try:
