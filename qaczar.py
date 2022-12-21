@@ -597,15 +597,16 @@ def _build_handler() -> type:
             # COM EDU GOV NET ORG
             self.start = time.time()
             if self.path.endswith('/'): self.path = f'{self.path}/{APP}.html'
-            if '?' not in self.path: qs = ''
-            else: self.path, qs = self.path.split('?', 1)
+            if '?' not in self.path: path, qs = self.path, ''
+            else: path, qs = self.path.split('?', 1)
+            emit(f"Request from {self.client_address[0]}: {method} {path} {qs}")
             context = {
                     **_safe_globals(), 
                     'ip': self.client_address[0], 'ts': iso8601(), 'method': method,
-                    'query': parse.parse_qs(qs), 'path': self.path,
-                    'APP': self.path.split('/')[1] if '/' in self.path else None,
+                    'query': parse.parse_qs(qs), 'path': path,
+                    'APP': path.split('/')[1] if '/' in path else None,
             }
-            self.work_path = _dispatch_processor(self.path[1:], context)
+            self.work_path = _dispatch_processor(path[1:], context)
             
         def translate_path(self, path: str = None) -> str:
             return super().translate_path(path) if not self.work_path else self.work_path
