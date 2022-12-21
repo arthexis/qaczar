@@ -657,6 +657,10 @@ def _build_handler() -> type:
     class Q():
         def __init__(self):
             for k, v in _safe_globals().items(): setattr(self, k, v) 
+        def __getattr__(self, name):
+            # TODO: See if we can include additional information about the caller.
+            emit(f"Undefined: q.{name}.")
+            return None
 
     q = Q()
 
