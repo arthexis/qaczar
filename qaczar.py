@@ -30,7 +30,7 @@ _PID = os.getpid()
 _BRANCH = 'main'
 _DIR = os.path.dirname(os.path.abspath(__file__))
 
-DEBUG = True  
+DEBUG = False  
 APP = os.path.basename(_DIR)
 
 def iso8601() -> str: 
