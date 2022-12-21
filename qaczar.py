@@ -98,7 +98,6 @@ def _pip_import(module: str) -> t.Any:
 
 def imports(*modules: tuple[str]) -> t.Callable:
     """Decorator to import modules at runtime, passing them as arguments."""
-    # TODO: Allow specifying version number in runtime imports (for self-remediation).
     def decorator(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
@@ -309,7 +308,6 @@ def render_form(subpath: str | t.Callable, mod_name: str=None) -> str:
 
 @functools.cache
 def _build_form(mod_name: str, subpath: str) -> str:
-    # TODO: Handle multiple subpaths by using fieldsets? Allow decorators?
     form = render_form(subpath, mod_name)
     return write_file(f"{mod_name}__{subpath}.html" , form)
 
