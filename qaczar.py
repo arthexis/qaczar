@@ -701,6 +701,7 @@ def test_server(*args, **kwargs) -> t.NoReturn:
     request = _request_factory()
     assert 'qaczar' in request(f'{APP}.html')
     assert 'qaczar' in request(f'{APP}.py')
+    assert 'qaczar' in request(f'/')
 
 def _test_server_load(*args, **kwargs) -> t.NoReturn:
     global APP
