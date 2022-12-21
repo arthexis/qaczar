@@ -308,7 +308,7 @@ def list_dir(directory: str = '.', tag: str = 'li', ext: str = None, link: bool 
 def _load_template(fname: str) -> object:
     global _TEMPLATES, _DIR, _BASE_HTML
     cached, old_mtime = _TEMPLATES.get(fname, (None, None))
-    emit(f"Load template {fname=} {cached=} {old_mtime=}.")
+    emit(f"Load template {fname=} {bool(cached)=} {old_mtime=}.")
     if fname == 'qaczar.html':
         if cached: return cached
         if (new_mtime := _mtime_file(fname)) != old_mtime:
