@@ -386,7 +386,7 @@ import threading
 import collections
 
 _LOCAL = threading.local()
-_SCHEMA = collections.defaultdict(str)
+_SCHEMA = collections.defaultdict(dict)
 
 def _init_table(_db, table: str, cols: list[str]) -> None:
     global _SCHEMA, APP
@@ -394,7 +394,7 @@ def _init_table(_db, table: str, cols: list[str]) -> None:
     sql = (f"CREATE TABLE IF NOT EXISTS {table} ({', '.join(cols)}, " 
             f"ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
             f"id INTEGER PRIMARY KEY AUTOINCREMENT)")
-    _SCHEMA[APP] += f'{sql};\n'
+    _SCHEMA[APP][table] = sql
     _db.execute(sql)
 
 def _insert(_db, table: str, *values) -> None:
