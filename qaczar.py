@@ -645,8 +645,8 @@ def _build_handler() -> type:
             if not path or path == '/': path = f'/{APP}.html'
             # I tried to split off building the entire context, but it was a bad idea.
             context = {
-                    **_safe_globals(), 
-                    'ip': self.client_address[0], 'ts': iso8601(), 'method': method,
+                    'q': _safe_globals(), 'method': method,
+                    'ip': self.client_address[0], 'ts': iso8601(), 
                     'query': parse.parse_qs(qs), 'path': path,
                     'APP': path.split('/')[1] if '/' in path else None,
             }
