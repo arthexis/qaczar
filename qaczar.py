@@ -279,17 +279,19 @@ def list_dir(directory: str = '.', tag: str = 'li', ext: str = None, link: bool 
 
 def _load_template(fname: str) -> object:
     global _TEMPLATES, _DIR, _BASE_HTML
-    cached, last = _TEMPLATES.get(fname, (None, None)), 0
-    if fname == 'qaczar.html' or (last := _mtime_file(fname)) != cached[1]:
-        mt = _pip_import('mako.template')
-        if fname == 'qaczar.html': tpl = mt.Template(_BASE_HTML)
-        else: 
-            ml = _pip_import('mako.lookup')
-            lookup = ml.TemplateLookup(directories=[_DIR], input_encoding='utf-8')
-            tpl = mt.Template(filename=fname, lookup=lookup)
-        _TEMPLATES[fname] = tpl, last
-        emit(f"Loaded {fname=} {last=}.")
-        return tpl
+    cached, old_mtime = _TEMPLATES.get(fname, (None, None))
+    if fname == 'qaczar.html':
+        if cached: return cached
+        if (new_mtime := _mtime_file(fname)) != old_mtime:
+            mt = _pip_import('mako.template')
+            if fname == 'qaczar.html': tpl = mt.Template(_BASE_HTML)
+            else: 
+                ml = _pip_import('mako.lookup')
+                lookup = ml.TemplateLookup(directories=[_DIR], input_encoding='utf-8')
+                tpl = mt.Template(filename=fname, lookup=lookup)
+            _TEMPLATES[fname] = tpl, new_mtime
+            emit(f"Loaded {fname=} {new_mtime=}.")
+            return tpl
     return _TEMPLATES[fname][0]
 
 def process_html(fname: str, context: dict) -> str:
