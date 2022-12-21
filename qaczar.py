@@ -9,7 +9,7 @@
 # 1 One Script. Keep line width to less than 100 characters. Aesthetics matter, but not too much.
 # 2 Prefer functions, instead of classes, for modularity, composability and encapsulation.
 # 3 Functions should not reference functions or other globals defined later in the script.
-# 4 Exploit the standard library to its fullest, avoid fancy third-party dependencies.
+# 4 Exploit the standard library to its fullest and automate dependency management.
 # 5 Sometimes, its ok to break the rules: take advantage of the language but clean up after.
 # 6 In case of doubt, play the game to see what happens. Also, you just lost it.
 # 7 There is no seventh.
@@ -383,18 +383,18 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
 
 import sqlite3
 import threading
+import collections
 
 _LOCAL = threading.local()
-_SCHEMA = ''
+_SCHEMA = collections.defaultdict(str)
 
 def _init_table(_db, table: str, cols: list[str]) -> None:
-    # TODO: Make the schema tracker work per-app by using the APP name with _LOCAL.
-    global _SCHEMA
+    global _SCHEMA, APP
     # emit(f"Create table: {table} {cols=}")
     sql = (f"CREATE TABLE IF NOT EXISTS {table} ({', '.join(cols)}, " 
             f"ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
             f"id INTEGER PRIMARY KEY AUTOINCREMENT)")
-    _SCHEMA += f'{sql};\n'
+    _SCHEMA[APP] += f'{sql};\n'
     _db.execute(sql)
 
 def _insert(_db, table: str, *values) -> None:
