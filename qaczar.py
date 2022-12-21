@@ -563,10 +563,6 @@ def _build_server(https: bool = True) -> type:
             ss.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate)
             self.socket = ssl_ctx.wrap_socket(self.socket, server_side=True) 
 
-        def process_request(self, request, client_address):
-            emit(f"Starting thread for {client_address}")
-            ss.ThreadingTCPServer.process_request(self, request, client_address)
-
     return SSLServer
 
 @recorded
