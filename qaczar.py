@@ -39,7 +39,7 @@ def emit(msg: str, div:str='', _at=None) -> None:
     """Prints a message to stderr, enriched with time, PID and line number."""
     global _PID
     frame = _at or sys._getframe(1)  
-    if div: print(div * 100, file=sys.stderr)
+    if div: print((div or '-') * 100, file=sys.stderr)
     print(f'[{_PID}:{frame.f_lineno} {iso8601()}] {frame.f_code.co_name}:  {msg}', file=sys.stderr)
 
 def halt(msg: str) -> t.NoReturn:
@@ -367,7 +367,7 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
         fname = f'{prefix}.{suffix}'
         if not os.path.exists(fname): create_app(fname)
     else: prefix, suffix = fname.split(".", 1)  # Only one dot is allowed.
-    emit(f"Dispatch processor: {fname} {prefix} {suffix}", div=True)
+    emit(f"Dispatch processor: {fname} {prefix} {suffix}", div='-')
     if not prefix: return None  # Prevent dotfiles from being processed.
     if '/' in suffix: 
         suffix, subpath = suffix.split('/')
