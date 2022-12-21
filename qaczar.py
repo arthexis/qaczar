@@ -519,6 +519,7 @@ def page_title(title: str = '') -> str:
     return title if title else f'{APP.upper()}'
 
 def app_styles():
+    """Return the CSS styles for the app."""	
     return _read_file(f'qaczar.css', encoding='utf-8')
 
 @imports('pyfiglet')
