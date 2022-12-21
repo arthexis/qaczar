@@ -412,6 +412,7 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
         try:
             # TODO: Fix template error: TypeError: unhashable type: 'list'
             # This error happens when using a query string with a form.
+            emit(f"Process {fname} {context=}", div='-')
             return processor(f'{prefix}.{suffix}', context)
         except Exception as e:
             emit(f"Error processing {fname}: {e}")
