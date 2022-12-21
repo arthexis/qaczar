@@ -458,6 +458,16 @@ def recorded(func: t.Callable) -> t.Callable:
         return result
     return _recorded
 
+def _purge_tables():
+    global APP, _SCHEMA
+    with _connect_db() as db:
+        for table in db.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall():
+            if table[0] in _SCHEMA[APP]: continue
+            if table[0].startswith(f'{APP}_'): continue
+            if table[0].startswith(f'sqlite_'): continue
+            emit(f"Purge unused table: {table[0]}")
+            db.execute(f"DROP TABLE {table[0]}")
+        db.commit()
 
 #@# WEB COMPONENTS
 
@@ -688,6 +698,7 @@ def watcher_role(*args, next: str = None, **kwargs) -> t.NoReturn:
 
 def server_role(*args, host=HOST, port=PORT, **kwargs) -> t.NoReturn:
     global APP
+    _purge_tables()
     server_cls = _build_server()
     handler_cls = _build_handler()
     with server_cls((host, int(port)), handler_cls) as httpd:
