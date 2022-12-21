@@ -23,6 +23,7 @@
 import os
 import sys
 import time
+import traceback
 import typing as t
 
 _PYTHON = sys.executable
@@ -37,12 +38,13 @@ def iso8601() -> str:
     """Returns the current time in ISO 8601 format."""
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
 
-def emit(msg: str, div:str='', _at=None) -> None: 
+def emit(msg: str, div: str = '', trace: bool =False,  _at=None) -> None: 
     """Prints a message to stderr, enriched with time, PID and line number."""
     global _PID
     frame = _at or sys._getframe(1)  
     if div: print((div or '-') * 100, file=sys.stderr)
     print(f'[{_PID}:{frame.f_lineno} {iso8601()}] {frame.f_code.co_name}:  {msg}', file=sys.stderr)
+    if trace: traceback.print_stack(frame, file=sys.stderr)
 
 def halt(msg: str) -> t.NoReturn:
     """Stops the program and all its subprocesses, printing a final message."""
@@ -227,7 +229,6 @@ def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
 
 import shutil
 import inspect
-import traceback
 
 _WORKDIR = os.path.join(_DIR, '.worker')
 _TEMPLATES = {}
@@ -415,7 +416,6 @@ def _process_error(fname: str, context: dict) -> str:
     if '.' in fname: fname = fname.split('.', 1)[0] + '.html'
     err = context.get('error', None)
     banner = ascii_banner(f"404")
-    # Include the full traceback in the error page.
     content = (f"<h1 class='banner'>{banner}</h1><p>Not found: {fname}</p>"
             f"<pre class='traceback'>{traceback.format_exc()}</pre>"
             f"<hr /><p><a href='/'>Home</a></p>")
@@ -440,7 +440,7 @@ def _dispatch_processor(fname: str, context: dict) -> str | None:
             # This error happens when using a query string with a form.
             return processor(f'{prefix}.{suffix}', context)
         except Exception as e:
-            emit(f"Error processing {fname}: {type(e)} {e}")
+            emit(f"Error processing {fname}: {type(e)}> {e}", trace=True)
             context['error'] = e
             return _process_error(fname, context)
     return None
