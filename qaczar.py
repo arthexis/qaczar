@@ -599,7 +599,7 @@ def _build_handler() -> type:
             if self.path.endswith('/'): self.path = f'{self.path}{APP}.html'
             if '?' not in self.path: path, qs = self.path, ''
             else: path, qs = self.path.split('?', 1)
-            # I tried to split building the context, but it was a bad idea.
+            # I tried to split off building the entire context, but it was a bad idea.
             context = {
                     **_safe_globals(), 
                     'ip': self.client_address[0], 'ts': iso8601(), 'method': method,
