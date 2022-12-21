@@ -411,6 +411,7 @@ def _insert(_db, table: str, *values) -> None:
         raise e
 
 def _connect_db() -> sqlite3.Connection:
+    # TODO: Test this with multiple requests that write to the database.
     global APP, _LOCAL, _PID
     if hasattr(_LOCAL, '{APP}_db'): return getattr(_LOCAL, '{APP}_db')
     _db = sqlite3.connect(f'{APP}.sqlite3')
