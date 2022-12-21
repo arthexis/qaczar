@@ -250,7 +250,7 @@ _BASE_HTML = """
     <%block name="content">
         <h2>Roadmap</h2>
         <ol class="ln">${q.enum_file('qaczar.py', prefix='# TODO:')}</ol><hr />
-        ${q.render_form(query.get('form', 'sign_guestbook'))}
+        
     </%block>
     <%block name="footer">
         <hr /><h3>Files</h3><ul>${q.list_dir()}</ul>
