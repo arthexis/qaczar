@@ -15,6 +15,8 @@
 # 6 In case of doubt, play the game to see what happens. Also, you just lost it.
 # 7 There is no seventh.
 
+# <!--
+
 
 #@# LOCAL PLATFORM
 
@@ -207,20 +209,17 @@ _TEMPLATES = {}
 
 # Template syntax: https://docs.makotemplates.org/en/latest/syntax.html
 _BASE_HTML = """
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${page_title()}</title>
-    <style>${app_styles()}</style>
+    <title>${page_title()}</title><style>${app_styles()}</style>
 </head>
 <body>
     <header><nav>
         <a href='/qaczar.html'>
         <img src="/qaczar.png" alt="QACZAR" width="90" height="90" />
-        <h1>${ascii_banner('QACZAR')}</h1></a>
-        ${nav_links()}
+        <h1>${ascii_banner('QACZAR')}</h1></a> ${nav_links()}
     </nav></header><hr />
     <%block name="content">
         <h2>Roadmap</h2>
