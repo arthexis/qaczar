@@ -646,7 +646,7 @@ def _build_handler() -> type:
                     'query': parse.parse_qs(qs), 'path': path,
                     'APP': path.split('/')[1] if '/' in path else None,
             }
-            emit(f"Request from {self.client_address[0]} for {self.path} -> {path}")
+            # emit(f"Request from {self.client_address[0]} for {self.path} -> {path}")
             self.work_path = _dispatch_processor(path[1:], context)
             
         def translate_path(self, path: str = None) -> str:
