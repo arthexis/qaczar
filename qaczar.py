@@ -205,6 +205,7 @@ import traceback
 _WORKDIR = os.path.join(_DIR, '.worker')
 _TEMPLATES = {}
 
+# Template syntax: https://docs.makotemplates.org/en/latest/syntax.html
 _BASE_HTML = """
 <!DOCTYPE html>
 <html lang="en">
@@ -221,7 +222,6 @@ _BASE_HTML = """
         <h1>${ascii_banner('QACZAR')}</h1></a>
         ${nav_links()}
     </nav></header><hr />
-    <!-- https://docs.makotemplates.org/en/latest/inheritance.html -->
     <%block name="content">
         <h2>Roadmap</h2>
         <ol class="ln">${enum_file('qaczar.py', prefix='# TODO:')}</ol><hr />
