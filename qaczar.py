@@ -385,7 +385,7 @@ def recorded(func: t.Callable) -> t.Callable:
         return result
     return _recorded
 
-def _purge_tables():
+def _purge_unused_tables():
     global APP, _SCHEMA
     with _connect_db() as db:
         for table in db.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall():
@@ -484,6 +484,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
         self._build_response('POST'); return super().do_GET()
     
     def end_headers(self) -> None:
+        """Let us add some headers to the response."""
         duration = time.time() - self.start
         self.send_header('Server-Timing', f'miss;dur={duration:.4f}')
         self.send_header('Cache-Control', f'Etag: {mtime_file(self.path)}')
@@ -526,6 +527,7 @@ def _request_factory(urllib3, app:str=None):
     return _request
     
 def test_server(*args, **kwargs) -> t.NoReturn:
+    """Let us test the server by making http requests to it."""
     # TODO: Test other special paths such as blank, /, etc.
     # TODO: Test submitting a form (ie. sign_guestbook).
     global APP
@@ -554,7 +556,7 @@ def watcher_role(*args, next: str = None, **kwargs) -> t.NoReturn:
 
 def server_role(*args, host=HOST, port=PORT, **kwargs) -> t.NoReturn:
     global APP
-    _purge_tables()
+    _purge_unused_tables()
     with SSLServer((host, int(port)), RequestHandler) as httpd:
         emit(f"Server ready at https://{host}:{port}")
         atexit.register(httpd.shutdown)
@@ -571,7 +573,6 @@ def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
     passed = 0
     for test in globals().keys():
         if test.startswith(f'test_{suite}'): 
-            emit(f"Running {test=}...")
             globals()[test](*args, **kwargs)
             passed += 1
         if mtime_file(f'{APP}.py') != _MTIME: break
