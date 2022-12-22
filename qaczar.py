@@ -589,12 +589,12 @@ def worker_role(*args, **kwargs) -> t.NoReturn:
 
 def _role_selector(*args, **kwargs) -> t.NoReturn:
     """Let each instance decide their own role, based on what's missing."""
-    emit(f"Starting {APP} with args: {args} and kwargs: {kwargs}")
     if 'watcher' not in kwargs: role = watcher_role
     elif 'server' not in kwargs: role = server_role
     elif 'tester' not in kwargs: role = tester_role
     else: role = worker_role
     try:
+        emit(f"Start role {role.__name__} {args=} {kwargs=}.")
         role(*args, **kwargs)
     except AssertionError as e:
         (halt if DEBUG else emit)(f"Assertion failed: {e}")
