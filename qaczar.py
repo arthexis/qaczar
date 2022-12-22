@@ -60,7 +60,7 @@ def mtime_file(fname: str) -> float:
 _MTIME = mtime_file(__file__)
 
 def read_file(fname: str, encoding=None) -> bytes | str:
-    """Consult millions of flip-flops about dead programs."""
+    """Consult millions of flip-flops on the histories of dead programs."""
     if '__' in fname: fname = fname.replace('__', '.')
     with open(fname, 'rb' if not encoding else 'r', encoding=encoding) as f: return f.read()
     
@@ -105,7 +105,7 @@ def _pip_import(module: str) -> t.Any:
     return importlib.import_module(module)
 
 def imports(*modules: tuple[str]) -> t.Callable:
-    """Let every function solicit dependencies as needed."""
+    """Let every function reach as far as it needs for its dependencies."""
     def decorator(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
@@ -450,10 +450,11 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
     # TODO: Performance testing is needed to ensure this approach will work in the long run.
 
     def log_message(self, format, *args):
-        # We need to call a separate function to avoid recording raw args.
+        """Let us not put @recorded on this directly, it messes with *args."""
         access_log(self.address_string(), format % args)
 
     def _build_response(self, method: str = None) -> bool:
+        """Let each request be parsed and processed. If needed, overwrite the response file."""
         self.work_path, self.start = None, time.time()
         if self.path == '/' or not self.path: self.path = '/welcome.html'
         if method == 'POST':
@@ -470,6 +471,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
                 self.work_path = write_file(wp, content, encoding='utf-8')
         
     def translate_path(self, path: str = None) -> str:
+        """Let each request be served from the working directory when needed."""
         return super().translate_path(path) if not self.work_path else self.work_path
 
     def do_HEAD(self) -> None:
