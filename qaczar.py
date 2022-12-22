@@ -153,7 +153,7 @@ def _setup_environ() -> None:
 def _start_py(script_path: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
     global _PYTHON
     line_args = [str(a) for a in _arg_line(*args, **kwargs)]
-    # emit(f"Starting {script_path=} {line_args=}.")
+    emit(f"Starting {script_path=} {line_args=}.")
     # Popen is a context manager, but we want to keep proc alive and not wait for it.
     # We cannot use run() for this. Remember to manually terminate the process later.
     proc = subprocess.Popen([_PYTHON, script_path, *line_args],
@@ -594,7 +594,7 @@ def role_dispatcher(*args, **kwargs) -> t.NoReturn:
     elif 'tester' not in kwargs: role = tester_role
     else: role = worker_role
     try:
-        emit(f"Start '{role.__name__}' {args=} {kwargs=}.")
+        emit(f"Started '{role.__name__}' {args=} {kwargs=}.")
         role(*args, **kwargs)
     except AssertionError as e:
         (halt if DEBUG else emit)(f"Assertion failed: {e}")
