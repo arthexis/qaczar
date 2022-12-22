@@ -31,6 +31,7 @@ _DIR = os.path.dirname(os.path.abspath(__file__))
 
 DEBUG = True
 APP = os.path.basename(_DIR)
+LANG = 'en'
 
 def iso8601() -> str: 
     """Let time flow in a single direction, one second at a time."""
@@ -149,13 +150,13 @@ def _setup_environ() -> None:
     subprocess.run([_PYTHON, '-m', 'pip', 'install', '--upgrade', 'pip', '--quiet'])
     subprocess.run([_PYTHON, '-m', 'pip', 'install', '-r', 'requirements.txt', '--quiet'])
 
-def _start_py(script: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
+def _start_py(script_path: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
     global _PYTHON
     line_args = [str(a) for a in _arg_line(*args, **kwargs)]
-    emit(f"Starting {script=} {line_args=}.")
+    emit(f"Starting {script_path=} {line_args=}.")
     # Popen is a context manager, but we want to keep proc alive and not wait for it.
     # We cannot use run() for this. Remember to manually terminate the process later.
-    proc = subprocess.Popen([_PYTHON, script, *line_args],
+    proc = subprocess.Popen([_PYTHON, script_path, *line_args],
                             stdout=sys.stdout, stderr=sys.stderr)
     proc._args, proc._kwargs = args, kwargs  # Magic for restart_py
     atexit.register(proc.terminate)
@@ -176,6 +177,7 @@ def _restart_py(proc: subprocess.Popen = None, opid=_PID) -> subprocess.Popen:
     return _start_py(f'{APP}.py', *args, **kwargs)
 
 def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:  
+    """Let the script die and restart it. If it dies twice, stop the watcher."""
     source, old_mtime, stable = read_file(fn), mtime_file(fn), True
     while True:
         time.sleep(2.6)
@@ -201,10 +203,10 @@ def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
 
 _WORKDIR = os.path.join(_DIR, '.worker')
 
-def _set_workdir(role: str) -> None:
+def _set_workdir(dirname: str) -> None:
     global _DIR, _WORKDIR
-    _WORKDIR = os.path.join(_DIR, f'.{role}')
-    if role in ('server', 'worker'):
+    _WORKDIR = os.path.join(_DIR, f'.{dirname}')
+    if dirname in ('server', 'worker'):
         if os.path.isdir(_WORKDIR): shutil.rmtree(_WORKDIR)
 
 def _work_path(fname: str) -> str:
@@ -385,7 +387,7 @@ def recorded(func: t.Callable) -> t.Callable:
         return result
     return _recorded
 
-def _purge_unused_tables():
+def _purge_database():
     global APP, _SCHEMA
     with _connect_db() as db:
         for table in db.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall():
@@ -511,13 +513,13 @@ class SSLServer(ss.ThreadingTCPServer):
 _COUNTER = 0
 
 @imports('urllib3')
-def _request_factory(urllib3, app:str=None):
+def request_factory(urllib3):
     # TODO: Design a string for the user-agent and use it to track tests.
-    global HOST, PORT
+    global HOST, PORT, APP
     http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=_build_ssl_certs()[0])
     def _request(fname:str, data:dict = None, status:int = 200):
         global _COUNTER
-        if app: fname = f"{app}/{fname}"
+        fname = f"{APP}/{fname}"
         url = f"https://{HOST}:{PORT}/{fname}"
         r = http.request('POST' if data else 'GET', url, fields=data, timeout=30)
         assert r.status == status, f"Request to {url} failed with status {r.status}"
@@ -531,7 +533,7 @@ def test_server(*args, **kwargs) -> t.NoReturn:
     # TODO: Test other special paths such as blank, /, etc.
     # TODO: Test submitting a form (ie. sign_guestbook).
     global APP
-    request = _request_factory()
+    request = request_factory()
     assert 'qaczar' in request(f'welcome.html')
 
 
@@ -546,27 +548,28 @@ def _commit_source() -> t.NoReturn:
     emit(f"Source committed to {_BRANCH}.")
 
 
-#@# COMMON ROLES
+#@# BASE ROLES
 
-def watcher_role(*args, next: str = None, **kwargs) -> t.NoReturn:
+def watcher_role(*args, **kwargs) -> t.NoReturn:
     global APP
-    if not next: raise ValueError('next role was not defined')
-    kwargs['role'] = next
+    _setup_environ()
+    kwargs['watcher'] = os.getpid()
     _watch_over(_start_py(f'{APP}.py', *args, **kwargs), f'{APP}.py')
 
-def server_role(*args, host=HOST, port=PORT, **kwargs) -> t.NoReturn:
-    global APP
-    _purge_unused_tables()
-    with SSLServer((host, int(port)), RequestHandler) as httpd:
-        emit(f"Server ready at https://{host}:{port}")
+def server_role(*args, **kwargs) -> t.NoReturn:
+    global APP, HOST, PORT
+    _purge_database()
+    with SSLServer((HOST, int(PORT)), RequestHandler) as httpd:
         atexit.register(httpd.shutdown)
-        kwargs['role'] = 'tester'
-        kwargs['suite'] = 'server' if 'suite' not in kwargs else kwargs['suite']
+        kwargs['server'] = f'{HOST}:{PORT}'
         _start_py(f'{APP}.py', *args, **kwargs)
+        emit(f"Server ready at https://{HOST}:{PORT}")
         httpd.serve_forever()
 
 def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
     # TODO: Add automatic tests to prevent public API regressions.
+    # TODO: Keep the tester running and re-run tests when source changes.
+    # TODO: Have a keep-alive ping to detect when the server is down.
     global _MTIME
     passed = 0
     for test in globals().keys():
@@ -582,27 +585,23 @@ def worker_role(*args, **kwargs) -> t.NoReturn:
     raise NotImplementedError("Worker role not implemented.")
 
 
-#@# DISPATCHER
+#@# ROLE SELECTOR
 
-def _role_dispatcher(role: str, args: tuple, kwargs: dict) -> t.NoReturn:
-    global DEBUG
-    _set_workdir(role)
-    opid = kwargs.pop('opid', None)  # If we receive opid it means we are being watched.
-    emit(f"Dispatch role='{__role}' args={__args} kwargs={__kwargs} watch by {opid=}.")
-    function = globals().get(f"{role}_role")
-    if function is None: raise ValueError(f"Role '{role}' is not defined.")
+def _role_selector(*args, **kwargs) -> t.NoReturn:
+    """Let each instance decide their own role, based on what's missing."""
+    if 'watcher' not in kwargs: role = watcher_role
+    if 'server' not in kwargs: role = server_role
+    if 'tester' not in kwargs: role = tester_role
+    else: role = worker_role
     try:
-        function(*args, **kwargs)
+        role(*args, **kwargs)
     except AssertionError as e:
         (halt if DEBUG else emit)(f"Assertion failed: {e}")
     except KeyboardInterrupt:
         halt("Interrupted by user.")
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        _setup_environ()
-        __role, __args, __kwargs = 'watcher', [], {'next': 'server'}
-    else:
-        __args, __kwargs = _split_args(sys.argv[1:])
-        __role = __kwargs.pop('role')  # It's ok to fail if role is not defined.
-    _role_dispatcher(__role, __args, __kwargs)
+    if len(sys.argv) > 1: _ARGS, _KWARGS = _split_args(sys.argv[1:])
+    else: _ARGS, _KWARGS = (), {}
+    _role_selector(*_ARGS, **_KWARGS)
+    
