@@ -46,7 +46,7 @@ def emit(msg: str, div: str = '', trace: bool =False,  _at=None) -> None:
     if trace: traceback.print_stack(frame, file=sys.stderr)
 
 def halt(msg: str) -> t.NoReturn:
-    """Let the halting problem be proven, empirically."""
+    """Let the halting problem be proven empirically."""
     frame = sys._getframe(1)
     emit(f"{msg} <- Final message.", _at=frame)
     emit(f"Halting all processes.", _at=frame)
@@ -60,12 +60,12 @@ def mtime_file(fname: str) -> float:
 _MTIME = mtime_file(__file__)
 
 def read_file(fname: str, encoding=None) -> bytes | str:
-    """Let a million flip-flops be consulted for advice about dead programs."""
+    """Consult millions of flip-flops about dead programs."""
     if '__' in fname: fname = fname.replace('__', '.')
     with open(fname, 'rb' if not encoding else 'r', encoding=encoding) as f: return f.read()
     
 def write_file(fname: str, data: bytes | str, encoding=None) -> bytes | str:
-    """Let a million flip-flops be re-arranged into a complicated memetic mausoleum."""
+    """Arrange millions of flip-flops into an elaborate mausoleum."""
     if encoding and not isinstance(data, str): data = str(data)
     if '__' in fname: fname = fname.replace('__', '.')
     parent_dir = os.path.dirname(fname)
@@ -301,7 +301,8 @@ def build_html_content(func_names: list[str], context: dict) -> str:
 
 @hyper('body', 'article')
 def welcome(**qs) -> str:
-    # TODO: Add all the elements (such as the roadmap) to the welcome page.
+    """Let this welcome page be the default page. It shall have a roadmap.""" 	
+    # TODO: Add all the missing elements (such as the roadmap) to the welcome page.
     return elem('h1', f"QACZAR")
 
 
@@ -363,7 +364,7 @@ def _func_params_cols(func: t.Callable) -> list[str]:
     return columns
 
 def recorded(func: t.Callable) -> t.Callable:
-    """Decorator to record function calls and results in a database."""
+    """Let all calls to the decorated function be recorded in the database."""
     func_name = func.__name__
     with _connect_db() as db:
         # TODO: Define the columns based on the function signature automatically.
@@ -442,7 +443,7 @@ def _build_ssl_certs(x509, rsa, hashes, ser, site=None) -> tuple[str, str]:
 
 @recorded
 def access_log(address: str, message: str) -> None:
-    """Log an access to the server."""
+    """Let the access log be recorded in the database for analysis."""
     emit(f"Access from {address} {message}")
 
 class RequestHandler(hs.SimpleHTTPRequestHandler):
