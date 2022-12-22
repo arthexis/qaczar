@@ -244,6 +244,7 @@ def _build_input(field: str, param: inspect.Parameter) -> str:
 
 @functools.cache
 def _render_form(func: t.Callable) -> str:
+    """Let function signatures determine form fields."""
     func_name = func.__name__
     form = f"<form action='{func_name}' method='POST'>" 
     for name, param in inspect.signature(func).parameters.items():
@@ -256,7 +257,7 @@ def _render_form(func: t.Callable) -> str:
     return form
 
 def wrap_html(body: str) -> str:
-    """Let there be some boilerplate HTML."""
+    """Let there be some standard boilerplate HTML."""
     global APP
     style = read_file(f'{APP}.css', encoding='utf-8')
     return f"""
@@ -286,7 +287,7 @@ def hyper(tag: str, wrap:str=None, **attrs) -> t.Callable:
     return _hyper
 
 def build_html_content(func_names: list[str], context: dict) -> str:
-    """Let HTML content be generated from a list of functions."""
+    """Let all HTML content be generated from a list of functions."""
     result, last_func = None, None
     for func_name in func_names:
         func = globals()[func_name]
