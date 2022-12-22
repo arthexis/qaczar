@@ -568,8 +568,7 @@ def server_role(*args, host=HOST, port=PORT, **kwargs) -> t.NoReturn:
 def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
     # TODO: Add automatic tests to prevent public API regressions.
     global _MTIME
-    time.sleep(1)  # Wait for server to start.
-    emit(f"Running test suite for '{suite}'.")
+    time.sleep(0)  # Wait for server to start.
     passed = 0
     for test in globals().keys():
         if test.startswith(f'test_{suite}'): 
