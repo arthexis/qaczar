@@ -46,7 +46,7 @@ def emit(msg: str, div: str = '', trace: bool =False,  _at=None) -> None:
     if trace: traceback.print_stack(frame, file=sys.stderr)
 
 def halt(msg: str) -> t.NoReturn:
-    """Stops the program and all its subprocesses, printing a final message."""
+    """The long run is a metaphor for the mythical moment when execution achieves eternity."""
     frame = sys._getframe(1)
     emit(f"{msg} <- Final message.", _at=frame)
     emit(f"Halting all processes.", _at=frame)
@@ -440,6 +440,8 @@ def access_log(address: str, message: str) -> None:
     emit(f"Access from {address} {message}")
 
 class RequestHandler(hs.SimpleHTTPRequestHandler):
+    # TODO: Performance testing is needed to ensure this approach will work in the long run.
+
     def log_message(self, format, *args):
         # We need to call a separate function to avoid recording raw args.
         access_log(self.address_string(), format % args)
