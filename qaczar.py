@@ -453,7 +453,8 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
             raise NotImplementedError("POST method not implemented.")
         path, qs = self.path.split('?', 1) if '?' in self.path else (self.path, '')
         qs = parse.parse_qs(qs) if qs else {}
-        if '.' not in path: path += '.html'
+        if '.' not in path: 
+            raise NotImplementedError("Directory listing not implemented.")
         if path.endswith('.html'):
             if '/'  in path[1:]: 
                 raise NotImplementedError("Subdirectories not implemented.")
