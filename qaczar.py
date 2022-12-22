@@ -15,8 +15,6 @@
 # 6 In case of doubt, play the game to see what happens. Also, you just lost it.
 # 7 There is no seventh.
 
-# <!--
-
 
 #@# LOCAL PLATFORM
 
@@ -242,12 +240,9 @@ def _build_input(field: str, param: inspect.Parameter) -> str:
     return elem('input', **attrs)
 
 @functools.cache
-def _render_form(func: t.Callable, mod_name: str=None) -> str:
-    if callable(subpath): subpath = subpath.__name__
-    if not mod_name: mod_name = APP
-    form = (f"<form action='/{mod_name}.py/{subpath}' "
-            f"method='POST' accept-charset='utf-8' name='{subpath}'>" 
-            f"<p class='doc'>{func.__doc__}</p>")
+def _render_form(func: t.Callable) -> str:
+    func_name = func.__name__
+    form = f"<form action='{func_name}' method='POST'>" 
     for name, param in inspect.signature(func).parameters.items():
         if not param.kind in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD): continue
         if name.startswith('_'): continue
@@ -285,13 +280,14 @@ def hyper(tag: str, wrap:str=None, **attrs) -> t.Callable:
 def build_content(func_names: list[str], context: dict) -> str:
     result, last_func = None, None
     for func_name in func_names:
+        func = globals()[func_name]
+        context['form'] = _render_form(func)
         if last_func: context[last_func] = result
-        result = globals()[func_name](**context)
+        result = func(**context)
         last_func = func_name
     return result
 
-
-@hyper('body')
+@hyper('body', 'article')
 def welcome(**qs) -> str:
     # TODO: Add all the elements (such as the roadmap) to the welcome page.
     return elem('h1', f"QACZAR")
