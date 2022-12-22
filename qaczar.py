@@ -65,7 +65,7 @@ def read_file(fname: str, encoding=None) -> bytes | str:
     with open(fname, 'rb' if not encoding else 'r', encoding=encoding) as f: return f.read()
     
 def write_file(fname: str, data: bytes | str, encoding=None) -> bytes | str:
-    """Arrange millions of flip-flops into an elaborate mausoleum."""
+    """Rearrange millions of flip-flops into an elaborate mausoleum."""
     if encoding and not isinstance(data, str): data = str(data)
     if '__' in fname: fname = fname.replace('__', '.')
     parent_dir = os.path.dirname(fname)
