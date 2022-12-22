@@ -267,12 +267,14 @@ def wrap_html(body: str) -> str:
     """
 
 def hyper(tag: str, wrap:str=None, **attrs) -> t.Callable:
+    """Decorator that wraps a function's result in an HTML element."""
     def _hyper(func: t.Callable, _wrap=wrap, _attrs=attrs) -> t.Callable:
         @functools.wraps(func)
         def _hypertext(*args, **kwargs):
             result = func(*args, **kwargs)
+            emit(f"{func.__name__}({args}, {kwargs}) -> {result}")
             if wrap: result = ''.join(elem(wrap, r) for r in result) 
-            if tag == 'body': return wrap_html(result)
+            if tag in ('html', 'body'): return wrap_html(result)
             return elem(tag, result, **_attrs)
         return _hypertext
     return _hyper
@@ -281,10 +283,12 @@ def build_content(func_names: list[str], context: dict) -> str:
     result, last_func = None, None
     for func_name in func_names:
         func = globals()[func_name]
+        # TODO: Determine what other components need to be included.
         context['form'] = _render_form(func)
         if last_func: context[last_func] = result
         result = func(**context)
         last_func = func_name
+    # TODO: Add validations of the result html.
     return result
 
 @hyper('body', 'article')
