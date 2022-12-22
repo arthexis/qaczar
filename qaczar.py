@@ -443,6 +443,7 @@ def access_log(address: str, message: str) -> None:
 
 class RequestHandler(hs.SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
+        # We need to call a separate function to avoid recording raw args.
         access_log(self.address_string(), format % args)
 
     def _build_response(self, method: str = None) -> bool:
