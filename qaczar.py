@@ -215,7 +215,7 @@ def work_path(fname: str) -> str:
     return os.path.join(_WORKDIR, fname)
 
 
-#@# CONTENT GENERATOR
+#@# CONTENT GENERATION
 
 import shutil
 import inspect
@@ -261,13 +261,11 @@ def wrap_html(body: str) -> str:
     global APP
     style = read_file(f'{APP}.css', encoding='utf-8')
     return f"""
-    <!DOCTYPE html>
-    <html lang="en">
+    <!DOCTYPE html><html lang="en">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <style>{style}</style>
-        <title>{APP}</title>
+        <style>{style}</style><title>{APP}</title>
     </head>
     <body>{body}</body>
     </html>
@@ -284,17 +282,18 @@ def hyper(tag: str, wrap:str=None, **attrs) -> t.Callable:
         return _hypertext
     return _hyper
 
+def build_content(func_names: list[str], context: dict) -> str:
+    result, last_func = None, None
+    for func_name in func_names:
+        if last_func: context[last_func] = result
+        result = globals()[func_name](**context)
+        last_func = func_name
+    return result
+
+
 @hyper('body')
 def welcome(**qs) -> str:
     return elem('h1', f"QACZAR")
-
-def build_content(func_names: list[str], qs: dict) -> str:
-    result, last_func = None, None
-    for func_name in func_names:
-        if last_func: qs[last_func] = result
-        result = globals()[func_name](**qs)
-        last_func = func_name
-    return result
 
 
 #@# DATABASE
