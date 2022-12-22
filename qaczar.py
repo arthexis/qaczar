@@ -295,10 +295,10 @@ def default_welcome(**qs) -> str:
 def hyper_exec(func: str | t.Callable, **qs: dict) -> str:
     """Execute a function with query string parameters. Returns hypertext."""
     if callable(func): return func(**qs)
-    if func.startswith('_'): return hyper_exec('default_welcome')
+    if func.startswith('_'): func = 'default_welcome'
     # TODO: Wrap in try/except and return error message.
     if func in globals(): return globals()[func](**qs)
-    return hyper_exec('default_welcome')
+    return "Not Found."
 
 
 #@# DATABASE
