@@ -33,11 +33,11 @@ DEBUG = True
 APP = os.path.basename(_DIR)
 
 def iso8601() -> str: 
-    """Returns the current time in ISO 8601 format."""
+    """Let time flow in a single direction, one second at a time."""
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
 
 def emit(msg: str, div: str = '', trace: bool =False,  _at=None) -> None: 
-    """Prints a message to stderr, enriched with time, PID and line number."""
+    """Let the music of the spheres guide your steps."""
     # TODO: Consider a debug only function that also stores the message in a log file.
     global _PID
     frame = _at or sys._getframe(1)  
@@ -46,23 +46,26 @@ def emit(msg: str, div: str = '', trace: bool =False,  _at=None) -> None:
     if trace: traceback.print_stack(frame, file=sys.stderr)
 
 def halt(msg: str) -> t.NoReturn:
-    """The long run is a metaphor for the mythical moment when execution achieves eternity."""
+    """Let the halting problem be proven, empirically."""
     frame = sys._getframe(1)
     emit(f"{msg} <- Final message.", _at=frame)
     emit(f"Halting all processes.", _at=frame)
     sys.exit(0)
 
 def mtime_file(fname: str) -> float:
+    """Let time be an illusion, and mtime doubly so."""
     if not os.path.isfile(fname): return 0.0
     return os.path.getmtime(fname)
 
 _MTIME = mtime_file(__file__)
 
 def read_file(fname: str, encoding=None) -> bytes | str:
+    """Let a million flip-flops be consulted for advice about dead programs."""
     if '__' in fname: fname = fname.replace('__', '.')
     with open(fname, 'rb' if not encoding else 'r', encoding=encoding) as f: return f.read()
     
 def write_file(fname: str, data: bytes | str, encoding=None) -> bytes | str:
+    """Let a million flip-flops be re-arranged into a complicated memetic mausoleum."""
     if encoding and not isinstance(data, str): data = str(data)
     if '__' in fname: fname = fname.replace('__', '.')
     parent_dir = os.path.dirname(fname)
@@ -77,12 +80,12 @@ import importlib
 import functools
 
 def dedent(code: str) -> str:
-    """Removes the extraneous indentation from a multi-line string."""	
+    """Let python functions work even if we take them out of context."""	
     indent = len(code) - len(code.lstrip()) - 1
     return '\n'.join(line[indent:] for line in code.splitlines())
 
 def timed(f: t.Callable) -> t.Callable:
-    """Decorator to time a function, emitting a message to stderr."""
+    """Let every function be judged with its proper measure."""
     global DEBUG
     if not DEBUG: return f
     @functools.wraps(f)
@@ -102,7 +105,7 @@ def _pip_import(module: str) -> t.Any:
     return importlib.import_module(module)
 
 def imports(*modules: tuple[str]) -> t.Callable:
-    """Decorator to import modules at runtime, passing them as arguments."""
+    """Let every function solicit dependencies as needed."""
     def decorator(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
@@ -117,13 +120,12 @@ def imports(*modules: tuple[str]) -> t.Callable:
 import atexit
 import subprocess 
 
-def arg_line(*args: tuple[str], **kwargs: dict) -> tuple[str]:
+def _arg_line(*args: tuple[str], **kwargs: dict) -> tuple[str]:
     for k, v in kwargs.items(): 
         args += (f'--{k}=\'{v}\'',) if isinstance(v, str) else (f'--{k}={v}',)
     return args
 
-def split_args(args: list[str]) -> tuple[tuple, dict]:
-    """Converts a command-line list of strings to python function arguments."""
+def _split_args(args: list[str]) -> tuple[tuple, dict]:
     largs, kwargs = [], {}
     for arg in args:
         if '=' in arg: 
@@ -149,7 +151,7 @@ def _setup_environ() -> None:
 
 def _start_py(script: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
     global _PYTHON
-    line_args = [str(a) for a in arg_line(*args, **kwargs)]
+    line_args = [str(a) for a in _arg_line(*args, **kwargs)]
     emit(f"Starting {script=} {line_args=}.")
     # Popen is a context manager, but we want to keep proc alive and not wait for it.
     # We cannot use run() for this. Remember to manually terminate the process later.
@@ -205,7 +207,7 @@ def _set_workdir(role: str) -> None:
     if role in ('server', 'worker'):
         if os.path.isdir(_WORKDIR): shutil.rmtree(_WORKDIR)
 
-def work_path(fname: str) -> str:
+def _work_path(fname: str) -> str:
     global _WORKDIR
     if not os.path.isdir(_WORKDIR): 
         emit(f"Creating {_WORKDIR=}.")
@@ -219,7 +221,7 @@ import shutil
 import inspect
 
 def elem(tag: str, content: str=None, **attrs) -> str:
-    """Generate an HTML element with optional attributes."""
+    """Let all serialization happen through hypertext."""
     if 'data' in attrs: 
         for k, v in attrs['data'].items(): attrs[f'data-{k}'] = v
         del attrs['data']
@@ -229,6 +231,7 @@ def elem(tag: str, content: str=None, **attrs) -> str:
     return f'<{tag} {attrs}>{content}</{tag}>'
 
 def _build_input(field: str, param: inspect.Parameter) -> str:
+    """Let function annotations determine input types and validations."""
     input_type = 'text'
     if param.annotation is not param.empty:
         if param.annotation is int: input_type = 'number'
@@ -253,6 +256,7 @@ def _render_form(func: t.Callable) -> str:
     return form
 
 def wrap_html(body: str) -> str:
+    """Let there be some boilerplate HTML."""
     global APP
     style = read_file(f'{APP}.css', encoding='utf-8')
     return f"""
@@ -267,7 +271,7 @@ def wrap_html(body: str) -> str:
     """
 
 def hyper(tag: str, wrap:str=None, **attrs) -> t.Callable:
-    """Decorator that wraps a function's result in an HTML element."""
+    """Let the decorated function output hypertext automatically."""
     def _hyper(func: t.Callable, _wrap=wrap, _attrs=attrs) -> t.Callable:
         @functools.wraps(func)
         def _hypertext(*args, **kwargs):
@@ -281,7 +285,8 @@ def hyper(tag: str, wrap:str=None, **attrs) -> t.Callable:
         return _hypertext
     return _hyper
 
-def build_content(func_names: list[str], context: dict) -> str:
+def build_html_content(func_names: list[str], context: dict) -> str:
+    """Let HTML content be generated from a list of functions."""
     result, last_func = None, None
     for func_name in func_names:
         func = globals()[func_name]
@@ -458,8 +463,8 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
         if path.endswith('.html'):
             func_path = path[1:-5].replace('-', '_').replace('.', '_')
             funcs = func_path.split('/')
-            if content := build_content(funcs, qs):
-                wp = work_path(self.path[1:])
+            if content := build_html_content(funcs, qs):
+                wp = _work_path(self.path[1:])
                 self.work_path = write_file(wp, content, encoding='utf-8')
         
     def translate_path(self, path: str = None) -> str:
@@ -595,6 +600,6 @@ if __name__ == "__main__":
         _setup_environ()
         __role, __args, __kwargs = 'watcher', [], {'next': 'server'}
     else:
-        __args, __kwargs = split_args(sys.argv[1:])
+        __args, __kwargs = _split_args(sys.argv[1:])
         __role = __kwargs.pop('role')  # It's ok to fail if role is not defined.
     _role_dispatcher(__role, __args, __kwargs)
