@@ -589,6 +589,7 @@ def worker_role(*args, **kwargs) -> t.NoReturn:
 
 def _role_selector(*args, **kwargs) -> t.NoReturn:
     """Let each instance decide their own role, based on what's missing."""
+    emit(f"Starting {APP} with args: {args} and kwargs: {kwargs}")
     if 'watcher' not in kwargs: role = watcher_role
     if 'server' not in kwargs: role = server_role
     if 'tester' not in kwargs: role = tester_role
