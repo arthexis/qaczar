@@ -293,6 +293,7 @@ def build_content(func_names: list[str], context: dict) -> str:
 
 @hyper('body')
 def welcome(**qs) -> str:
+    # TODO: Add all the elements (such as the roadmap) to the welcome page.
     return elem('h1', f"QACZAR")
 
 
