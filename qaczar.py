@@ -273,7 +273,9 @@ def hyper(tag: str, wrap:str=None, **attrs) -> t.Callable:
         def _hypertext(*args, **kwargs):
             result = func(*args, **kwargs)
             emit(f"{func.__name__}({args}, {kwargs}) -> {result}")
-            if wrap: result = ''.join(elem(wrap, r) for r in result) 
+            if wrap: 
+                if isinstance(result, str): result = elem(wrap, result)
+                else: result = ''.join(elem(wrap, r) for r in result) 
             if tag in ('html', 'body'): return wrap_html(result)
             return elem(tag, result, **_attrs)
         return _hypertext
