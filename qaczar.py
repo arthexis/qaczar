@@ -54,17 +54,17 @@ def halt(msg: str) -> t.NoReturn:
     emit(f"Halting all processes.", _at=frame)
     sys.exit(0)
 
-def _mtime_file(fname: str) -> float:
+def mtime_file(fname: str) -> float:
     if not os.path.isfile(fname): return 0.0
     return os.path.getmtime(fname)
 
-_MTIME = _mtime_file(__file__)
+_MTIME = mtime_file(__file__)
 
-def _read_file(fname: str, encoding=None) -> bytes:
+def read_file(fname: str, encoding=None) -> bytes | str:
     if '__' in fname: fname = fname.replace('__', '.')
     with open(fname, 'rb' if not encoding else 'r', encoding=encoding) as f: return f.read()
     
-def _write_file(fname: str, data: bytes | str, encoding=None) -> str:
+def write_file(fname: str, data: bytes | str, encoding=None) -> bytes | str:
     if encoding and not isinstance(data, str): data = str(data)
     if '__' in fname: fname = fname.replace('__', '.')
     parent_dir = os.path.dirname(fname)
@@ -97,7 +97,7 @@ def timed(f: t.Callable) -> t.Callable:
 
 def _pip_import(module: str) -> t.Any:
     name = module.split('.')[0]
-    requirements = _read_file('requirements.txt', encoding='utf-8').splitlines()
+    requirements = read_file('requirements.txt', encoding='utf-8').splitlines()
     if name not in requirements:    
         subprocess.run([sys.executable, '-m', 'pip', 'install', name, '--quiet'])
         with open('requirements.txt', 'a', encoding='utf-8') as f: f.write(f'{name}\n')
@@ -119,16 +119,12 @@ def imports(*modules: tuple[str]) -> t.Callable:
 import atexit
 import subprocess 
 
-def _arg_line(*args: tuple[str], **kwargs: dict) -> tuple[str]:
+def arg_line(*args: tuple[str], **kwargs: dict) -> tuple[str]:
     for k, v in kwargs.items(): 
         args += (f'--{k}=\'{v}\'',) if isinstance(v, str) else (f'--{k}={v}',)
     return args
 
-def _join_arg_line(args: tuple[str], kwargs: dict) -> str:
-    """Joins a list of command-line arguments into a single string."""
-    return ' '.join(_arg_line(*args, **kwargs))
-
-def _split_arg_line(args: list[str]) -> tuple[tuple, dict]:
+def split_args(args: list[str]) -> tuple[tuple, dict]:
     """Converts a command-line list of strings to python function arguments."""
     largs, kwargs = [], {}
     for arg in args:
@@ -142,7 +138,7 @@ def _split_arg_line(args: list[str]) -> tuple[tuple, dict]:
 def _setup_environ() -> None:
     global _PYTHON
     if not os.path.isfile('requirements.txt'): 
-        _write_file('requirements.txt', '', encoding='utf-8')
+        write_file('requirements.txt', '', encoding='utf-8')
     if sys.platform.startswith('win'):
         if not os.path.isfile('.venv/Scripts/python.exe'): 
             subprocess.run([sys.executable, '-m', 'venv', '.venv'])
@@ -155,7 +151,7 @@ def _setup_environ() -> None:
 
 def _start_py(script: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
     global _PYTHON
-    line_args = [str(a) for a in _arg_line(*args, **kwargs)]
+    line_args = [str(a) for a in arg_line(*args, **kwargs)]
     emit(f"Starting {script=} {line_args=}.")
     # Popen is a context manager, but we want to keep proc alive and not wait for it.
     # We cannot use run() for this. Remember to manually terminate the process later.
@@ -180,11 +176,11 @@ def _restart_py(proc: subprocess.Popen = None, opid=_PID) -> subprocess.Popen:
     return _start_py(f'{APP}.py', *args, **kwargs)
 
 def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:  
-    source, old_mtime, stable = _read_file(fn), _mtime_file(fn), True
+    source, old_mtime, stable = read_file(fn), mtime_file(fn), True
     while True:
         time.sleep(2.6)
-        if (new_mtime := _mtime_file(fn)) != old_mtime:
-            mutation, old_mtime = _read_file(fn), new_mtime
+        if (new_mtime := mtime_file(fn)) != old_mtime:
+            mutation, old_mtime = read_file(fn), new_mtime
             if mutation != source:
                 emit(f"Mutation detected. Restart and mark unstable.")
                 proc, stable = _restart_py(proc), False
@@ -198,7 +194,7 @@ def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
             halt(f"Script died twice. Stopping watcher.")  # Halt from above.
         if not stable:
             emit(f"Stabilizing {proc.pid=}.")
-            source, stable = _read_file(fn), True
+            source, stable = read_file(fn), True
             
 
 #@# WORK DIRECTORIES
@@ -211,7 +207,7 @@ def _set_workdir(role: str) -> None:
     if role in ('server', 'worker'):
         if os.path.isdir(_WORKDIR): shutil.rmtree(_WORKDIR)
 
-def _work_path(fname: str) -> str:
+def work_path(fname: str) -> str:
     global _WORKDIR
     if not os.path.isdir(_WORKDIR): 
         emit(f"Creating {_WORKDIR=}.")
@@ -261,7 +257,7 @@ def _render_form(func: t.Callable, mod_name: str=None) -> str:
     form += f"<button type='submit'>EXECUTE</button></form>"
     return form
 
-def _wrap_html_doc(body: str, **attrs) -> str:
+def wrap_html(body: str) -> str:
     global APP
     return f"""
     <!DOCTYPE html>
@@ -276,31 +272,28 @@ def _wrap_html_doc(body: str, **attrs) -> str:
     </html>
     """
 
-def hypertext(func):
-    """Decorator to generate HTML from a function."""
-    def _hypertext(*args, _raw=None, **kwargs):
-        kwargs['_raw'] = True
-        body = func(*args, **kwargs)
-        if isinstance(body, tuple): body, attrs = body
-        else: attrs = {}
-        if _raw: return body
-        return _wrap_html_doc(body, **attrs)
-    return _hypertext
+def hyper(tag: str, wrap:str=None, **attrs) -> t.Callable:
+    def _hyper(func: t.Callable, _wrap=wrap, _attrs=attrs) -> t.Callable:
+        @functools.wraps(func)
+        def _hypertext(*args, **kwargs):
+            result = func(*args, **kwargs)
+            if wrap: result = ''.join(elem(wrap, r) for r in result) 
+            if tag == 'body': return wrap_html(result)
+            return elem(tag, result, **_attrs)
+        return _hypertext
+    return _hyper
 
+@hyper('body')
 def welcome(**qs) -> str:
-    global APP
-    return elem('h1', f"Welcome to the {APP} app.")
+    return elem('h1', f"QACZAR")
 
-@hypertext
-def hyper_exec(func: str | t.Callable, **qs: dict) -> str:
-    """Execute a function with query string parameters. Returns hypertext."""
-    if callable(func): return func(**qs)
-    # TODO: Wrap in try/except and return error message.
-    if func not in globals(): 
-        fun = f"{func}({', '.join(f'{k}={v}' for k, v in qs.items())})"
-        return elem('p', f"Function {fun} not found.")
-    return globals()[func](**qs)
-    
+def build_content(func_names: list[str], qs: dict) -> str:
+    result, last_func = None, None
+    for func_name in func_names:
+        if last_func: qs[last_func] = result
+        result = globals()[func_name](**qs)
+        last_func = func_name
+    return result
 
 
 #@# DATABASE
@@ -415,12 +408,12 @@ def _build_ssl_certs(x509, rsa, hashes, ser, site=None) -> tuple[str, str]:
     if not os.path.exists('.ssl'): os.mkdir('.ssl')
     certname, keyname = '.ssl/cert.pem', '.ssl/key.pem'
     if os.path.exists(certname) and os.path.exists(keyname):
-        cert = x509.load_pem_x509_certificate(_read_file(certname))
+        cert = x509.load_pem_x509_certificate(read_file(certname))
         if cert.not_valid_after > dt.datetime.utcnow(): return certname, keyname
         else: os.remove(certname); os.remove(keyname)
     emit("Generating new SSL certificates for localhost.")
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    _write_file(keyname, key.private_bytes(
+    write_file(keyname, key.private_bytes(
             encoding=ser.Encoding.PEM,
             format=ser.PrivateFormat.PKCS8,
             encryption_algorithm=ser.NoEncryption()))
@@ -435,7 +428,7 @@ def _build_ssl_certs(x509, rsa, hashes, ser, site=None) -> tuple[str, str]:
             .add_extension(x509.SubjectAlternativeName([x509.DNSName(site)]), critical=False) \
             .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True) \
             .sign(key, hashes.SHA256())
-    _write_file(certname, cert.public_bytes(ser.Encoding.PEM))
+    write_file(certname, cert.public_bytes(ser.Encoding.PEM))
     return certname, keyname
 
 @recorded
@@ -458,12 +451,11 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
         if '.' not in path: 
             raise NotImplementedError("Directory listing not implemented.")
         if path.endswith('.html'):
-            if '/'  in path[1:]: 
-                raise NotImplementedError("Subdirectories not implemented.")
-            func_name = path[1:-5].replace('-', '_').replace('.', '_')
-            if content := hyper_exec(func_name, **qs):
-                wp = _work_path(self.path[1:])
-                self.work_path = _write_file(wp, content, encoding='utf-8')
+            func_path = path[1:-5].replace('-', '_').replace('.', '_')
+            funcs = func_path.split('/')
+            if content := build_content(funcs, qs):
+                wp = work_path(self.path[1:])
+                self.work_path = write_file(wp, content, encoding='utf-8')
         
     def translate_path(self, path: str = None) -> str:
         return super().translate_path(path) if not self.work_path else self.work_path
@@ -480,7 +472,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
     def end_headers(self) -> None:
         duration = time.time() - self.start
         self.send_header('Server-Timing', f'miss;dur={duration:.4f}')
-        self.send_header('Cache-Control', f'Etag: {_mtime_file(self.path)}')
+        self.send_header('Cache-Control', f'Etag: {mtime_file(self.path)}')
         return super().end_headers()
     
     def send_header(self, keyword: str, value: str) -> None:
@@ -568,7 +560,7 @@ def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
             emit(f"Running {test=}...")
             globals()[test](*args, **kwargs)
             passed += 1
-        if _mtime_file(f'{APP}.py') != _MTIME: break
+        if mtime_file(f'{APP}.py') != _MTIME: break
     else:
         emit(f"Tests for '{suite}' passed: {passed}.")
         _commit_source()
@@ -598,6 +590,6 @@ if __name__ == "__main__":
         _setup_environ()
         __role, __args, __kwargs = 'watcher', [], {'next': 'server'}
     else:
-        __args, __kwargs = _split_arg_line(sys.argv[1:])
+        __args, __kwargs = split_args(sys.argv[1:])
         __role = __kwargs.pop('role')  # It's ok to fail if role is not defined.
     _role_dispatcher(__role, __args, __kwargs)
