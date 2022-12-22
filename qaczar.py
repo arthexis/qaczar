@@ -448,8 +448,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
     def _build_response(self, method: str = None) -> bool:
         global APP
         self.work_path, self.start = None, time.time()
-        if '//' in self.path: self.path = self.path.replace('//', '/')
-        if self.path == '/' or not self.path: self.path = '/welcome'
+        if self.path == '/' or not self.path: self.path = '/welcome.html'
         if method == 'POST':
             raise NotImplementedError("POST method not implemented.")
         path, qs = self.path.split('?', 1) if '?' in self.path else (self.path, '')
