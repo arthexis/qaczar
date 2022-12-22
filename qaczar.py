@@ -259,14 +259,15 @@ def _render_form(func: t.Callable, mod_name: str=None) -> str:
 
 def wrap_html(body: str) -> str:
     global APP
+    style = read_file(f'{APP}.css')
     return f"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <style>{style}</style>
         <title>{APP}</title>
-        <link rel="stylesheet" href="{APP}.css" />
     </head>
     <body>{body}</body>
     </html>
