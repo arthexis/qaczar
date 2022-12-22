@@ -259,7 +259,7 @@ def _render_form(func: t.Callable, mod_name: str=None) -> str:
 
 def wrap_html(body: str) -> str:
     global APP
-    style = read_file(f'{APP}.css')
+    style = read_file(f'{APP}.css', encoding='utf-8')
     return f"""
     <!DOCTYPE html>
     <html lang="en">
