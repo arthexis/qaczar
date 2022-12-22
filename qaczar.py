@@ -287,7 +287,7 @@ def hypertext(func):
         return _wrap_html_doc(body, **attrs)
     return _hypertext
 
-def default_welcome(**qs) -> str:
+def welcome(**qs) -> str:
     global APP
     return elem('h1', f"Welcome to the {APP} app.")
 
