@@ -31,7 +31,7 @@ _PID = os.getpid()
 _BRANCH = 'main'
 _DIR = os.path.dirname(os.path.abspath(__file__))
 
-DEBUG = False
+DEBUG = True
 APP = os.path.basename(_DIR)
 
 def iso8601() -> str: 
@@ -40,6 +40,7 @@ def iso8601() -> str:
 
 def emit(msg: str, div: str = '', trace: bool =False,  _at=None) -> None: 
     """Prints a message to stderr, enriched with time, PID and line number."""
+    # TODO: Consider a debug only function that also stores the message in a log file.
     global _PID
     frame = _at or sys._getframe(1)  
     if div: print((div or '-') * 100, file=sys.stderr)
@@ -111,17 +112,23 @@ def imports(*modules: tuple[str]) -> t.Callable:
             return f(*imported, *args, **kwargs)
         return wrapper
     return decorator
+    
+
+#@# SUBPROCESSING
+
+import atexit
+import subprocess 
 
 def _arg_line(*args: tuple[str], **kwargs: dict) -> tuple[str]:
     for k, v in kwargs.items(): 
         args += (f'--{k}=\'{v}\'',) if isinstance(v, str) else (f'--{k}={v}',)
     return args
 
-def join_arg_line(args: tuple[str], kwargs: dict) -> str:
+def _join_arg_line(args: tuple[str], kwargs: dict) -> str:
     """Joins a list of command-line arguments into a single string."""
     return ' '.join(_arg_line(*args, **kwargs))
 
-def split_arg_line(args: list[str]) -> tuple[tuple, dict]:
+def _split_arg_line(args: list[str]) -> tuple[tuple, dict]:
     """Converts a command-line list of strings to python function arguments."""
     largs, kwargs = [], {}
     for arg in args:
@@ -131,33 +138,6 @@ def split_arg_line(args: list[str]) -> tuple[tuple, dict]:
             kwargs[__key] = __value
         else: largs.append(arg)
     return tuple(largs), kwargs
-
-def _read_const(const:str, fname: str = __file__, ln: int = False) -> str | int | None:
-    if not os.path.isfile(fname): return None
-    with open(fname, 'r', encoding='utf-8') as f: lines = f.readlines()
-    const = f'{const.upper()} ='
-    for i, line in enumerate(lines):
-        if line.startswith(const): 
-            if ln: return i+1
-            return line.split(const)[1].strip()
-    return None
-
-def _mutate_const(const:str, value: str, fname: str = __file__) -> None:
-    # Finds a constant in the source code and replaces it with a new value.
-    emit(f"Mutating {const} to {value} in {fname}.")
-    if not os.path.isfile(fname): return
-    with open(fname, 'r', encoding='utf-8') as f: lines = f.readlines()
-    const = f'{const.upper()} ='
-    for i, line in enumerate(lines):
-        if line.startswith(const):
-            lines[i] = f'{const} {value}\n'; break
-    with open(fname, 'w', encoding='utf-8') as f: f.writelines(lines)
-
-
-#@# SUBPROCESSING
-
-import atexit
-import subprocess 
 
 def _setup_environ() -> None:
     global _PYTHON
@@ -186,14 +166,13 @@ def _start_py(script: str, *args: list[str], **kwargs: dict) -> subprocess.Popen
     return proc
 
 def _stop_py(proc: subprocess.Popen) -> tuple[tuple, dict]:
-    emit(f"Stopping {proc.pid=}.")
+    # emit(f"Stopping {proc.pid=}.")
     proc.terminate(); proc.wait()
     atexit.unregister(proc.terminate)
     return proc._args, proc._kwargs
 
 def _restart_py(proc: subprocess.Popen = None, opid=_PID) -> subprocess.Popen:
-    global APP, DEBUG
-    DEBUG = _read_const('DEBUG') == 'True'
+    global APP
     if proc and proc.poll() is None: 
         args, kwargs = _stop_py(proc)
         kwargs['opid'] = opid
@@ -201,7 +180,6 @@ def _restart_py(proc: subprocess.Popen = None, opid=_PID) -> subprocess.Popen:
     return _start_py(f'{APP}.py', *args, **kwargs)
 
 def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:  
-    global DEBUG
     source, old_mtime, stable = _read_file(fn), _mtime_file(fn), True
     while True:
         time.sleep(2.6)
@@ -215,71 +193,36 @@ def _watch_over(proc: subprocess.Popen, fn: str) -> t.NoReturn:
             if proc.returncode == 0: sys.exit(0)  # Halt from below.
             if stable:
                 emit(f"Script died {proc.returncode=}. Restart and mark unstable.")
-                if not DEBUG: _mutate_const('DEBUG', 'True')
                 proc, stable = _restart_py(proc), False
                 continue
             halt(f"Script died twice. Stopping watcher.")  # Halt from above.
         if not stable:
             emit(f"Stabilizing {proc.pid=}.")
-            if DEBUG: _mutate_const('DEBUG', 'False')
             source, stable = _read_file(fn), True
             
 
-#@# CONTENT GENERATOR
-
-import shutil
-import inspect
+#@# WORK DIRECTORIES
 
 _WORKDIR = os.path.join(_DIR, '.worker')
-_TEMPLATES = {}
-
-# Template syntax: https://docs.makotemplates.org/en/latest/syntax.html
-_BASE_HTML = """
-<!DOCTYPE html><html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${q.page_title()}</title><style>${q.app_styles()}</style>
-</head>
-<body>
-    <header><nav>
-        <a href='/qaczar.html'>
-        <img src="/qaczar.png" alt="QACZAR" width="90" height="90" />
-        <h1>${q.ascii_banner('QACZAR')}</h1></a> ${q.nav_links()}
-    </nav></header><hr />
-    <%block name="content">
-        <h2>Roadmap</h2>
-        <ol class="ln">${q.enum_file('qaczar.py', prefix='# TODO:')}</ol><hr />
-        <!-- ERROR -->
-        ${q.render_form(query['form'][0] if 'form' in query else 'sign_guestbook')}
-    </%block>
-    <%block name="footer">
-        <hr /><h3>Files</h3><ul>${q.list_dir()}</ul>
-        <footer><a href="/qaczar.py">Powered by the qaczar.py web system.</a></footer>
-    </%block>
-</body>
-</html>
-"""	
 
 def _set_workdir(role: str) -> None:
     global _DIR, _WORKDIR
     _WORKDIR = os.path.join(_DIR, f'.{role}')
     if role in ('server', 'worker'):
         if os.path.isdir(_WORKDIR): shutil.rmtree(_WORKDIR)
-        os.mkdir(_WORKDIR)
 
 def _work_path(fname: str) -> str:
     global _WORKDIR
-    if not os.path.isdir(_WORKDIR): os.mkdir(_WORKDIR)
+    if not os.path.isdir(_WORKDIR): 
+        emit(f"Creating {_WORKDIR=}.")
+        os.mkdir(_WORKDIR)
     return os.path.join(_WORKDIR, fname)
 
-def read_file(fname: str) -> str:
-    """Read a file from the active work folder."""
-    return _read_file(_work_path(fname), encoding='utf-8')
 
-def write_file(fname: str, content: str) -> str:
-    """Write a file to the active work folder."""
-    return _write_file(_work_path(fname), content, encoding='utf-8')
+#@# CONTENT GENERATOR
+
+import shutil
+import inspect
 
 def elem(tag: str, content: str=None, **attrs) -> str:
     """Generate an HTML element with optional attributes."""
@@ -290,55 +233,6 @@ def elem(tag: str, content: str=None, **attrs) -> str:
     if attrs and not content: return f'<{tag} {attrs}/>'
     if not content: return f'<{tag}/>'
     return f'<{tag} {attrs}>{content}</{tag}>'
-
-def enum_file(fname: str, tag: str = 'li', prefix: str = None) -> str:
-    """Enumerate lines in a file, optionally filtering by prefix."""
-    return ''.join(f'<{tag} data-ln="{i}">{line if not prefix else line.split(prefix)[1]}</{tag}>'
-        for i, line in enumerate(_read_file(fname, encoding='utf-8').splitlines())
-        if not prefix or line.strip().startswith(prefix))
-
-def list_dir(directory: str = '.', tag: str = 'li', ext: str = None, link: bool = True) -> str:
-    """List files in a directory, optionally filtering by extension."""
-    return '\n'.join(
-        f'<{tag}>{f}</{tag}>' if not link else f'<{tag}><a href="/{f}">{f}</a></{tag}>'
-        for f in os.listdir(directory)
-        if (not ext or f.endswith(ext)) and not f.startswith(('.', '_')))
-
-def _load_template(fname: str) -> object:
-    global _TEMPLATES, _DIR, _BASE_HTML
-    cached, old_mtime = _TEMPLATES.get(fname, (None, None))
-    emit(f"Load template {fname=} {bool(cached)=} {old_mtime=}.")
-    if fname == 'qaczar.html':
-        if cached: return cached
-        if (new_mtime := _mtime_file(fname)) != old_mtime:
-            mt = _pip_import('mako.template')
-            if fname == 'qaczar.html': tpl = mt.Template(_BASE_HTML)
-            else: 
-                ml = _pip_import('mako.lookup')
-                lookup = ml.TemplateLookup(directories=[_DIR], input_encoding='utf-8')
-                # TODO: Consider subclassing mako.template.Template to track more info.
-                tpl = mt.Template(filename=fname, lookup=lookup)
-            _TEMPLATES[fname] = tpl, new_mtime
-            emit(f"Template cache miss {fname=} {new_mtime=}.")
-            return tpl
-    return _TEMPLATES[fname][0]
-
-def process_html(fname: str, context: dict) -> str:
-    """Process a template file with context (uses mako.template)."""	
-    # TODO: Test changing the html based on query params.
-    template = _load_template(fname)
-    content = template.render(**context)
-    return write_file(fname, content)
-
-@functools.cache
-def extract_api() -> t.Generator[t.Callable, None, None]:
-    """Extract all public functions from a module."""
-    for name, func in inspect.getmembers(sys.modules[__name__], inspect.isfunction):
-        if name.startswith('_'): continue
-        if inspect.signature(func).return_annotation in (t.NoReturn, t.Callable): continue
-        if not func.__doc__: 
-            emit(f"Missing docstring for {name} (ln: {func.__code__.co_firstlineno}).")
-        yield func
 
 def _build_input(field: str, param: inspect.Parameter) -> str:
     input_type = 'text'
@@ -351,15 +245,10 @@ def _build_input(field: str, param: inspect.Parameter) -> str:
         if param.annotation is bool: attrs['checked'] = 'checked'
     return elem('input', **attrs)
 
-def _active_module(mod_name: str):
-    return sys.modules[mod_name if mod_name != APP else __name__]
-
 @functools.cache
-def render_form(subpath: str | t.Callable, mod_name: str=None) -> str:
-    global APP
+def _render_form(func: t.Callable, mod_name: str=None) -> str:
     if callable(subpath): subpath = subpath.__name__
     if not mod_name: mod_name = APP
-    func = getattr(_active_module(mod_name), subpath)
     form = (f"<form action='/{mod_name}.py/{subpath}' "
             f"method='POST' accept-charset='utf-8' name='{subpath}'>" 
             f"<p class='doc'>{func.__doc__}</p>")
@@ -372,81 +261,44 @@ def render_form(subpath: str | t.Callable, mod_name: str=None) -> str:
     form += f"<button type='submit'>EXECUTE</button></form>"
     return form
 
-@functools.cache
-def _build_form(mod_name: str, subpath: str) -> str:
-    form = render_form(subpath, mod_name)
-    return write_file(f"{mod_name}__{subpath}.html" , form)
-
-def _execute_form(mod_name: str, subpath: str, data: dict) -> str:
-    func = getattr(_active_module(mod_name), subpath)
-    if all(len(v) == 1 for v in data.values()):
-        data = {k: v[0] for k, v in data.items()}
-    result = func(**data)
-    return write_file(f"{mod_name}__{subpath}.html", str(result))
-
-def process_py(fname: str, context: dict) -> str:
-    """Allows extracting or executing functions from a python module.
-    A subpath is the name of the function to extract or execute and comes from the context.
-    If subpath is not specified, the entire module is extracted and rendered as HTML.
-    """
-    if (subpath := context.get('subpath', None)) is None: return fname
-    mod_name = fname.split('.')[0]
-    method = context.get('method', 'GET')
-    if method == 'GET':
-        return _build_form(mod_name, subpath)
-    elif method == 'POST':
-        data = context.get('data', {})
-        return _execute_form(mod_name, subpath, data)
-
-def create_app(directory: str) -> None:
-    """Create a new application using SEEDS from qaczar.py."""
-    # TODO: The app is being created in the .server directory. Fix this.
-    seeds = {
-        "html": r"<%inherit file='/qaczar.html'/>", 
-        # TODO: Figure what other files are needed for seeding an app.
-    }
-    if not os.path.exists(directory): 
-        emit(f"Create new app directory: {directory}")
-        os.mkdir(directory)
-    for ext, content in seeds.items():
-        write_file(f'{directory}/{directory}.{ext}', content)
-    else: emit(f"Skip existing application: {directory}")
-    return f'{directory}/{directory}.html'
-
-def _process_error(fname: str, context: dict) -> str:
-    """Handle errors by returning a custom 404 page."""
-    if '.' in fname: fname = fname.split('.', 1)[0] + '.html'
-    err = context.get('error', None)
-    banner = ascii_banner(f"404")
-    content = (f"<h1 class='banner'>{banner}</h1><p>Not found: {fname}</p>"
-            f"<pre class='traceback'>{traceback.format_exc()}</pre>"
-            f"<hr /><p><a href='/'>Home</a></p>")
-    return write_file(fname, content)
-
-# @timed
-def _dispatch_processor(fname: str, context: dict) -> str | None:
+def _wrap_html_doc(body: str, **attrs) -> str:
     global APP
-    if '.' not in fname: 
-        prefix, suffix = f'{fname}/{fname}', 'html'
-        fname = f'{prefix}.{suffix}'
-        if not os.path.exists(fname): create_app(fname)
-    else: prefix, suffix = fname.split(".", 1)  # Only one dot is allowed.
-    # emit(f"Dispatch processor: {fname} {prefix} {suffix}", div='-')
-    if '/' in suffix: 
-        suffix, subpath = suffix.split('/')
-        context['subpath'] = subpath
-    if not prefix: prefix = APP
-    if (processor := globals().get(f'process_{suffix}')):
-        try:
-            # TODO: Fix template error: TypeError: unhashable type: 'list'
-            # This error happens when using a query string with a form.
-            emit(f"Dispatch processor: {fname} {prefix} {suffix}", div='-')
-            return processor(f'{prefix}.{suffix}', context)
-        except Exception as e:
-            emit(f"Error processing {fname}: {type(e)}> {e}", trace=True)
-            context['error'] = e
-            return _process_error(fname, context)
-    return None
+    return f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>{APP}</title>
+        <link rel="stylesheet" href="{APP}.css" />
+    </head>
+    <body>{body}</body>
+    </html>
+    """
+
+def hypertext(func):
+    """Decorator to generate HTML from a function."""
+    def _hypertext(*args, _raw=None, **kwargs):
+        kwargs['_raw'] = True
+        body = func(*args, **kwargs)
+        if isinstance(body, tuple): body, attrs = body
+        else: attrs = {}
+        if _raw: return body
+        return _wrap_html_doc(body, **attrs)
+    return _hypertext
+
+def default_welcome(**qs) -> str:
+    global APP
+    return elem('h1', f"Welcome to the {APP} app.")
+
+@hypertext
+def hyper_exec(func: str | t.Callable, **qs: dict) -> str:
+    """Execute a function with query string parameters. Returns hypertext."""
+    if callable(func): return func(**qs)
+    if func.startswith('_'): return hyper_exec('default_welcome')
+    # TODO: Wrap in try/except and return error message.
+    if func in globals(): return globals()[func](**qs)
+    return hyper_exec('default_welcome')
 
 
 #@# DATABASE
@@ -540,52 +392,6 @@ def _purge_tables():
         db.commit()
 
 
-#@# WEB COMPONENTS
-
-import random
-
-def page_title(title: str = '') -> str:
-    """Return a page title, or the default if none is provided."""
-    return title if title else f'{APP.upper()}'
-
-def app_styles():
-    """Return the CSS styles for the app."""	
-    return _read_file(f'qaczar.css', encoding='utf-8')
-
-@imports('pyfiglet')
-def ascii_banner(pyfiglet, text:str, font: str='graffiti') -> str:
-    """Generate a banner from ASCII text in a random font."""
-    if font == 'random':
-        font = random.choice(pyfiglet.FigletFont.getFonts())
-    banner = pyfiglet.figlet_format(text, font=font) 
-    return f"<pre class='ascii' title='Welcome to {text} (Font: {font})'>{banner}</pre>"
-
-@functools.cache
-def nav_links() -> str:
-    """Generate a list of links to all public functions in a module."""
-    global APP
-    return '\n'.join(
-            f"<a href='/{APP}.html?form={fn.__name__}' title='{fn.__doc__} "
-            f"({fn.__code__.co_firstlineno})'>{fn.__name__}</a>" 
-            for fn in extract_api())
-
-
-#@# COMMON FORMS
-
-@recorded
-def hello_world(name: str = 'World') -> str:
-    """Say hello to the world! Useful as a smoke test."""
-    return f"<div class='hello'>Hello, {name}!</div>"
-
-@recorded
-def sign_guestbook(email: str, message: str) -> str:
-    """Thanks for your visit, please sign our guestbook."""
-    # TODO: Consider field validation decorators for POST receiver functions.
-    emit(f"Contact from {email}: {message}")
-    # return f"Thanks for contacting us, {email}!"
-    return f"<p>Thanks for contacting us, {email}! We will be in touch.<p>"
-    
-
 #@# HTTPS SERVER
 
 import ssl
@@ -596,10 +402,6 @@ import socketserver as ss
 import urllib.parse as parse
 
 HOST, PORT, SITE = 'localhost', 9443, 'qaczar.com'
-
-@functools.cache
-def _safe_globals() -> dict:
-    return {k: v for k, v in globals().items() if not k.startswith('_')}
 
 @imports('cryptography.x509',
     'cryptography.hazmat.primitives.asymmetric.rsa',
@@ -634,94 +436,65 @@ def _build_ssl_certs(x509, rsa, hashes, ser, site=None) -> tuple[str, str]:
     _write_file(certname, cert.public_bytes(ser.Encoding.PEM))
     return certname, keyname
 
-def _build_server(https: bool = True) -> type:
-    if not https: return ss.ThreadingTCPServer
-    ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    ssl_ctx.load_cert_chain(*_build_ssl_certs())
-
-    class SSLServer(ss.ThreadingTCPServer):
-        # TODO: This creates 1 thread per request, which is not ideal. Implement a thread pool.
-        def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True):
-            ss.ThreadingTCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate)
-            self.socket = ssl_ctx.wrap_socket(self.socket, server_side=True) 
-
-    return SSLServer
-
 @recorded
 def access_log(address: str, message: str) -> None:
     """Log an access to the server."""
     emit(f"Access from {address} {message}")
 
+class RequestHandler(hs.SimpleHTTPRequestHandler):
+    def log_message(self, format, *args):
+        access_log(self.address_string(), format % args)
+
+    def _build_response(self, method: str = None) -> bool:
+        global APP
+        self.work_path, self.start = None, time.time()
+        if '//' in self.path: self.path = self.path.replace('//', '/')
+        if self.path == '/' or not self.path: self.path = '/welcome'
+        if method == 'POST':
+            raise NotImplementedError("POST method not implemented.")
+        path, qs = self.path.split('?', 1) if '?' in self.path else (self.path, '')
+        qs = parse.parse_qs(qs) if qs else {}
+        if '.' not in path: path += '.html'
+        if path.endswith('.html'):
+            if '/'  in path[1:]: 
+                raise NotImplementedError("Subdirectories not implemented.")
+            func_name = path[1:-5].replace('-', '_').replace('.', '_')
+            if content := hyper_exec(func_name, **qs):
+                wp = _work_path(self.path[1:])
+                self.work_path = _write_file(wp, content, encoding='utf-8')
+        
+    def translate_path(self, path: str = None) -> str:
+        return super().translate_path(path) if not self.work_path else self.work_path
+
+    def do_HEAD(self) -> None:
+        self._build_response('HEAD'); return super().do_HEAD()
+        
+    def do_GET(self) -> None:
+        self._build_response('GET'); return super().do_GET()
     
-def _build_handler() -> type:
+    def do_POST(self) -> None:
+        self._build_response('POST'); return super().do_GET()
+    
+    def end_headers(self) -> None:
+        duration = time.time() - self.start
+        self.send_header('Server-Timing', f'miss;dur={duration:.3f}')
+        self.send_header('Cache-Control', f'Etag: {_mtime_file(self.path)}')
+        return super().end_headers()
+    
+    def send_header(self, keyword: str, value: str) -> None:
+        if keyword.lower() == 'content-type' and 'text' in value and 'encoding' not in value:
+            value = f"{value}; charset=utf-8"
+        elif keyword == 'Server': value = f"{value} (qaczar.py)"
+        # emit(f"Sent header {keyword}: {value}")
+        return super().send_header(keyword, value)
 
-    class Q():
-        def __init__(self):
-            for k, v in _safe_globals().items(): setattr(self, k, v) 
-        def __getattr__(self, name):
-            # TODO: See if we can include additional information about the caller.
-            emit(f"Undefined: q.{name}.")
-            return None
-
-    q = Q()
-
-    class EmitHandler(hs.SimpleHTTPRequestHandler):
-        def log_message(self, format, *args):
-            access_log(self.address_string(), format % args)
-
-    class Handler(EmitHandler if DEBUG else hs.SimpleHTTPRequestHandler):
-        @property
-        def content_length(self) -> int:
-            return int(self.headers.get('content-length', 0))
-        
-        def _rfile_read(self, encoding: str = 'utf-8') -> bytes:
-            return self.rfile.read(self.content_length).decode(encoding)
-
-        def _build_response(self, method: str = None, _q=q) -> bool:
-            global APP
-            emit(f"Dispatch {self.client_address[0]} to {self.path}.", div="-")
-            self.start = time.time()
-            if '//' in self.path: self.path = self.path.replace('//', '/')
-            if self.path.endswith('/'): self.path = f'{self.path}{APP}.html'
-            if '?' not in self.path: path, qs = self.path, ''
-            else: path, qs = self.path.split('?', 1)
-            if not path or path == '/': path = f'/{APP}.html'
-            # I tried to split off building the entire context, but it was a bad idea.
-            context = {
-                    'q': _q, 'method': method, 'ts': iso8601(), 
-                    'ip': self.client_address[0], 'path': path, 
-                    'query': parse.parse_qs(qs), 
-                    'form_data': parse.parse_qs(self._rfile_read()),
-                    'APP': path.split('/')[1] if '/' in path else None,
-            }
-            self.work_path = _dispatch_processor(path[1:], context)
-            
-        def translate_path(self, path: str = None) -> str:
-            return super().translate_path(path) if not self.work_path else self.work_path
-
-        def do_HEAD(self) -> None:
-            self._build_response('HEAD'); return super().do_HEAD()
-            
-        def do_GET(self) -> None:
-            self._build_response('GET'); return super().do_GET()
-        
-        def do_POST(self) -> None:
-            self._build_response('POST'); return super().do_GET()
-        
-        def end_headers(self) -> None:
-            duration = time.time() - self.start
-            self.send_header('Server-Timing', f'miss;dur={duration:.3f}')
-            self.send_header('Cache-Control', f'Etag: {_mtime_file(self.path)}')
-            return super().end_headers()
-        
-        def send_header(self, keyword: str, value: str) -> None:
-            if keyword.lower() == 'content-type' and 'text' in value and 'encoding' not in value:
-                value = f"{value}; charset=utf-8"
-            elif keyword == 'Server': value = f"{value} (qaczar.py)"
-            # emit(f"Sent header {keyword}: {value}")
-            return super().send_header(keyword, value)
-
-    return Handler
+class SSLServer(ss.ThreadingTCPServer):
+    # TODO: This creates 1 thread per request, which is not ideal. Implement a thread pool.
+    def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True):
+        ss.ThreadingTCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate)
+        ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        ssl_ctx.load_cert_chain(*_build_ssl_certs())
+        self.socket = ssl_ctx.wrap_socket(self.socket, server_side=True) 
 
 
 #@#  SELF TESTING
@@ -749,11 +522,7 @@ def test_server(*args, **kwargs) -> t.NoReturn:
     # TODO: Test submitting a form (ie. sign_guestbook).
     global APP
     request = _request_factory()
-    assert 'qaczar' in request(f'{APP}.html')
-    assert 'qaczar' in request(f'{APP}.py')
-    assert 'qaczar' in request(f'/')
-    assert 'qaczar' in request(f'')
-    assert 'qaczar' in request(f'//')
+    assert 'qaczar' in request(f'welcome.html')
 
 
 #@#  REPOSITORY
@@ -778,9 +547,7 @@ def watcher_role(*args, next: str = None, **kwargs) -> t.NoReturn:
 def server_role(*args, host=HOST, port=PORT, **kwargs) -> t.NoReturn:
     global APP
     _purge_tables()
-    server_cls = _build_server()
-    handler_cls = _build_handler()
-    with server_cls((host, int(port)), handler_cls) as httpd:
+    with SSLServer((host, int(port)), RequestHandler) as httpd:
         emit(f"Server ready at https://{host}:{port}")
         atexit.register(httpd.shutdown)
         kwargs['role'] = 'tester'
@@ -829,6 +596,6 @@ if __name__ == "__main__":
         _setup_environ()
         __role, __args, __kwargs = 'watcher', [], {'next': 'server'}
     else:
-        __args, __kwargs = split_arg_line(sys.argv[1:])
+        __args, __kwargs = _split_arg_line(sys.argv[1:])
         __role = __kwargs.pop('role')  # It's ok to fail if role is not defined.
     _role_dispatcher(__role, __args, __kwargs)
