@@ -446,7 +446,6 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
         access_log(self.address_string(), format % args)
 
     def _build_response(self, method: str = None) -> bool:
-        global APP
         self.work_path, self.start = None, time.time()
         if self.path == '/' or not self.path: self.path = '/welcome.html'
         if method == 'POST':
@@ -477,7 +476,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
     
     def end_headers(self) -> None:
         duration = time.time() - self.start
-        self.send_header('Server-Timing', f'miss;dur={duration:.3f}')
+        self.send_header('Server-Timing', f'miss;dur={duration:.4f}')
         self.send_header('Cache-Control', f'Etag: {_mtime_file(self.path)}')
         return super().end_headers()
     
@@ -556,7 +555,7 @@ def server_role(*args, host=HOST, port=PORT, **kwargs) -> t.NoReturn:
         httpd.serve_forever()
 
 def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
-    # TODO: Add some automatic tests to prevent public API regressions.
+    # TODO: Add automatic tests to prevent public API regressions.
     global _MTIME
     time.sleep(1)  # Wait for server to start.
     emit(f"Running test suite for '{suite}'.")
@@ -572,7 +571,7 @@ def tester_role(*args, suite: str = None, **kwargs) -> t.NoReturn:
         _commit_source()
 
 def worker_role(*args, **kwargs) -> t.NoReturn:
-    pass
+    raise NotImplementedError("Worker role not implemented.")
 
 
 #@# DISPATCHER
