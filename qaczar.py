@@ -594,7 +594,7 @@ def role_dispatcher(*args, **kwargs) -> t.NoReturn:
     elif 'tester' not in kwargs: role = tester_role
     else: role = worker_role
     try:
-        emit(f"Start role {role.__name__} {args=} {kwargs=}.")
+        emit(f"Start '{role.__name__}' {args=} {kwargs=}.")
         role(*args, **kwargs)
     except AssertionError as e:
         (halt if DEBUG else emit)(f"Assertion failed: {e}")
