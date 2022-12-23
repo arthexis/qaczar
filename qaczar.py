@@ -438,7 +438,7 @@ def header_nav(**context) -> str:
 def footer(**context) -> str:
     """Let this be the footer of the page."""
     global SITE
-    return elem('a', f'{SITE}', href=f'{SITE}/welcome.html')
+    return elem('a', f'Home', href=f'{SITE}/welcome.html')
 
 
 @hyper('article', css='roadmap')
