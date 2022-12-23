@@ -329,21 +329,17 @@ import colorsys
 @imports('webcolors')
 def _color_scheme(webcolors, primary: str, scheme: str='triadic') -> list[str]:
     """Generate a list of colors."""
+    # Each scheme should return a list with the appropriate number of colors, each color
+    # has its own three color components.
     if scheme == 'triadic':
-        return [primary] + list(colorsys.hsv_to_rgb(
-            (colorsys.rgb_to_hsv(*webcolors.name_to_rgb(primary))[0] + 0.333) % 1, 1, 1))
-    elif scheme == 'tetradic':
-        return [primary] + list(colorsys.hsv_to_rgb(
-            (colorsys.rgb_to_hsv(*webcolors.name_to_rgb(primary))[0] + 0.25) % 1, 1, 1))
-    elif scheme == 'analogous':
-        return [primary] + list(colorsys.hsv_to_rgb(
-            (colorsys.rgb_to_hsv(*webcolors.name_to_rgb(primary))[0] + 0.1) % 1, 1, 1))
-    elif scheme == 'monochromatic':
-        return [primary] + list(colorsys.hsv_to_rgb(
-            colorsys.rgb_to_hsv(*webcolors.name_to_rgb(primary))[0], 1, 0.8))
-    elif scheme == 'complementary':
-        return [primary] + list(colorsys.hsv_to_rgb(
-            (colorsys.rgb_to_hsv(*webcolors.name_to_rgb(primary))[0] + 0.5) % 1, 1, 1))
+        hls = colorsys.rgb_to_hls(*webcolors.name_to_rgb(primary))
+        rgb = colorsys.hls_to_rgb(*(hls[0] + 0.333, hls[1], hls[2]))
+        emit(f"RGB: {rgb}")
+        # MAke sure all elements of rbg are integers.
+        rgb = tuple(int(x * 255) for x in rgb)
+        secondary = webcolors.rgb_to_hex(rgb)
+        emit(f"Next color {secondary=}")
+        return [primary, secondary]
     else: raise ValueError(f"Unsupported color scheme: {scheme}")
     
 def site_css(primary: str, scheme: str='tetradic') -> str:
@@ -354,8 +350,8 @@ def site_css(primary: str, scheme: str='tetradic') -> str:
         :root {{
             --primary: {colors[0]};
             --secondary: {colors[1]};
-            --tertiary: {colors[2]};
-            --quaternary: {colors[3]};
+            --tertiary: {colors[0]};
+            --quaternary: {colors[1]};
         }}
         body {{
             background-color: var(--primary);
@@ -428,7 +424,7 @@ def elem_html(body: str, **attrs) -> str:
     <!DOCTYPE html><html lang="en">
     <head>
         {elem_meta()}
-        <style>{site_css('goldenrod', 'tetradic')}</style>
+        <style>{site_css('goldenrod', 'triadic')}</style>
         <title>{current_site()}</title>
     </head>
     <body>{body}</body>
