@@ -434,6 +434,13 @@ def header_nav(**context) -> str:
             elem('a', 'CONTACT', href='/contact'),
         ]
 
+@hyper('footer', 'p')
+def footer(**context) -> str:
+    """Let this be the footer of the page."""
+    global SITE
+    return elem('a', f'{SITE}', href=f'{SITE}/welcome.html')
+
+
 @hyper('article', css='roadmap')
 def roadmap(**context) -> str:
     """Let this be the roadmap of the page."""
@@ -441,7 +448,6 @@ def roadmap(**context) -> str:
             elem('h2', 'ROADMAP'),
             elem('p', 'This is the roadmap of the page.'),
         ]
-
 
 @hyper('body', ('header', 'main', 'footer'))
 def hello_world(**context) -> str:
