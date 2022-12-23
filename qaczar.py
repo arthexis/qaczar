@@ -222,7 +222,7 @@ def write_file(fname: str, data: bytes | str, encoding=None) -> None:
     site_fname = os.path.join(_LOCAL.site, fname)
     _write_file(site_fname, data, encoding)
 
-def scan_script(fname: str, prefix: str = None) -> t.Generator[str, None, None]:
+def scan_file(fname: str, prefix: str = None) -> t.Generator[str, None, None]:
     """Let us read a script from the site directory, filtering by prefix optionally."""
     for line in read_file(fname, encoding='utf-8').splitlines():
         if not prefix: yield line
@@ -286,6 +286,17 @@ def _func_params_cols(func: t.Callable) -> list[str]:
         if col_type: columns.append(f'{name} {col_type}')
     return columns
 
+def _purge_database():
+    global APP, _SCHEMA
+    with _connect_db() as db:
+        for table in db.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall():
+            if table[0] in _SCHEMA[APP]: continue
+            if table[0].startswith(f'{APP}_'): continue
+            if table[0].startswith(f'sqlite_'): continue
+            emit(f"Purge unused table: {table[0]}")
+            db.execute(f"DROP TABLE {table[0]}")
+        db.commit()
+
 def recorded(func: t.Callable) -> t.Callable:
     """Let all calls to the decorated function be recorded in the database."""
     func_name = func.__name__
@@ -307,17 +318,6 @@ def recorded(func: t.Callable) -> t.Callable:
             db.commit()
         return result
     return _recorded
-
-def _purge_database():
-    global APP, _SCHEMA
-    with _connect_db() as db:
-        for table in db.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall():
-            if table[0] in _SCHEMA[APP]: continue
-            if table[0].startswith(f'{APP}_'): continue
-            if table[0].startswith(f'sqlite_'): continue
-            emit(f"Purge unused table: {table[0]}")
-            db.execute(f"DROP TABLE {table[0]}")
-        db.commit()
 
 
 #@# HTML ELEMENTS
@@ -438,9 +438,9 @@ def app_features(subject: str, **context) -> str:
     """Let there be a function that generates a list of the app's features."""
     global APP
     if subject == 'roadmap': 
-        features = scan_script(f'{APP}.py', '# TODO:')
+        features = scan_file(f'{APP}.py', '# TODO:')
     elif subject == 'changelog':
-        features = scan_script(f'{APP}.py', '# RJGO:')
+        features = scan_file(f'{APP}.py', '# RJGO:')
     else: features = []
     if not features: features = ['Nothing to see here.']
     return elem('h2', subject.title()), elem_list(features)
