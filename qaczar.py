@@ -376,10 +376,12 @@ def elem_html(body: str, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     global APP, _LOCAL
     # TODO: Generate the CSS code dynamically instead of reading a file.
+    style = "* {margin: 0; padding: 0;}"
     return f"""
     <!DOCTYPE html><html lang="en">
     <head>
         {elem_meta()}
+        <style>{style}</style>
         <title>{_LOCAL.site if hasattr(_LOCAL, 'site') else APP}</title>
     </head>
     <body>{body}</body>
