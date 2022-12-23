@@ -326,6 +326,10 @@ def recorded(func: t.Callable) -> t.Callable:
 
 import colorsys
 
+def _color_shift(red: int, green: int, blue: int, shift: int) -> tuple[int, int, int]:
+    """Shift a color by a given amount."""
+    return (red + shift, green + shift, blue + shift)
+
 @imports('webcolors')
 def _color_scheme(webcolors, primary: str, scheme: str='tetradic') -> list[str]:
     """Generate a list of colors."""
@@ -337,16 +341,14 @@ def _color_scheme(webcolors, primary: str, scheme: str='tetradic') -> list[str]:
         return [primary, primary, primary, primary]
     else: raise ValueError(f"Unsupported color scheme: {scheme}")
     
-def site_css(primary: str, scheme: str='tetradic') -> str:
+def site_css() -> str:
     """Generate site CSS from a primary color and a color scheme."""
-    colors = _color_scheme(primary, scheme)
-    emit(f"colors: {colors}")
     return f"""
         :root {{
-            --primary: {colors[0]};
-            --secondary: {colors[1]};
-            --tertiary: {colors[2]};
-            --quaternary: {colors[3]};
+            --primary: black;
+            --secondary: red;
+            --tertiary: green;
+            --quaternary: yellow;
         }}
         body {{
             background-color: var(--primary);
@@ -415,12 +417,11 @@ def elem_meta() -> str:
 def elem_html(body: str, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     # TODO: Generate the CSS code dynamically instead of reading a file.
-    css = site_css('goldenrod', 'tetradic')
     return f"""
     <!DOCTYPE html><html lang="en">
     <head>
         {elem_meta()}
-        <style>{css}</style>
+        <style>{site_css()}</style>
         <title>{current_site()}</title>
     </head>
     <body>{body}</body>
