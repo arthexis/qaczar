@@ -624,7 +624,7 @@ def worker_role(*args, **kwargs) -> t.NoReturn:
 
 #@# ROLE SELECTOR
 
-def role_dispatcher(*args, **kwargs) -> t.NoReturn:
+def _role_dispatch(*args, **kwargs) -> t.NoReturn:
     """Let each instance decide their own role, based on what's missing."""
     if 'watcher' not in kwargs: role = watcher_role
     elif 'server' not in kwargs: role = server_role
@@ -642,5 +642,5 @@ def role_dispatcher(*args, **kwargs) -> t.NoReturn:
 if __name__ == "__main__":
     if len(sys.argv) > 1: _ARGS, _KWARGS = _split_args(sys.argv[1:])
     else: _ARGS, _KWARGS = (), {}
-    role_dispatcher(*_ARGS, **_KWARGS)
+    _role_dispatch(*_ARGS, **_KWARGS)
     
