@@ -374,16 +374,18 @@ def html_elem(body: str) -> str:
     </html>
     """
 
-def hyper(tag: str, wrap:str=None, **attrs) -> t.Callable:
+def hyper(tag: str, wrap: str | tuple = None, **attrs) -> t.Callable:
     """Let the decorated function output hypertext automatically."""
     def _decorator(func: t.Callable, _tag=tag, _wrap=wrap, _attrs=attrs) -> t.Callable:
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
             result = func(*args, **kwargs)
             emit(f"{func.__name__}({args}, {kwargs}) -> <{tag}>{result}")
-            if _wrap: 
+            if isinstance(_wrap, str):
                 if isinstance(result, str): result = elem(_wrap, result)
                 else: result = ''.join(elem(_wrap, r) for r in result) 
+            elif isinstance(_wrap, tuple):
+                result = ''.join(elem(w, r) for w, r in zip(_wrap, result))
             if _tag in ('html', 'body'): return html_elem(result)
             return elem(_tag, result, **_attrs)
         return _hyper
