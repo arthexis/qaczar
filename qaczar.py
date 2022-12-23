@@ -685,7 +685,6 @@ def request_factory(urllib3):
     http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=_build_ssl_certs()[0])
     def _request(fname:str, data:dict = None, status:int = 200):
         global _COUNTER
-        fname = f"{APP}/{fname}"
         url = f"https://{HOST}:{PORT}/{fname}"
         r = http.request('POST' if data else 'GET', url, fields=data, timeout=30)
         assert r.status == status, f"Request to {url} failed with status {r.status}"
