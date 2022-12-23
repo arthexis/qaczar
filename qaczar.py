@@ -515,7 +515,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
     def send_header(self, keyword: str, value: str) -> None:
         if keyword.lower() == 'content-type' and 'text' in value and 'encoding' not in value:
             value = f"{value}; charset=utf-8"
-        elif keyword == 'Server': value = f"{value} (qaczar.py)"
+        elif keyword == 'Server': value = f"{value} qaczar.py/0.1"
         emit(f"Sent header {keyword}: {value}")
         return super().send_header(keyword, value)
 
