@@ -377,15 +377,15 @@ def elem_html(body: str, **attrs) -> str:
     global APP, _LOCAL
     # TODO: Generate the CSS code dynamically instead of reading a file.
     return f"""
-        <!DOCTYPE html><html lang="en">
-        <head>
-            {elem_meta()}
-            <style>{read_file(f'{APP}.css', encoding='utf-8')}</style>
-            <title>{_LOCAL.site if hasattr(_LOCAL, 'site') else APP}</title>
-        </head>
-        <body>{body}</body>
-        </html>
-        """
+    <!DOCTYPE html><html lang="en">
+    <head>
+        {elem_meta()}
+        <style>{read_file(f'{APP}.css', encoding='utf-8')}</style>
+        <title>{_LOCAL.site if hasattr(_LOCAL, 'site') else APP}</title>
+    </head>
+    <body>{body}</body>
+    </html>
+    """
 
 
 #@# HTML GENERATORS
