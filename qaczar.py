@@ -465,7 +465,12 @@ def app_comments(**context) -> str:
 @hyper('body', ('header', 'main', 'footer'))
 def hello_world(**context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 	
-    return chain(site_header, app_roadmap, app_comments, site_footer)(**context)
+    return chain(site_header, app_roadmap, site_footer)(**context)
+
+@hyper('body', ('header', 'main', 'footer'))
+def app_comments(**context) -> str:
+    """Let this be the comments page. It shall have a list of comments.""" 	
+    return chain(site_header, app_comments, site_footer)(**context)
 
 
 #@# HTTPS SERVER
