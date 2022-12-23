@@ -428,7 +428,7 @@ def elem_html(body: str, **attrs) -> str:
     <!DOCTYPE html><html lang="en">
     <head>
         {elem_meta()}
-        <style>{site_css('green')}</style>
+        <style>{site_css('goldenrod')}</style>
         <title>{current_site()}</title>
     </head>
     <body>{body}</body>
