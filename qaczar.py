@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# qaczar.py: An  web authoring system.
+# qaczar.py: A Web Authoring System to honor of the Self-Inventing.
 # by R. J. Guillén-Osorio (rjgo [at] qaczar [dot] com) 2022-2023.
 
 # License: MIT (https://opensource.org/licenses/MIT).
