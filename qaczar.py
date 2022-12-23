@@ -346,7 +346,6 @@ def elem_input(field: str, param: inspect.Parameter) -> str:
         if param.annotation is bool: attrs['checked'] = 'checked'
     return elem('input', **attrs)
 
-@functools.lru_cache(maxsize=128)
 def elem_input(func: t.Callable) -> str:
     """Let function signatures determine form fields."""
     func_name = func.__name__
