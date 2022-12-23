@@ -384,7 +384,7 @@ def hyper(tag: str, wrap: str | tuple = None, **attrs) -> t.Callable:
                 if isinstance(result, str): result = elem(_wrap, result)
                 else: result = ''.join(elem(_wrap, r) for r in result) 
             elif isinstance(_wrap, tuple):
-                result = ''.join(elem(w, r) 
+                result = '\n'.join(elem(w, r) 
                     for w, r in itertools.zip_longest(_wrap, result, fillvalue=_wrap[-1]))
             if _tag in ('html', 'body'): return html_elem(result)
             return elem(_tag, result, **_attrs)
