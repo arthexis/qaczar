@@ -501,7 +501,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
             qs = parse.parse_qs(qs) if qs else {}
             site, *funcs = [func for func in pure_path[1:-5].split('/') if func]
             if not funcs: site, funcs = SITE, [site]
-            with set_site_dir(site) as site_dir:
+            with set_site_dir(site):
                 emit(f"Building {site=} {funcs=} {qs=} {data=}")
                 content = build_html_chain(*funcs, **qs, **data)
             self.work_path = os.path.join('.server', self.path[1:])
