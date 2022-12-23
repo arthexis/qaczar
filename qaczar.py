@@ -334,7 +334,6 @@ def elem(tag: str, content: str | list = None, cdata: bool=False, **attrs) -> st
 def elem_list(items, sep: str = ''):
     return sep.join(elem('li', item, data={'seq': i}) for i, item in enumerate(items))
 
-@functools.lru_cache(maxsize=128)
 def elem_input(field: str, param: inspect.Parameter) -> str:
     """Let function annotations determine input types and validations."""
     input_type = 'text'
