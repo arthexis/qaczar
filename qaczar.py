@@ -177,7 +177,7 @@ def _restart_py(proc: subprocess.Popen = None, opid=_PID) -> subprocess.Popen:
     else: args, kwargs = [], {}
     return _start_py(f'{APP}.py', *args, **kwargs)
 
-def _watch_eternal(proc: subprocess.Popen, fn: str) -> t.NoReturn:  
+def _watch_forever(proc: subprocess.Popen, fn: str) -> t.NoReturn:  
     """Let the script die and restart it. If it dies twice, stop the watcher."""
     source, old_mtime, stable = _read_file(fn), mtime_file(fn), True
     while True:
@@ -589,12 +589,14 @@ def _commit_source() -> t.NoReturn:
 #@# BASE ROLES
 
 def watcher_role(*args, **kwargs) -> t.NoReturn:
+    """Let us watch ourselves to see we may never halt until commanded."""	
     global APP
     _setup_py_venv()
     kwargs['watcher'] = os.getpid()
-    _watch_eternal(_start_py(f'{APP}.py', *args, **kwargs), f'{APP}.py')
+    _watch_forever(_start_py(f'{APP}.py', *args, **kwargs), f'{APP}.py')
 
 def server_role(*args, **kwargs) -> t.NoReturn:
+    """Let us generate, serve and store the site content and user input."""	
     # TODO: Catch port being in use and suggest a different port.
     global APP, HOST, PORT
     _purge_database()
@@ -606,19 +608,19 @@ def server_role(*args, **kwargs) -> t.NoReturn:
         httpd.serve_forever()
 
 def tester_role(*args, **kwargs) -> t.NoReturn:
+    """Let us test the server by making http requests to it."""
     # TODO: Add automatic tests to prevent public API regressions.
     # TODO: Keep the tester running and re-run tests when source changes.
     # TODO: Have a keep-alive ping to detect when the server is down.
-    passed = 0
-    for test in globals().keys():
+    for passed, test in enumerate(globals().keys()):
         if test.startswith(f'test_'): 
             globals()[test](*args, **kwargs)
-            passed += 1
     else:
         emit(f"Tests passed: {passed}.")
         _commit_source()
 
 def worker_role(*args, **kwargs) -> t.NoReturn:
+    """Let us do work that is not related to the serving requests."""
     raise NotImplementedError("Worker role not implemented.")
 
 
