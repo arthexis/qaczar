@@ -218,8 +218,8 @@ def write_file(fname: str, data: bytes | str, encoding=None) -> None:
 
 def scan_script(fname: str = None, prefix: str = None) -> t.Generator[str, None, None]:
     """Let us read a script from the site directory, filtering by prefix optionally."""
-    global _LOCAL
-    if not fname: fname = _LOCAL.site
+    global APP
+    if not fname: fname = f'{APP}.py'
     for line in read_file(fname).splitlines():
         if not prefix: yield line
         elif line.strip().startswith(prefix): yield line.strip()[len(prefix):]
@@ -328,7 +328,7 @@ def elem(tag: str, content: str=None, cdata: bool=False, **attrs) -> str:
         for k, v in attrs['data'].items(): attrs[f'data-{k}'] = v
         del attrs['data']
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
-    if not isinstance(content, str): content = ''.join(content)
+    if content and not isinstance(content, str): content = ''.join(content)
     if attrs and not content: return f'<{tag} {attrs}/>'
     if not content: return f'<{tag}/>'
     if cdata: content = f'<![CDATA[{content}]]>'
@@ -435,28 +435,20 @@ def header_nav(**context) -> str:
         ]
 
 @hyper('footer', 'p')
-def footer(**context) -> str:
+def footer_links(**context) -> str:
     """Let this be the footer of the page."""
     global SITE
     return elem('a', f'Home', href=f'{SITE}/welcome.html')
 
-
 @hyper('article', css='roadmap')
-def roadmap(**context) -> str:
-    """Let this be the roadmap of the page."""
-    return [
-            elem('h2', 'ROADMAP'),
-            elem('p', 'This is the roadmap of the page.'),
-        ]
+def app_roadmap(**context) -> str:
+    """Let there be a roadmap of the application."""
+    todos = scan_script('# TODO:')
 
 @hyper('body', ('header', 'main', 'footer'))
 def hello_world(**context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 	
-    # TODO: Add all the missing elements (such as the roadmap) to the welcome page.
-    return [
-            header_nav(**context),
-            elem('p', f"Here's a roadmap of what's coming up next."),
-        ]
+    return [func(**context) for func in [header_nav, app_roadmap, footer_links]]
 
 
 #@# HTTPS SERVER
