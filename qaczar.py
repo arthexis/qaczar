@@ -461,7 +461,7 @@ def app_roadmap(**context) -> str:
 @hyper('body', ('header', 'main', 'footer'))
 def hello_world(**context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 	
-    return chain(header_nav, app_roadmap, footer_links)(**context)
+    return chain(header_nav, app_roadmap, app_roadmap, footer_links)(**context)
 
 
 #@# HTTPS SERVER
