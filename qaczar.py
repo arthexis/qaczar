@@ -429,7 +429,7 @@ def nav_links(**context) -> str:
     emit(f"nav_links({context}) ({_COMPONENTS=})")
     links = [
         elem('a', page.replace('_', ' ').title() , href=f'/{page}')
-        for page in _COMPONENTS['html'].keys()
+        for page in _COMPONENTS['body'].keys()
         if not page.startswith('_')
     ]
     return links
