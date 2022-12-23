@@ -67,15 +67,13 @@ def set_site_dir(site: str) -> None:
 
 def _read_file(fname: str, encoding=None) -> bytes | str:
     """Consult millions of flip-flops on the histories of dead programs."""
-    if '__' in fname: fname = fname.replace('__', '.')
     with open(fname, 'rb' if not encoding else 'r', encoding=encoding) as f: return f.read()
     
 def _write_file(fname: str, data: bytes | str, encoding=None) -> None:
     """Rearrange millions of flip-flops into an elaborate mausoleum."""
     if encoding and not isinstance(data, str): data = str(data)
-    if '__' in fname: fname = fname.replace('__', '.')
-    parent_dir = os.path.dirname(fname)
-    if parent_dir and not os.path.isdir(parent_dir): os.makedirs(parent_dir)
+    base_dir = os.path.dirname(fname)
+    if base_dir and not os.path.isdir(base_dir): os.makedirs(base_dir)
     with open(fname, 'wb' if not encoding else 'w', encoding=encoding) as f: f.write(data)
 
 
@@ -157,7 +155,7 @@ def _setup_py_venv() -> None:
 def _start_py(script_path: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
     global _PYTHON
     line_args = [str(a) for a in _args_line(*args, **kwargs)]
-    emit(f"Starting {script_path=} {line_args=}.")
+    emit(f"Start python script '{script_path}' {line_args=}.")
     # Popen is a context manager, but we want to keep proc alive and not wait for it.
     # We cannot use run() for this. Remember to manually terminate the process later.
     proc = subprocess.Popen([_PYTHON, script_path, *line_args],
