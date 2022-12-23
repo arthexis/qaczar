@@ -365,6 +365,7 @@ def site_css(primary: str, scheme: str='tetradic') -> str:
         a:hover {{ color: var(--tertiary); }}
         a:active {{ color: var(--quaternary); }}
         a:visited {{ color: var(--quaternary); }}
+        article {{ background-color: var(--secondary); }}
     """
 
 
