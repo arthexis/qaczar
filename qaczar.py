@@ -425,6 +425,12 @@ def html_build_chain(*func_names: str, **context) -> str:
 @hyper('header', ('h1', 'nav'))
 def header_nav(**context) -> str:
     """Let this be the header of the page."""
+    global _COMPONENTS
+    links = [
+        elem('a', page.replace('_', ' ').title() , href=f'/{page}')
+        for page in _COMPONENTS['html'].keys()
+        if not page.startswith('_')
+    ]
     return [
             elem('a', 'QACZAR', href='/'),
             elem('a', 'Home', href='/welcome.html'),
