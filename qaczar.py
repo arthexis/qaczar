@@ -428,8 +428,8 @@ def html_build_chain(*func_names: str, **context) -> str:
 #@# WEB COMPONENTS
 
 @hyper('nav', 'a')
-def app_nav() -> str:
-    """Let this be the body of the page."""
+def site_nav() -> str:
+    """Let there be a list of navigation links to other site pages."""
     global _COMPONENTS
     return [
         elem('a', page.replace('_', ' ').title() , href=f'/{page}')
@@ -437,22 +437,11 @@ def app_nav() -> str:
         if not page.startswith('_') and page not in ('hello_world', 'index')
     ]
 
-@hyper('nav', 'a')
-def site_links(**context) -> str:
-    """Let this be the navigation bar of the page."""
-    global _COMPONENTS
-    links = [
-        elem('a', page.replace('_', ' ').title() , href=f'/{page}')
-        for page in _COMPONENTS['body'].keys()
-        if not page.startswith('_')
-    ]
-    return links
-
 @hyper('header', ('h1', 'nav'))
 def site_header(**context) -> str:
     """Let this be the header of the page."""
     global _COMPONENTS
-    return elem('a', 'QACZAR', href='/'), site_links(**context)
+    return elem('a', 'QACZAR', href='/'), site_nav(**context)
 
 @hyper('footer', 'p')
 def site_footer(**context) -> str:
