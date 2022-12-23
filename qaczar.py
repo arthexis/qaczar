@@ -320,6 +320,9 @@ def recorded(func: t.Callable) -> t.Callable:
     return _recorded
 
 
+#@# CSS GENERATOR
+
+
 #@# HTML ELEMENTS
 
 import inspect
@@ -447,8 +450,6 @@ def app_features(subject: str, **context) -> str:
     global APP
     if subject == 'roadmap': 
         features = scan_file(f'{APP}.py', '# TODO:')
-    elif subject == 'changelog':
-        features = scan_file(f'{APP}.py', '# RJGO:')
     else: features = []
     if not features: features = ['Nothing to see here.']
     return elem('h2', subject.title()), elem_list(features)
