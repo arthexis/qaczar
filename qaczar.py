@@ -473,7 +473,7 @@ def site_header(title: str = None, **context) -> str:
 def site_footer(**context) -> str:
     """Let this be the footer of the page."""
     global SITE
-    return elem('a', f'Home', href=f'{SITE}/welcome.html')
+    return elem('a', f'Powered by the qaczar.py web system.', href=f'{SITE}/qaczar.py')
 
 def site_page(title: str, **attrs) -> str:
     """Let us decorate a function to be a top page of the site."""
