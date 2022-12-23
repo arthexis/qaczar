@@ -231,8 +231,6 @@ def scan_file(fname: str, prefix: str = None) -> t.Generator[str, None, None]:
         elif line.strip().startswith(prefix): yield line.strip()[len(prefix):]
 
 
-
-
 #@# DATABASE
 
 import sqlite3
