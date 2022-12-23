@@ -404,11 +404,15 @@ def build_html_chain(*func_names: str, **context) -> str:
 
 #@# WEB COMPONENTS
 
-@hyper('body')
+@hyper('body', ('header', 'main', 'footer'))
 def hello_world(**qs) -> str:
     """Let this be the default page. It shall have a roadmap.""" 	
     # TODO: Add all the missing elements (such as the roadmap) to the welcome page.
-    return elem('h1', f"QACZAR")
+    return [
+            elem('h1', f"QACZAR"),
+            elem('h2', f"Welcome to {APP}!"),
+            elem('p', f"Here's a roadmap of what's coming up next."),
+        ]
 
 
 #@# HTTPS SERVER
