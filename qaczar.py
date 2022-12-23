@@ -345,8 +345,8 @@ def site_css(primary: str, scheme: str='tetradic') -> str:
         :root {{
             --primary: {colors[0]};
             --secondary: {colors[1]};
-            --tertiary: {colors[0]};
-            --quaternary: {colors[1]};
+            --tertiary: {colors[2]};
+            --quaternary: {colors[3]};
         }}
         body {{
             background-color: var(--primary);
@@ -392,7 +392,7 @@ def elem_input(field: str, param: inspect.Parameter) -> str:
         if param.annotation is bool: attrs['checked'] = 'checked'
     return elem('input', **attrs)
 
-def elem_input(func: t.Callable) -> str:
+def elem_form(func: t.Callable) -> str:
     """Let function signatures determine form fields."""
     func_name = func.__name__
     form = f"<form action='{func_name}' method='POST'>" 
