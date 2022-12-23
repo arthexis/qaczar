@@ -201,25 +201,27 @@ def _watch_forever(proc: subprocess.Popen, fname: str) -> t.NoReturn:
 import contextlib
 
 @contextlib.contextmanager
-def set_site_dir(site: str) -> str:
+def set_current_site(site: str) -> str:
     """Let us set the directory where the site is served from."""
     global _LOCAL
     setattr(_LOCAL, 'site', site)
     yield os.path.join(os.getcwd(), site)
     delattr(_LOCAL, 'site')
 
+def current_site() -> str:
+    global APP, _LOCAL
+    return _LOCAL.site if hasattr(_LOCAL, 'site') else APP
+
 def read_file(fname: str, encoding=None) -> str | bytes:
     """Let each site read files from their own directory first, and the base second."""
-    global _LOCAL
-    site_fname = os.path.join(_LOCAL.site, fname) if hasattr(_LOCAL, 'site') else None
+    site_fname = os.path.join(current_site(), fname)
     if not site_fname or not os.path.exists(site_fname):
         site_fname = os.path.join(os.getcwd(), fname)
     return _read_file(site_fname, encoding)
 
 def write_file(fname: str, data: bytes | str, encoding=None) -> None:
     """Let each site write files to their own directory (never to the base)."""
-    global _LOCAL
-    site_fname = os.path.join(_LOCAL.site, fname)
+    site_fname = os.path.join(current_site(), fname)
     _write_file(site_fname, data, encoding)
 
 def scan_file(fname: str, prefix: str = None) -> t.Generator[str, None, None]:
@@ -227,6 +229,8 @@ def scan_file(fname: str, prefix: str = None) -> t.Generator[str, None, None]:
     for line in read_file(fname, encoding='utf-8').splitlines():
         if not prefix: yield line
         elif line.strip().startswith(prefix): yield line.strip()[len(prefix):]
+
+
 
 
 #@# DATABASE
@@ -324,29 +328,44 @@ def recorded(func: t.Callable) -> t.Callable:
 
 import colorsys
 
-# Function that picks 4 colors based on an input string.
-# Then, assignes them to css classes and returs the css.
-def color_scheme(name: str) -> str:
-    """Generate a color scheme based on a name."""
-    colors = []
-    for i in range(4):
-        h = hash(name + str(i)) % 360
-        s = 0.5 + hash(name + str(i)) % 50 / 100
-        l = 0.5 + hash(name + str(i)) % 50 / 100
-        colors.append(f"hsl({h}, {s*100}%, {l*100}%)")
+@imports('webcolors')
+def color_scheme(webcolors, primary: str, scheme: str='triadic') -> list[str]:
+    """Generate a list of colors."""
+    if scheme == 'triadic':
+        return [primary] + list(colorsys.hsv_to_rgb(
+            (colorsys.rgb_to_hsv(*webcolors.name_to_rgb(primary))[0] + 0.333) % 1, 1, 1))
+    elif scheme == 'tetradic':
+        return [primary] + list(colorsys.hsv_to_rgb(
+            (colorsys.rgb_to_hsv(*webcolors.name_to_rgb(primary))[0] + 0.25) % 1, 1, 1))
+    elif scheme == 'analogous':
+        return [primary] + list(colorsys.hsv_to_rgb(
+            (colorsys.rgb_to_hsv(*webcolors.name_to_rgb(primary))[0] + 0.1) % 1, 1, 1))
+    elif scheme == 'monochromatic':
+        return [primary] + list(colorsys.hsv_to_rgb(
+            colorsys.rgb_to_hsv(*webcolors.name_to_rgb(primary))[0], 1, 0.8))
+    elif scheme == 'complementary':
+        return [primary] + list(colorsys.hsv_to_rgb(
+            (colorsys.rgb_to_hsv(*webcolors.name_to_rgb(primary))[0] + 0.5) % 1, 1, 1))
+    else: raise ValueError(f"Unsupported color scheme: {scheme}")
+    
+def site_css(primary: str, scheme: str='tetradic') -> str:
+    """Generate site CSS from a primary color and a color scheme."""
+    colors = color_scheme(primary, scheme)
     return f"""
-        .{name}-bg {{ background-color: {colors[0]}; }}
-        .{name}-fg {{ color: {colors[0]}; }}
-        .{name}-border {{ border-color: {colors[0]}; }}
-        .{name}-hover:hover {{ background-color: {colors[1]}; }}
-        .{name}-hover:hover {{ color: {colors[1]}; }}
-        .{name}-hover:hover {{ border-color: {colors[1]}; }}
-        .{name}-active:active {{ background-color: {colors[2]}; }}
-        .{name}-active:active {{ color: {colors[2]}; }}
-        .{name}-active:active {{ border-color: {colors[2]}; }}
-        .{name}-focus:focus {{ background-color: {colors[3]}; }}
-        .{name}-focus:focus {{ color: {colors[3]}; }}
-        .{name}-focus:focus {{ border-color: {colors[3]}; }}
+        :root {{
+            --primary: {colors[0]};
+            --secondary: {colors[1]};
+            --tertiary: {colors[2]};
+            --quaternary: {colors[3]};
+        }}
+        body {{
+            background-color: var(--primary);
+            color: var(--secondary);
+        }}
+        a {{ color: var(--secondary); }}
+        a:hover {{ color: var(--tertiary); }}
+        a:active {{ color: var(--quaternary); }}
+        a:visited {{ color: var(--quaternary); }}
     """
 
 
@@ -402,21 +421,15 @@ def elem_meta() -> str:
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     """
 
-def current_site() -> str:
-    global APP, _LOCAL
-    return _LOCAL.site if hasattr(_LOCAL, 'site') else APP
-
 def elem_html(body: str, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     # TODO: Generate the CSS code dynamically instead of reading a file.
-    style = "* {margin: 0; padding: 0;}"
-    style += color_scheme(site := current_site())
     return f"""
     <!DOCTYPE html><html lang="en">
     <head>
         {elem_meta()}
-        <style>{style}</style>
-        <title>{site}</title>
+        <style>{site_css('green')}</style>
+        <title>{current_site()}</title>
     </head>
     <body>{body}</body>
     </html>
@@ -613,7 +626,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
             qs = parse.parse_qs(qs) if qs else {}
             site, *funcs = [func for func in pure_path[1:-5].split('/') if func]
             if not funcs: site, funcs = SITE, [site]
-            with set_site_dir(site):
+            with set_current_site(site):
                 emit(f"Building {site=} {funcs=} {qs=} {data=}")
                 content = html_build_chain(*funcs, **qs, **data)
             self.work_path = os.path.join('.server', self.path[1:])
