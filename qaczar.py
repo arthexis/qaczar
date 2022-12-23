@@ -332,6 +332,9 @@ def elem(tag: str, content: str | list = None, cdata: bool=False, **attrs) -> st
     if cdata: content = f'<![CDATA[{content}]]>'
     return f'<{tag} {attrs}>{content}</{tag}>'
 
+def elem_lis(items, sep: str = ''):
+    return sep.join(elem('li', item, data={'seq': i}) for i, item in enumerate(items))
+
 @functools.lru_cache(maxsize=128)
 def elem_input(field: str, param: inspect.Parameter) -> str:
     """Let function annotations determine input types and validations."""
