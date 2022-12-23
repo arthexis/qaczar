@@ -343,23 +343,22 @@ def _color_scheme(webcolors, primary: str, scheme: str='tetradic') -> list[str]:
     
 def site_css() -> str:
     """Generate site CSS from a primary color and a color scheme."""
-    return f"""
-        :root {{
+    return """
+        :root {
             --primary: black;
             --secondary: red;
             --tertiary: green;
             --quaternary: yellow;
-        }}
-        body {{
+        }
+        * { margin: 0; padding: 0; }
+        body {
             background-color: var(--primary);
             color: var(--secondary);
-        }}
-        a {{ color: var(--secondary); }}
-        a:hover {{ color: var(--tertiary); }}
-        a:active {{ color: var(--quaternary); }}
-        a:visited {{ color: var(--quaternary); }}
-        article {{ background-color: var(--secondary); }}
-        article {{ color: var(--primary);  }}
+        }
+        a { color: var(--secondary); }
+        a:hover { color: var(--tertiary); }
+        a:active { color: var(--quaternary); }
+        a:visited { color: var(--quaternary); }
     """
 
 
