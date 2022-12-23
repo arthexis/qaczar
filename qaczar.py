@@ -190,6 +190,41 @@ def _watch_forever(proc: subprocess.Popen, fname: str) -> t.NoReturn:
             source, stable = _read_file(fname), True
         
 
+#@# SITE DIRECTORY
+
+import contextlib
+
+@contextlib.contextmanager
+def set_site_dir(site: str) -> str:
+    """Set the directory where the site is served from."""
+    global _LOCAL
+    setattr(_LOCAL, 'site', site)
+    yield os.path.join(os.getcwd(), site)
+    delattr(_LOCAL, 'site')
+
+def read_file(fname: str, encoding=None) -> str | bytes:
+    """Let each site read files from their own directory."""
+    global _LOCAL
+    site_fname = os.path.join(_LOCAL.site, fname)
+    if not os.path.exists(site_fname):
+        site_fname = os.path.join(os.getcwd(), fname)
+    return _read_file(site_fname, encoding)
+
+def write_file(fname: str, data: bytes | str, encoding=None) -> None:
+    """Let each site write files to their own directory."""
+    global _LOCAL
+    site_fname = os.path.join(_LOCAL.site, fname)
+    _write_file(site_fname, data, encoding)
+
+def scan_script(fname: str = None, prefix: str = None) -> t.Generator[str, None, None]:
+    """Let us read a script from the site directory, filtering by prefix optionally."""
+    global _LOCAL
+    if not fname: fname = _LOCAL.site
+    for line in read_file(fname).splitlines():
+        if not prefix: yield line
+        elif line.strip().startswith(prefix): yield line.strip()[len(prefix):]
+
+
 #@# DATABASE
 
 import sqlite3
@@ -281,31 +316,6 @@ def _purge_database():
         db.commit()
 
 
-#@# SITE DIRECTORY
-
-import contextlib
-
-@contextlib.contextmanager
-def set_site_dir(site: str) -> str:
-    """Set the directory where the site is served from."""
-    global _LOCAL
-    setattr(_LOCAL, 'site', site)
-    yield os.path.join(os.getcwd(), site)
-    delattr(_LOCAL, 'site')
-
-def read_file(fname: str, encoding=None) -> str | bytes:
-    """Let each site read files from their own directory."""
-    global _LOCAL
-    site_fname = os.path.join(_LOCAL.site, fname)
-    return _read_file(site_fname, encoding)
-
-def write_file(fname: str, data: bytes | str, encoding=None) -> None:
-    """Let each site write files to their own directory."""
-    global _LOCAL
-    site_fname = os.path.join(_LOCAL.site, fname)
-    _write_file(site_fname, data, encoding)
-
-
 #@# HTML GENERATION
 
 import inspect
@@ -370,10 +380,14 @@ def html_elem(body: str) -> str:
     </html>
     """
 
+_COMPONENTS = collections.defaultdict(dict)
+
 def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Callable:
     """Let the decorated function output hypertext automatically."""
+    global _COMPONENTS
     if css: attrs['class'] = css
     def _decorator(func: t.Callable, _tag=tag, _wrap=wrap, _attrs=attrs) -> t.Callable:
+        _COMPONENTS[_tag][func.__name__] = func
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
             result = func(*args, **kwargs)
@@ -426,7 +440,6 @@ def roadmap(**context) -> str:
             elem('h2', 'ROADMAP'),
             elem('p', 'This is the roadmap of the page.'),
         ]
-
 
 
 @hyper('body', ('header', 'main', 'footer'))
