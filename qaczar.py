@@ -176,7 +176,6 @@ def _restart_py(proc: subprocess.Popen = None, opid=_PID) -> subprocess.Popen:
     global APP
     if proc and proc.poll() is None: 
         args, kwargs = _stop_py(proc)
-        kwargs['opid'] = opid
     else: args, kwargs = [], {}
     return _start_py(f'{APP}.py', *args, **kwargs)
 
