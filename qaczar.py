@@ -349,7 +349,7 @@ def _color_scheme(webcolors, primary: str, scheme: str='triadic') -> list[str]:
 def site_css(primary: str, scheme: str='tetradic') -> str:
     """Generate site CSS from a primary color and a color scheme."""
     colors = _color_scheme(primary, scheme)
-    assert len(colors) == 4
+    emit(f"colors: {colors}")
     return f"""
         :root {{
             --primary: {colors[0]};
