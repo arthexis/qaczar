@@ -359,7 +359,7 @@ def site_css() -> str:
         a:active {{ color: var(--quaternary); }}
         a:visited {{ color: var(--quaternary); }}
         article {{ background-color: var(--secondary); }}
-        article {{ color: var(--primary); }}
+        article {{ color: var(--primary);  }}
     """
 
 
@@ -482,7 +482,7 @@ def html_build_chain(*func_names: str, **context) -> str:
 
 #@# APP COMPONENTS
 
-@hyper('article', ('h2', 'ol'), css='roadmap')
+@hyper('section', ('h2', 'ol'), css='roadmap')
 def app_features(subject: str, **context) -> str:
     """Let there be a function that generates a list of the app's features."""
     global APP
