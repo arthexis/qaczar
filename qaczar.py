@@ -376,7 +376,7 @@ def elem_html(body: str, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     global APP, _LOCAL
     # TODO: Generate the CSS code dynamically instead of reading a file.
-    style = "* {margin: 0.5rem; padding: 0.5rem;}"
+    style = "* {margin: 0.1rem; padding: 0.1rem;}"
     return f"""
     <!DOCTYPE html><html lang="en">
     <head>
