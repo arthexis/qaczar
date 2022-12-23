@@ -447,12 +447,15 @@ def footer_links(**context) -> str:
     global SITE
     return elem('a', f'Home', href=f'{SITE}/welcome.html')
 
-@hyper('article', css='roadmap')
+@hyper('article', ('h2', 'ol'), css='roadmap')
 def app_roadmap(**context) -> str:
     """Let there be a roadmap of the application."""
     global APP
     todos = scan_script(f'{APP}.py', '# TODO:')
-    return elem('ol', ''.join(elem('li', todo) for todo in todos))
+    return [
+            elem('h2', 'Roadmap'),
+            ''.join(elem('li', todo) for todo in todos)
+        ]
 
 @hyper('body', ('header', 'main', 'footer'))
 def hello_world(**context) -> str:
