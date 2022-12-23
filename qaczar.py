@@ -426,6 +426,7 @@ def html_build_chain(*func_names: str, **context) -> str:
 def nav_links(**context) -> str:
     """Let this be the navigation bar of the page."""
     global _COMPONENTS
+    emit(f"nav_links({context}) ({_COMPONENTS['html'].keys()})")
     links = [
         elem('a', page.replace('_', ' ').title() , href=f'/{page}')
         for page in _COMPONENTS['html'].keys()
