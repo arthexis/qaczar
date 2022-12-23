@@ -394,17 +394,14 @@ def hyper(tag: str, wrap: str | tuple = None, **attrs) -> t.Callable:
 def build_html_chain(*func_names: str, **context) -> str:
     """Let all HTML content be generated from pure functions and context."""
     global _LOCAL
-    # TODO: Handle exceptions in the chain.
-    # TODO: Allow overriding functions from the site python module.
     try:
         if _LOCAL.site not in sys.path: sys.path.append(_LOCAL.site)
         site_module = importlib.import_module(_LOCAL.site)
         funcs = [getattr(site_module, name) for name in func_names]
     except (ModuleNotFoundError, AttributeError):
-        # If the module is not found, use the globals
         funcs = [globals()[name] for name in func_names]
-    # Execute the functions in reverse order
-
+    except Exception as e:
+        return f"<h1>ERROR: {e}</h1>"
     for i, func in enumerate(reversed(funcs)): 
         emit(f"Step #{i} {func.__name__}({context})")
         block = func(**context)
