@@ -26,12 +26,12 @@ import typing as t
 
 _PYTHON = sys.executable
 _PID = os.getpid()
-_BRANCH = 'main'
 _DIR = os.path.dirname(os.path.abspath(__file__))
 
+BRANCH = 'main'
 RELEASE = '0.1'
 DEBUG = True
-APP = os.path.basename(_DIR)
+APP = os.path.basename(_DIR)  # Currently: 'qaczar'
 LANG = 'en'
 
 def iso8601() -> str: 
@@ -482,7 +482,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
         _access_log(self.address_string(), format % args)
 
     def _rfile_read(self, size: int = None) -> bytes:
-        """Read the request body."""
+        """Let us read the request body (ie. for parsing form data)."""
         if size is None: size = int(self.headers['Content-Length'])
         return self.rfile.read(size)
 
@@ -538,6 +538,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
         return super().send_header(keyword, value)
 
 class SSLServer(ss.ThreadingTCPServer):
+    """Let us subclass the ThreadingTCPServer to add SSL support."""
     # TODO: This creates 1 thread per request, which is not ideal. Implement a thread pool.
     def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True):
         ss.ThreadingTCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate)
@@ -552,6 +553,7 @@ _COUNTER = 0
 
 @imports('urllib3')
 def request_factory(urllib3):
+    """Let us make requests to the server and check the response."""	
     # TODO: Design a string for the user-agent and use it to track tests.
     global HOST, PORT, APP
     http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=_build_ssl_certs()[0])
@@ -578,12 +580,13 @@ def test_server(*args, **kwargs) -> t.NoReturn:
 #@#  REPOSITORY
 
 def _commit_source() -> t.NoReturn:
+    """Let us commit the source code to the git repository."""
     # TODO: Create missing branch if not exists when pushing to git.
-    global _BRANCH
+    global BRANCH
     os.system('git add .')
     os.system('git commit -m "auto commit" -q')
-    os.system(f'git push origin {_BRANCH} -q')
-    emit(f"Source committed to {_BRANCH}.")
+    os.system(f'git push origin {BRANCH} -q')
+    emit(f"Source committed to {BRANCH}.")
 
 
 #@# BASE ROLES
