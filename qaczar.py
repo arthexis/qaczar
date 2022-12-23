@@ -38,12 +38,12 @@ def iso8601() -> str:
     """Let time flow in a single direction, one second at a time."""
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
 
-def emit(msg: str, div: str = '', trace: bool =False,  _at=None) -> None: 
+def emit(msg: str, sep: str = '', trace: bool =False,  _at=None) -> None: 
     """Let the music of the spheres guide your steps."""
     # TODO: Consider a debug only function that also stores the message in a log file.
     global _PID
     frame = _at or sys._getframe(1)  
-    if div: print((div or '-') * 100, file=sys.stderr)
+    if sep: print((sep or '-') * (100 / len(sep)), file=sys.stderr)
     print(f'[{_PID}:{frame.f_lineno} {iso8601()}] {frame.f_code.co_name}:  {msg}', file=sys.stderr)
     if trace: traceback.print_stack(frame, file=sys.stderr)
 
@@ -87,15 +87,15 @@ def dedent(code: str) -> str:
     indent = len(code) - len(code.lstrip()) - 1
     return '\n'.join(line[indent:] for line in code.splitlines())
 
-def timed(f: t.Callable) -> t.Callable:
+def timed(func: t.Callable) -> t.Callable:
     """Let every function be judged with its proper measure."""
     global DEBUG
-    if not DEBUG: return f
-    @functools.wraps(f)
+    if not DEBUG: return func
+    @functools.wraps(func)
     def _timed(*args, **kwargs):
         start = time.time(); elapsed = time.time() - start
-        result = f(*args, **kwargs)
-        emit(f"Function <{f.__name__}> {args=} {kwargs=} took {elapsed:.4f} seconds.")
+        result = func(*args, **kwargs)
+        emit(f"Function <{func.__name__}> {args=} {kwargs=} took {elapsed:.4f} seconds.")
         return result
     return _timed
 
@@ -177,13 +177,13 @@ def _restart_py(proc: subprocess.Popen = None) -> subprocess.Popen:
     else: args, kwargs = [], {}
     return _start_py(f'{APP}.py', *args, **kwargs)
 
-def _watch_forever(proc: subprocess.Popen, fn: str) -> t.NoReturn:  
+def _watch_forever(proc: subprocess.Popen, fname: str) -> t.NoReturn:  
     """Let the script die and restart it. If it dies twice, stop the watcher."""
-    source, old_mtime, stable = _read_file(fn), mtime_file(fn), True
+    source, old_mtime, stable = _read_file(fname), mtime_file(fname), True
     while True:
         time.sleep(2.6)
-        if (new_mtime := mtime_file(fn)) != old_mtime:
-            mutation, old_mtime = _read_file(fn), new_mtime
+        if (new_mtime := mtime_file(fname)) != old_mtime:
+            mutation, old_mtime = _read_file(fname), new_mtime
             if mutation != source:
                 emit(f"Mutation detected. Restart and mark unstable.")
                 proc, stable = _restart_py(proc), False
@@ -197,7 +197,7 @@ def _watch_forever(proc: subprocess.Popen, fn: str) -> t.NoReturn:
             halt(f"Script died twice. Stopping watcher.")  # Halt from above.
         if not stable:
             emit(f"Stabilizing {proc.pid=}.")
-            source, stable = _read_file(fn), True
+            source, stable = _read_file(fname), True
         
 
 #@# DATABASE
