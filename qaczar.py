@@ -494,7 +494,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
             _write_file(self.work_path, content, encoding='utf-8')
         
     def translate_path(self, path: str = None) -> str:
-        """Let each request be served from the working directory when needed."""
+        """Let each request be served from its work path (.server) when needed."""
         return super().translate_path(path) if not self.work_path else self.work_path
 
     def do_HEAD(self) -> None:
@@ -507,16 +507,18 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
         self._build_response('POST'); return super().do_GET()
     
     def end_headers(self) -> None:
-        """Let us add some headers to the response."""
+        """Let us add some headers to the end of the response (before the body)."""
         duration = time.time() - self.start
         self.send_header('Server-Timing', f'miss;dur={duration:.4f}')
         self.send_header('Cache-Control', f'Etag: {mtime_file(self.path)}')
         return super().end_headers()
     
     def send_header(self, keyword: str, value: str) -> None:
+        """Let us override some headers before they are sent."""
+        global RELEASE
         if keyword.lower() == 'content-type' and 'text' in value and 'encoding' not in value:
             value = f"{value}; charset=utf-8"
-        elif keyword == 'Server': value = f"{value} qaczar.py/0.1"
+        elif keyword == 'Server': value = f"{value} qaczar.py/{RELEASE}"
         emit(f"Sent header {keyword}: {value}")
         return super().send_header(keyword, value)
 
