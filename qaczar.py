@@ -427,8 +427,7 @@ def header_nav(**context) -> str:
     """Let this be the header of the page."""
     return [
             elem('a', 'QACZAR', href='/'),
-            elem('a', 'ABOUT', href='/about'),
-            elem('a', 'CONTACT', href='/contact'),
+            elem('a', 'Home', href='/welcome.html'),
         ]
 
 @hyper('footer', 'p')
