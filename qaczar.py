@@ -475,7 +475,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
         global SITE
         """Let each request be parsed and processed. If needed, overwrite the response file."""
         # I really hope I don't have to rewrite this one function forever. --Sysyphus
-        self.work_path, self.start = None, time.time()
+        self.server_path, self.start = None, time.time()
         if self.path == '/' or not self.path: self.path = f'/{SITE}/hello_world.html'
         if self.path.endswith('/'): self.path += 'index.html'
         if method != 'POST': data = {}
@@ -489,12 +489,12 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
             with set_site_dir(site) as site_dir:
                 emit(f"Build at {site_dir=} {funcs=} {qs=} {data=}")
                 content = build_html_chain(*funcs, **qs, **data)
-            self.work_path = os.path.join('.server', self.path[1:])
-            _write_file(self.work_path, content, encoding='utf-8')
+            self.server_path = os.path.join('.server', self.path[1:])
+            _write_file(self.server_path, content, encoding='utf-8')
         
     def translate_path(self, path: str = None) -> str:
         """Let each request be served from the working directory when needed."""
-        return super().translate_path(path) if not self.work_path else self.work_path
+        return super().translate_path(path) if not self.server_path else self.server_path
 
     def do_HEAD(self) -> None:
         self._build_response('HEAD'); return super().do_HEAD()
