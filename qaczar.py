@@ -401,6 +401,7 @@ def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Cal
             ln = func.__code__.co_firstlineno
             raise TypeError(f"Function @hyper({func.__name__}) ({ln}) must accept **context")
         _attrs['data-qhf'] = func.__name__
+        _attrs['data-qln'] = func.__code__.co_firstlineno
         _COMPONENTS[_tag][func.__name__] = func
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
