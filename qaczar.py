@@ -428,10 +428,19 @@ def html_build_chain(*func_names: str, **context) -> str:
 #@# WEB COMPONENTS
 
 @hyper('nav', 'a')
-def nav_links(**context) -> str:
+def app_nav() -> str:
+    """Let this be the body of the page."""
+    global _COMPONENTS
+    return [
+        elem('a', page.replace('_', ' ').title() , href=f'/{page}')
+        for page in _COMPONENTS['body'].keys()
+        if not page.startswith('_') and page not in ('hello_world', 'index')
+    ]
+
+@hyper('nav', 'a')
+def site_links(**context) -> str:
     """Let this be the navigation bar of the page."""
     global _COMPONENTS
-    emit(f"nav_links({context}) ({_COMPONENTS=})")
     links = [
         elem('a', page.replace('_', ' ').title() , href=f'/{page}')
         for page in _COMPONENTS['body'].keys()
@@ -440,13 +449,13 @@ def nav_links(**context) -> str:
     return links
 
 @hyper('header', ('h1', 'nav'))
-def header_nav(**context) -> str:
+def site_header(**context) -> str:
     """Let this be the header of the page."""
     global _COMPONENTS
-    return elem('a', 'QACZAR', href='/'), nav_links(**context)
+    return elem('a', 'QACZAR', href='/'), site_links(**context)
 
 @hyper('footer', 'p')
-def footer_links(**context) -> str:
+def site_footer(**context) -> str:
     """Let this be the footer of the page."""
     global SITE
     return elem('a', f'Home', href=f'{SITE}/welcome.html')
@@ -467,7 +476,7 @@ def app_comments(**context) -> str:
 @hyper('body', ('header', 'main', 'footer'))
 def hello_world(**context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 	
-    return chain(header_nav, app_roadmap, app_comments, footer_links)(**context)
+    return chain(site_header, app_roadmap, app_comments, site_footer)(**context)
 
 
 #@# HTTPS SERVER
