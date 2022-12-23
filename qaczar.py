@@ -392,7 +392,7 @@ def hyper(tag: str, wrap: str | tuple = None, **attrs) -> t.Callable:
     return _decorator
 
 def build_html_chain(*func_names: str, **context) -> str:
-    """Let all HTML content be generated from pure functions and context."""
+    """Let all HTML content be generated from pure functions and request context."""
     global _LOCAL
     try:
         if _LOCAL.site not in sys.path: sys.path.append(_LOCAL.site)
