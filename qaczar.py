@@ -400,7 +400,7 @@ def build_html_chain(*func_names: str, **context) -> str:
         funcs = [getattr(site_module, name) for name in func_names]
     except (ModuleNotFoundError, AttributeError):
         funcs = [globals()[name] for name in func_names]
-    except Exception as e:
+    except (KeyError, TypeError) as e:
         return f"<h1>ERROR: {e}</h1>"
     for i, func in enumerate(reversed(funcs)): 
         emit(f"Step #{i} {func.__name__}({context})")
