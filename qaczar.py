@@ -50,7 +50,7 @@ def emit(msg: str, div: str = '', trace: bool =False,  _at=None) -> None:
 def halt(msg: str, trace: bool=False) -> t.NoReturn:
     """Let the halting problem be proven empirically."""
     frame = sys._getframe(1)
-    emit(f"{msg} <- Final message.", _at=frame)
+    emit(f"{msg} <- Final message.", _at=frame, trace=trace)
     emit(f"Halting all processes.", _at=frame)
     sys.exit(0)
 
