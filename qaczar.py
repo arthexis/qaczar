@@ -106,7 +106,7 @@ def imports(*modules: tuple[str]) -> t.Callable:
             return f(*imported, *args, **kwargs)
         return wrapper
     return decorator
-    
+
 
 #@# SUBPROCESSING
 
@@ -319,7 +319,6 @@ def _purge_database():
 import inspect
 import itertools
 
-@functools.lru_cache(maxsize=128)
 def elem(tag: str, content: str | list = None, cdata: bool=False, **attrs) -> str:
     """Let all serialization happen through hypertext."""
     if 'data' in attrs: 
@@ -332,7 +331,7 @@ def elem(tag: str, content: str | list = None, cdata: bool=False, **attrs) -> st
     if cdata: content = f'<![CDATA[{content}]]>'
     return f'<{tag} {attrs}>{content}</{tag}>'
 
-def elem_lis(items, sep: str = ''):
+def elem_list(items, sep: str = ''):
     return sep.join(elem('li', item, data={'seq': i}) for i, item in enumerate(items))
 
 @functools.lru_cache(maxsize=128)
@@ -439,10 +438,7 @@ def nav_links(**context) -> str:
 def header_nav(**context) -> str:
     """Let this be the header of the page."""
     global _COMPONENTS
-    return [
-            elem('a', 'QACZAR', href='/'), 
-            nav_links(**context)
-        ]
+    return elem('a', 'QACZAR', href='/'), nav_links(**context)
 
 @hyper('footer', 'p')
 def footer_links(**context) -> str:
@@ -455,10 +451,7 @@ def app_roadmap(**context) -> str:
     """Let there be a roadmap of the application."""
     global APP
     todos = scan_script(f'{APP}.py', '# TODO:')
-    return [
-            elem('h2', 'Roadmap'),
-            ''.join(elem('li', todo) for todo in todos)
-        ]
+    return elem('h2', 'Roadmap'), elem_list(todos)
 
 @hyper('body', ('header', 'main', 'footer'))
 def hello_world(**context) -> str:
