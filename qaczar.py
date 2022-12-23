@@ -656,7 +656,7 @@ def _role_dispatch(*args, **kwargs) -> t.NoReturn:
         emit(f"Started '{role_name}' {args=} {kwargs=}.")
         role(*args, **kwargs)
     except AssertionError as e:
-        (halt if DEBUG else emit)(f"Assertion failed: {e}")
+        (halt if DEBUG else emit)(f"Assertion failed: {e}", trace=True)
     except KeyboardInterrupt:
         halt("Interrupted by user.")
 
