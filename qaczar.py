@@ -415,11 +415,12 @@ def elem_meta() -> str:
 def elem_html(body: str, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     # TODO: Generate the CSS code dynamically instead of reading a file.
+    css = site_css('goldenrod', 'tetradic')
     return f"""
     <!DOCTYPE html><html lang="en">
     <head>
         {elem_meta()}
-        <style>{site_css('goldenrod', 'tetradic')}</style>
+        <style>{css}</style>
         <title>{current_site()}</title>
     </head>
     <body>{body}</body>
