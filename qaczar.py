@@ -43,7 +43,7 @@ def emit(msg: str, sep: str = '', trace: bool =False,  _at=None) -> None:
     # TODO: Consider a debug only function that also stores the message in a log file.
     global _PID
     frame = _at or sys._getframe(1)  
-    if sep: print((sep or '-') * (100 / len(sep)), file=sys.stderr)
+    if sep: print((sep or '-') * (100 // len(sep)), file=sys.stderr)
     print(f'[{_PID}:{frame.f_lineno} {iso8601()}] {frame.f_code.co_name}:  {msg}', file=sys.stderr)
     if trace: traceback.print_stack(frame, file=sys.stderr)
 
