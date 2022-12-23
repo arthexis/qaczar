@@ -333,13 +333,8 @@ def _color_scheme(webcolors, primary: str, scheme: str='triadic') -> list[str]:
     # has its own three color components.
     if scheme == 'triadic':
         hls = colorsys.rgb_to_hls(*webcolors.name_to_rgb(primary))
-        rgb = colorsys.hls_to_rgb(*(hls[0] + 0.333, hls[1], hls[2]))
-        emit(f"RGB: {rgb}")
-        # MAke sure all elements of rbg are integers.
-        rgb = tuple(int(x * 255) for x in rgb)
-        secondary = webcolors.rgb_to_hex(rgb)
-        emit(f"Next color {secondary=}")
-        return [primary, secondary]
+        emit(f"{primary=} {hls=}")
+        return [primary, primary, primary, primary]
     else: raise ValueError(f"Unsupported color scheme: {scheme}")
     
 def site_css(primary: str, scheme: str='tetradic') -> str:
