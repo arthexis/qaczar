@@ -322,6 +322,29 @@ def recorded(func: t.Callable) -> t.Callable:
 
 #@# CSS GENERATOR
 
+import colorsys
+
+# Function that picks 4 colors based on an input string.
+# Then, assignes them to css classes and returs the css.
+def color_scheme(name: str) -> str:
+    """Generate a color scheme based on a name."""
+    colors = [f'#{c:06x}' for c in colorsys.hsv_to_rgb(
+        sum(ord(c) for c in name) % 360 / 360, 0.5, 0.95)]
+    return f"""
+        .{name}-bg {{ background-color: {colors[0]}; }}
+        .{name}-fg {{ color: {colors[0]}; }}
+        .{name}-border {{ border-color: {colors[0]}; }}
+        .{name}-hover:hover {{ background-color: {colors[1]}; }}
+        .{name}-hover:hover {{ color: {colors[1]}; }}
+        .{name}-hover:hover {{ border-color: {colors[1]}; }}
+        .{name}-active:active {{ background-color: {colors[2]}; }}
+        .{name}-active:active {{ color: {colors[2]}; }}
+        .{name}-active:active {{ border-color: {colors[2]}; }}
+        .{name}-focus:focus {{ background-color: {colors[3]}; }}
+        .{name}-focus:focus {{ color: {colors[3]}; }}
+        .{name}-focus:focus {{ border-color: {colors[3]}; }}
+    """
+
 
 #@# HTML ELEMENTS
 
