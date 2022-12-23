@@ -29,6 +29,7 @@ _PID = os.getpid()
 _BRANCH = 'main'
 _DIR = os.path.dirname(os.path.abspath(__file__))
 
+RELEASE = '0.1'
 DEBUG = True
 APP = os.path.basename(_DIR)
 LANG = 'en'
