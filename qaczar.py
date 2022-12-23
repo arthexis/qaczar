@@ -54,16 +54,10 @@ def halt(msg: str) -> t.NoReturn:
     emit(f"Halting all processes.", _at=frame)
     sys.exit(0)
 
-def mtime_file(fname: str) -> float:
+def _mtime_file(fname: str) -> float:
     """Let time be an illusion, and mtime doubly so."""
     if not os.path.isfile(fname): return 0.0
     return os.path.getmtime(fname)
-
-def set_site_dir(site: str) -> None:
-    """Let the site be the site of the crime."""
-    global _DIR
-    _DIR = os.path.join(_DIR, site)
-    if not os.path.isdir(_DIR): os.makedirs(_DIR)
 
 def _read_file(fname: str, encoding=None) -> bytes | str:
     """Consult millions of flip-flops on the histories of dead programs."""
@@ -81,11 +75,6 @@ def _write_file(fname: str, data: bytes | str, encoding=None) -> None:
 
 import importlib
 import functools
-
-def dedent(code: str) -> str:
-    """Let python functions work even if we take them out of context."""	
-    indent = len(code) - len(code.lstrip()) - 1
-    return '\n'.join(line[indent:] for line in code.splitlines())
 
 def timed(func: t.Callable) -> t.Callable:
     """Let every function be judged with its proper measure."""
@@ -179,10 +168,10 @@ def _restart_py(proc: subprocess.Popen = None) -> subprocess.Popen:
 
 def _watch_forever(proc: subprocess.Popen, fname: str) -> t.NoReturn:  
     """Let the script die and restart it. If it dies twice, stop the watcher."""
-    source, old_mtime, stable = _read_file(fname), mtime_file(fname), True
+    source, old_mtime, stable = _read_file(fname), _mtime_file(fname), True
     while True:
         time.sleep(2.6)
-        if (new_mtime := mtime_file(fname)) != old_mtime:
+        if (new_mtime := _mtime_file(fname)) != old_mtime:
             mutation, old_mtime = _read_file(fname), new_mtime
             if mutation != source:
                 emit(f"Mutation detected. Restart and mark unstable.")
@@ -399,9 +388,11 @@ def build_html_chain(*func_names: str, **context) -> str:
         site_module = importlib.import_module(_LOCAL.site)
         funcs = [getattr(site_module, name) for name in func_names]
     except (ModuleNotFoundError, AttributeError):
-        funcs = [globals()[name] for name in func_names]
-    except (KeyError, TypeError) as e:
-        return f"<h1>ERROR: {e}</h1>"
+        try:
+            funcs = [globals()[name] for name in func_names]
+        except (KeyError, TypeError) as e:
+            # TODO: Replace with calling a function that generates the error page.
+            return f"<h1>ERROR: {e}</h1>"
     for i, func in enumerate(reversed(funcs)): 
         emit(f"Step #{i} {func.__name__}({context})")
         block = func(**context)
@@ -412,7 +403,7 @@ def build_html_chain(*func_names: str, **context) -> str:
 #@# WEB COMPONENTS
 
 @hyper('header', ('h1', 'nav'))
-def header_nav(**qs) -> str:
+def header_nav(**context) -> str:
     """Let this be the header of the page."""
     return [
             elem('a', 'QACZAR', href='/'),
@@ -504,7 +495,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
         else: data = parse.parse_qs(self._rfile_read().decode('utf-8'))
         pure_path, qs = self.path.split('?', 1) if '?' in self.path else (self.path, '')
         if '.' not in pure_path: pure_path += '.html'
-        if pure_path.endswith('.html'):
+        if pure_path.endswith('.html'):  # Everything else is served as-is.
             qs = parse.parse_qs(qs) if qs else {}
             site, *funcs = [func for func in pure_path[1:-5].split('/') if func]
             if not funcs: site, funcs = SITE, [site]
@@ -532,7 +523,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
         duration = time.time() - self.start
         self.send_header('Server-Timing', f'miss;dur={duration:.4f}')
         if not self.work_path:
-            self.send_header('Cache-Control', f'Etag: {mtime_file(self.path)}')
+            self.send_header('Cache-Control', f'Etag: {_mtime_file(self.path)}')
         return super().end_headers()
     
     def send_header(self, keyword: str, value: str) -> None:
