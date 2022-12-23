@@ -486,9 +486,8 @@ def site_page(title: str, **attrs) -> str:
 
 @site_page('Hello from QACZAR')
 def hello_world(**context) -> str:
-    """Let this be the default page. It shall have a roadmap.""" 	
-    context['subject'] = 'roadmap'
-    return chain(site_header, app_features, site_footer)(**context)
+    """Let this be the default page. It shall have a roadmap.""" 
+    return app_features(subject='roadmap', **context)
 
 @site_page('Latest Comments')
 def app_comments(**context) -> str:
