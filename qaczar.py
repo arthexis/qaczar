@@ -361,7 +361,7 @@ def form_elem(func: t.Callable) -> str:
     form += f"<button type='submit'>EXECUTE</button></form>"
     return form
 
-def html_elem(body: str) -> str:
+def html_elem(body: str, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     global APP, _LOCAL
     if hasattr(_LOCAL, 'site'):
@@ -374,7 +374,8 @@ def html_elem(body: str) -> str:
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <style>{style}</style><title>{title}</title>
+        <style>{style}</style>
+        <title>{title}</title>
     </head>
     <body>{body}</body>
     </html>
@@ -397,7 +398,7 @@ def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Cal
             elif isinstance(_wrap, tuple):
                 result = ''.join(elem(w, r) 
                     for w, r in itertools.zip_longest(_wrap, result, fillvalue=_wrap[-1]))
-            if _tag in ('html', 'body'): return html_elem(result)
+            if _tag in ('html', 'body'): return html_elem(result, **_attrs)
             return elem(_tag, result, **_attrs)
         return _hyper
     return _decorator
