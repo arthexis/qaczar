@@ -38,12 +38,12 @@ def iso8601() -> str:
     """Let time flow in a single direction, one second at a time."""
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
 
-def emit(msg: str, sep: str = '', trace: bool =False,  _at=None) -> None: 
+def emit(msg: str, div: str = '', trace: bool =False,  _at=None) -> None: 
     """Let the music of the spheres guide your steps."""
     # TODO: Consider a debug only function that also stores the message in a log file.
     global _PID
     frame = _at or sys._getframe(1)  
-    if sep: print((sep or '-') * (100 // len(sep)), file=sys.stderr)
+    if div: print((div or '-') * (100 // len(div)), file=sys.stderr)
     print(f'[{_PID}:{frame.f_lineno} {iso8601()}] {frame.f_code.co_name}:  {msg}', file=sys.stderr)
     if trace: traceback.print_stack(frame, file=sys.stderr)
 
