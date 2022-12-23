@@ -216,11 +216,9 @@ def write_file(fname: str, data: bytes | str, encoding=None) -> None:
     site_fname = os.path.join(_LOCAL.site, fname)
     _write_file(site_fname, data, encoding)
 
-def scan_script(fname: str = None, prefix: str = None) -> t.Generator[str, None, None]:
+def scan_script(fname: str, prefix: str = None) -> t.Generator[str, None, None]:
     """Let us read a script from the site directory, filtering by prefix optionally."""
-    global APP
-    if not fname: fname = f'{APP}.py'
-    for line in read_file(fname).splitlines():
+    for line in read_file(fname, encoding='utf-8').splitlines():
         if not prefix: yield line
         elif line.strip().startswith(prefix): yield line.strip()[len(prefix):]
 
@@ -452,7 +450,9 @@ def footer_links(**context) -> str:
 @hyper('article', css='roadmap')
 def app_roadmap(**context) -> str:
     """Let there be a roadmap of the application."""
-    todos = scan_script('# TODO:')
+    global APP
+    todos = scan_script(f'{APP}.py', '# TODO:')
+    return elem('ol', ''.join(elem('li', todo) for todo in todos))
 
 @hyper('body', ('header', 'main', 'footer'))
 def hello_world(**context) -> str:
