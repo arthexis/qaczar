@@ -431,23 +431,22 @@ def html_build_chain(*func_names: str, **context) -> str:
 #@# APP COMPONENTS
 
 @hyper('article', ('h2', 'ol'), css='roadmap')
-def app_roadmap(**context) -> str:
-    """Let there be a roadmap of the application."""
+def app_features(subject: str, **context) -> str:
+    """Let there be a function that generates a list of the app's features."""
     global APP
-    todos = scan_script(f'{APP}.py', '# TODO:')
-    return elem('h2', 'Roadmap'), elem_list(todos)
-
-@hyper('article', ('h2', 'ol'), css='comments')
-def app_comments(**context) -> str:
-    global APP
-    comms = scan_script(f'{APP}.py', '# ')
-    return elem('h2', 'Comments'), elem_list(comms)
+    if subject == 'roadmap': 
+        features = scan_script(f'{APP}.py', '# TODO:')
+    elif subject == 'changelog':
+        features = scan_script(f'{APP}.py', '# RJGO:')
+    else: features = []
+    if not features: features = ['Nothing to see here.']
+    return elem('h2', subject.title()), elem_list(features)
 
 
 #@# SITE COMPONENTS
 
 @hyper('nav', 'a')
-def site_nav() -> str:
+def site_nav(**context) -> str:
     """Let there be a list of navigation links to other site pages."""
     global _COMPONENTS
     return [
@@ -485,7 +484,8 @@ def site_page(title: str, **attrs) -> str:
 @site_page('Hello from QACZAR')
 def hello_world(**context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 	
-    return chain(site_header, app_roadmap, site_footer)(**context)
+    context['subject'] = 'roadmap'
+    return chain(site_header, app_features, site_footer)(**context)
 
 @site_page('Latest Comments')
 def app_comments(**context) -> str:
