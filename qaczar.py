@@ -392,9 +392,9 @@ def hyper(tag: str, wrap: str | tuple = None, **attrs) -> t.Callable:
 def build_html_chain(*func_names: str, **context) -> str:
     """Let all HTML content be generated from pure functions and context."""
     # TODO: Handle exceptions in the chain.
-    emit(f"Building HTML chain: {func_names}")
     funcs = [globals()[name] for name in func_names]
-    for func in reversed(funcs): 
+    for i, func in enumerate(reversed(funcs)): 
+        emit(f"Step #{i} {func.__name__}({context})")
         block = func(**context)
         context[func.__name__] = block
     return block
@@ -490,7 +490,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
             site, *funcs = [func for func in pure_path[1:-5].split('/') if func]
             if not funcs: site, funcs = SITE, [site]
             with set_site_dir(site) as site_dir:
-                emit(f"Build at {site=} {funcs=} {qs=} {data=}")
+                emit(f"Build for {site=} {funcs=} {qs=} {data=}")
                 content = build_html_chain(*funcs, **qs, **data)
             self.work_path = os.path.join('.server', self.path[1:])
             _write_file(self.work_path, content, encoding='utf-8')
