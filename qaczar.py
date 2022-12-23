@@ -107,10 +107,10 @@ def imports(*modules: tuple[str]) -> t.Callable:
         return wrapper
     return decorator
 
-def chain(*funcs, **context) -> t.Callable:
+def chain(*funcs) -> t.Callable:
     """Let us generate a callable chain of functions that share a context."""
-    def _chain():
-        for func in funcs: yield func(**context)
+    def _chain(*args, **kwargs):
+        for func in funcs: yield func(*args, **kwargs)
     return _chain
 
 
