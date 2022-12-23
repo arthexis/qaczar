@@ -107,6 +107,12 @@ def imports(*modules: tuple[str]) -> t.Callable:
         return wrapper
     return decorator
 
+def chain(*funcs, **context) -> t.Callable:
+    """Let us generate a callable chain of functions that share a context."""
+    def _chain():
+        for func in funcs: yield func(**context)
+    return _chain
+
 
 #@# SUBPROCESSING
 
@@ -387,6 +393,7 @@ def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Cal
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
             result = func(*args, **kwargs)
+            if callable(result): return result()
             if isinstance(_wrap, str):
                 if isinstance(result, str): result = elem(_wrap, result)
                 else: result = ''.join(elem(_wrap, r) for r in result) 
@@ -454,7 +461,7 @@ def app_roadmap(**context) -> str:
 @hyper('body', ('header', 'main', 'footer'))
 def hello_world(**context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 	
-    return [func(**context) for func in [header_nav, app_roadmap, footer_links]]
+    return chain(header_nav, app_roadmap, footer_links)(**context)
 
 
 #@# HTTPS SERVER
