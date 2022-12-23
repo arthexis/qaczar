@@ -328,8 +328,12 @@ import colorsys
 # Then, assignes them to css classes and returs the css.
 def color_scheme(name: str) -> str:
     """Generate a color scheme based on a name."""
-    colors = [f'#{c:06x}' for c in colorsys.hsv_to_rgb(
-        sum(ord(c) for c in name) % 360 / 360, 0.5, 0.95)]
+    colors = []
+    for i in range(4):
+        h = hash(name + str(i)) % 360
+        s = 0.5 + hash(name + str(i)) % 50 / 100
+        l = 0.5 + hash(name + str(i)) % 50 / 100
+        colors.append(f"hsl({h}, {s*100}%, {l*100}%)")
     return f"""
         .{name}-bg {{ background-color: {colors[0]}; }}
         .{name}-fg {{ color: {colors[0]}; }}
@@ -398,17 +402,21 @@ def elem_meta() -> str:
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     """
 
+def current_site() -> str:
+    global APP, _LOCAL
+    return _LOCAL.site if hasattr(_LOCAL, 'site') else APP
+
 def elem_html(body: str, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
-    global APP, _LOCAL
     # TODO: Generate the CSS code dynamically instead of reading a file.
     style = "* {margin: 0; padding: 0;}"
+    style += color_scheme(site := current_site())
     return f"""
     <!DOCTYPE html><html lang="en">
     <head>
         {elem_meta()}
         <style>{style}</style>
-        <title>{_LOCAL.site if hasattr(_LOCAL, 'site') else APP}</title>
+        <title>{site}</title>
     </head>
     <body>{body}</body>
     </html>
