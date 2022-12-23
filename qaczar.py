@@ -319,6 +319,7 @@ def write_file(fname: str, data: bytes | str, encoding=None) -> None:
 #@# HTML GENERATION
 
 import inspect
+import itertools
 
 def elem(tag: str, content: str=None, cdata: bool=False, **attrs) -> str:
     """Let all serialization happen through hypertext."""
@@ -383,7 +384,8 @@ def hyper(tag: str, wrap: str | tuple = None, **attrs) -> t.Callable:
                 if isinstance(result, str): result = elem(_wrap, result)
                 else: result = ''.join(elem(_wrap, r) for r in result) 
             elif isinstance(_wrap, tuple):
-                result = ''.join(elem(w, r) for w, r in zip(_wrap, result))
+                result = ''.join(elem(w, r) 
+                    for w, r in itertools.zip_longest(_wrap, result, fillvalue=_wrap[-1]))
             if _tag in ('html', 'body'): return html_elem(result)
             return elem(_tag, result, **_attrs)
         return _hyper
@@ -401,6 +403,16 @@ def build_html_chain(*func_names: str, **context) -> str:
 
 
 #@# WEB COMPONENTS
+
+@hyper('header', ('h1', 'nav'))
+def header(**qs) -> str:
+    """Let this be the header of the page."""
+    return [
+            elem('a', 'QACZAR', href='/'),
+            elem('a', 'ABOUT', href='/about'),
+            elem('a', 'CONTACT', href='/contact'),
+        ]
+
 
 @hyper('body', ('header', 'main', 'footer'))
 def hello_world(**qs) -> str:
