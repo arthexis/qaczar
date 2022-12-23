@@ -310,6 +310,7 @@ def write_file(fname: str, data: bytes | str, encoding=None) -> None:
 import inspect
 import itertools
 
+@functools.lru_cache(maxsize=128)
 def elem(tag: str, content: str=None, cdata: bool=False, **attrs) -> str:
     """Let all serialization happen through hypertext."""
     if 'data' in attrs: 
@@ -322,7 +323,7 @@ def elem(tag: str, content: str=None, cdata: bool=False, **attrs) -> str:
     if cdata: content = f'<![CDATA[{content}]]>'
     return f'<{tag} {attrs}>{content}</{tag}>'
 
-@functools.cache
+@functools.lru_cache(maxsize=128)
 def input_elem(field: str, param: inspect.Parameter) -> str:
     """Let function annotations determine input types and validations."""
     input_type = 'text'
@@ -335,7 +336,7 @@ def input_elem(field: str, param: inspect.Parameter) -> str:
         if param.annotation is bool: attrs['checked'] = 'checked'
     return elem('input', **attrs)
 
-@functools.cache
+@functools.lru_cache(maxsize=128)
 def form_elem(func: t.Callable) -> str:
     """Let function signatures determine form fields."""
     func_name = func.__name__
@@ -351,14 +352,18 @@ def form_elem(func: t.Callable) -> str:
 
 def html_elem(body: str) -> str:
     """Let there be some standard boilerplate HTML."""
-    global APP
-    style = _read_file(f'{APP}.css', encoding='utf-8')
+    global APP, _LOCAL
+    if hasattr(_LOCAL, 'site'):
+        site_css = os.path.join(_LOCAL.site, f'{_LOCAL.site}.css')
+        if os.path.exists(site_css): style = _read_file(site_css, encoding='utf-8')
+    else: style = _read_file(f'{APP}.css', encoding='utf-8')
+    title = f"{APP} - {_LOCAL.site}" if hasattr(_LOCAL, 'site') else APP
     return f"""
     <!DOCTYPE html><html lang="en">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <style>{style}</style><title>{APP}</title>
+        <style>{style}</style><title>{title}</title>
     </head>
     <body>{body}</body>
     </html>
