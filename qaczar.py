@@ -47,10 +47,10 @@ def emit(msg: str, div: str = '', trace: bool =False,  _at=None) -> None:
     print(f'[{_PID}:{frame.f_lineno} {iso8601()}] {frame.f_code.co_name}:  {msg}', file=sys.stderr)
     if trace: traceback.print_stack(frame, file=sys.stderr)
 
-def halt(msg: str, trace: bool=False) -> t.NoReturn:
+def halt(msg: str) -> t.NoReturn:
     """Let the halting problem be proven empirically."""
     frame = sys._getframe(1)
-    emit(f"{msg} <- Final message.", _at=frame, trace=trace)
+    emit(f"{msg} <- Final message.", _at=frame)
     emit(f"Halting all processes.", _at=frame)
     sys.exit(0)
 
