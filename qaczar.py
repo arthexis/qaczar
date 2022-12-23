@@ -536,11 +536,6 @@ def hello_world(**context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 
     return app_features(subject='roadmap', **context)
 
-@site_page('Latest Comments')
-def app_comments(**context) -> str:
-    """Let this be the comments page. It shall have a list of comments.""" 	
-    return chain(site_header, app_comments, site_footer)(**context)
-
 
 #@# HTTPS SERVER
 
