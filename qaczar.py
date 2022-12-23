@@ -320,7 +320,7 @@ def _purge_database():
         db.commit()
 
 
-#@# HTML GENERATION
+#@# HTML ELEMENTS
 
 import inspect
 import itertools
@@ -382,6 +382,9 @@ def elem_html(body: str, **attrs) -> str:
     </html>
     """
 
+
+#@# HTML GENERATORS
+
 _COMPONENTS = collections.defaultdict(dict)
 
 def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Callable:
@@ -425,29 +428,7 @@ def html_build_chain(*func_names: str, **context) -> str:
     return block
 
 
-#@# WEB COMPONENTS
-
-@hyper('nav', 'a')
-def site_nav() -> str:
-    """Let there be a list of navigation links to other site pages."""
-    global _COMPONENTS
-    return [
-        elem('a', page.replace('_', ' ').title() , href=f'/{page}')
-        for page in _COMPONENTS['body'].keys()
-        if not page.startswith('_') and page not in ('hello_world', 'index')
-    ]
-
-@hyper('header', ('h1', 'nav'))
-def site_header(**context) -> str:
-    """Let this be the header of the page."""
-    global _COMPONENTS
-    return elem('a', 'QACZAR', href='/'), site_nav(**context)
-
-@hyper('footer', 'p')
-def site_footer(**context) -> str:
-    """Let this be the footer of the page."""
-    global SITE
-    return elem('a', f'Home', href=f'{SITE}/welcome.html')
+#@# APP COMPONENTS
 
 @hyper('article', ('h2', 'ol'), css='roadmap')
 def app_roadmap(**context) -> str:
@@ -462,12 +443,51 @@ def app_comments(**context) -> str:
     comms = scan_script(f'{APP}.py', '# ')
     return elem('h2', 'Comments'), elem_list(comms)
 
-@hyper('body', ('header', 'main', 'footer'))
+
+#@# SITE COMPONENTS
+
+@hyper('nav', 'a')
+def site_nav() -> str:
+    """Let there be a list of navigation links to other site pages."""
+    global _COMPONENTS
+    return [
+        elem('a', page.replace('_', ' ').title() , href=f'/{page}')
+        for page in _COMPONENTS['body'].keys()
+        if not page.startswith('_') and page not in ('hello_world', 'index')
+    ]
+
+@hyper('header', ('h1', 'nav'))
+def site_header(title: str = None, **context) -> str:
+    """Let this be the header of the page."""
+    global _COMPONENTS, SITE
+    return elem('a', title or SITE, href='/'), site_nav(**context)
+
+@hyper('footer', 'p')
+def site_footer(**context) -> str:
+    """Let this be the footer of the page."""
+    global SITE
+    return elem('a', f'Home', href=f'{SITE}/welcome.html')
+
+def site_page(title: str, **attrs) -> str:
+    """Let us decorate a function to be a top page of the site."""
+    attrs['title'] = title
+    def _decorator(func: t.Callable) -> t.Callable:
+        @hyper('body', ('header', 'main', 'footer'))
+        @functools.wraps(func)
+        def _site_page(*args, **kwargs):
+            return chain(site_header, func, site_footer)(*args, **kwargs)
+        return _site_page
+    return _decorator
+
+
+#@# SITE PAGES
+
+@site_page('Hello from QACZAR')
 def hello_world(**context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 	
     return chain(site_header, app_roadmap, site_footer)(**context)
 
-@hyper('body', ('header', 'main', 'footer'))
+@site_page('Latest Comments')
 def app_comments(**context) -> str:
     """Let this be the comments page. It shall have a list of comments.""" 	
     return chain(site_header, app_comments, site_footer)(**context)
