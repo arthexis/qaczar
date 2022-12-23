@@ -322,6 +322,7 @@ def elem(tag: str, content: str=None, cdata: bool=False, **attrs) -> str:
     if cdata: content = f'<![CDATA[{content}]]>'
     return f'<{tag} {attrs}>{content}</{tag}>'
 
+@functools.cache
 def input_elem(field: str, param: inspect.Parameter) -> str:
     """Let function annotations determine input types and validations."""
     input_type = 'text'
