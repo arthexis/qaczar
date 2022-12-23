@@ -650,7 +650,7 @@ def _role_dispatch(*args, **kwargs) -> t.NoReturn:
     if 'watcher' not in kwargs: role = watcher_role
     elif 'server' not in kwargs: role = server_role
     elif 'tester' not in kwargs: role = tester_role
-    else: role = worker_role
+    else: role = worker_role  # A cluster can have multiple workers.
     role_name = role.__name__.replace('_role', '')
     try:
         emit(f"Started '{role_name}' {args=} {kwargs=}.")
