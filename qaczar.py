@@ -327,11 +327,11 @@ def recorded(func: t.Callable) -> t.Callable:
 import colorsys
 
 @imports('webcolors')
-def _color_scheme(webcolors, primary: str, scheme: str='triadic') -> list[str]:
+def _color_scheme(webcolors, primary: str, scheme: str='tetradic') -> list[str]:
     """Generate a list of colors."""
     # Each scheme should return a list with the appropriate number of colors, each color
     # has its own three color components.
-    if scheme == 'triadic':
+    if scheme == 'tetradic':
         hls = colorsys.rgb_to_hls(*webcolors.name_to_rgb(primary))
         emit(f"{primary=} {hls=}")
         return [primary, primary, primary, primary]
@@ -419,7 +419,7 @@ def elem_html(body: str, **attrs) -> str:
     <!DOCTYPE html><html lang="en">
     <head>
         {elem_meta()}
-        <style>{site_css('goldenrod', 'triadic')}</style>
+        <style>{site_css('goldenrod', 'tetradic')}</style>
         <title>{current_site()}</title>
     </head>
     <body>{body}</body>
