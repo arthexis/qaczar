@@ -392,6 +392,10 @@ def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Cal
     global _COMPONENTS
     if css: attrs['class'] = css
     def _decorator(func: t.Callable, _tag=tag, _wrap=wrap, _attrs=attrs) -> t.Callable:
+        # MAke sure the func can take variable number of keyword arguments (var can have any name)
+        if not func.__code__.co_flags & 0x08:
+            ln = func.__code__.co_firstlineno
+            raise TypeError(f"Function @hyper({func.__name__}) ({ln}) must accept **kwargs")
         _COMPONENTS[_tag][func.__name__] = func
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
@@ -399,7 +403,7 @@ def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Cal
             if callable(result): return result()
             if isinstance(_wrap, str):
                 if isinstance(result, str): result = elem(_wrap, result)
-                else: result = ''.join(elem(_wrap, r) for r in result) 
+                else: result = ''.join(elem(_wrap, r) for r in result)
             elif isinstance(_wrap, tuple):
                 result = ''.join(elem(w, r) 
                     for w, r in itertools.zip_longest(_wrap, result, fillvalue=_wrap[-1]))
