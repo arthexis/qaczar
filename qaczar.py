@@ -316,6 +316,7 @@ def elem(tag: str, content: str=None, cdata: bool=False, **attrs) -> str:
         for k, v in attrs['data'].items(): attrs[f'data-{k}'] = v
         del attrs['data']
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
+    if not isinstance(content, str): content = ''.join(content)
     if attrs and not content: return f'<{tag} {attrs}/>'
     if not content: return f'<{tag}/>'
     if cdata: content = f'<![CDATA[{content}]]>'
@@ -411,7 +412,14 @@ def header_nav(**context) -> str:
             elem('a', 'CONTACT', href='/contact'),
         ]
 
-@hyper('article', _class='about')
+@hyper('article', css='roadmap')
+def roadmap(**context) -> str:
+    """Let this be the roadmap of the page."""
+    return [
+            elem('h2', 'ROADMAP'),
+            elem('p', 'This is the roadmap of the page.'),
+        ]
+
 
 
 @hyper('body', ('header', 'main', 'footer'))
