@@ -205,8 +205,8 @@ def set_site_dir(site: str) -> str:
 def read_file(fname: str, encoding=None) -> str | bytes:
     """Let each site read files from their own directory."""
     global _LOCAL
-    site_fname = os.path.join(_LOCAL.site, fname)
-    if not os.path.exists(site_fname):
+    site_fname = os.path.join(_LOCAL.site, fname) if hasattr(_LOCAL, 'site') else None
+    if not site_fname or not os.path.exists(site_fname):
         site_fname = os.path.join(os.getcwd(), fname)
     return _read_file(site_fname, encoding)
 
@@ -335,7 +335,7 @@ def elem(tag: str, content: str=None, cdata: bool=False, **attrs) -> str:
     return f'<{tag} {attrs}>{content}</{tag}>'
 
 @functools.lru_cache(maxsize=128)
-def input_elem(field: str, param: inspect.Parameter) -> str:
+def elem_input(field: str, param: inspect.Parameter) -> str:
     """Let function annotations determine input types and validations."""
     input_type = 'text'
     if param.annotation is not param.empty:
@@ -348,7 +348,7 @@ def input_elem(field: str, param: inspect.Parameter) -> str:
     return elem('input', **attrs)
 
 @functools.lru_cache(maxsize=128)
-def form_elem(func: t.Callable) -> str:
+def elem_input(func: t.Callable) -> str:
     """Let function signatures determine form fields."""
     func_name = func.__name__
     form = f"<form action='{func_name}' method='POST'>" 
@@ -357,18 +357,15 @@ def form_elem(func: t.Callable) -> str:
         if name.startswith('_'): continue
         if param.annotation is param.empty: continue
         form += f"<label for='{name}'>{name.upper()}:</label>"
-        form += input_elem(name, param) + "<br>"
+        form += elem_input(name, param) + "<br>"
     form += f"<button type='submit'>EXECUTE</button></form>"
     return form
 
-def html_elem(body: str, **attrs) -> str:
+def elem_html(body: str, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     global APP, _LOCAL
-    if hasattr(_LOCAL, 'site'):
-        site_css = os.path.join(_LOCAL.site, f'{_LOCAL.site}.css')
-        if os.path.exists(site_css): style = _read_file(site_css, encoding='utf-8')
-    else: style = _read_file(f'{APP}.css', encoding='utf-8')
-    title = f"{APP} - {_LOCAL.site}" if hasattr(_LOCAL, 'site') else APP
+    style = read_file(f'{APP}.css', encoding='utf-8')
+    title = _LOCAL.site if hasattr(_LOCAL, 'site') else APP
     return f"""
     <!DOCTYPE html><html lang="en">
     <head>
@@ -398,12 +395,12 @@ def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Cal
             elif isinstance(_wrap, tuple):
                 result = ''.join(elem(w, r) 
                     for w, r in itertools.zip_longest(_wrap, result, fillvalue=_wrap[-1]))
-            if _tag in ('html', 'body'): return html_elem(result, **_attrs)
+            if _tag in ('html', 'body'): return elem_html(result, **_attrs)
             return elem(_tag, result, **_attrs)
         return _hyper
     return _decorator
 
-def build_html_chain(*func_names: str, **context) -> str:
+def html_build_chain(*func_names: str, **context) -> str:
     """Let all HTML content be generated from pure functions and request context."""
     global _LOCAL
     try:
@@ -531,7 +528,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
             if not funcs: site, funcs = SITE, [site]
             with set_site_dir(site):
                 emit(f"Building {site=} {funcs=} {qs=} {data=}")
-                content = build_html_chain(*funcs, **qs, **data)
+                content = html_build_chain(*funcs, **qs, **data)
             self.work_path = os.path.join('.server', self.path[1:])
             _write_file(self.work_path, content, encoding='utf-8')
         
