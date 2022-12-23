@@ -362,8 +362,9 @@ def html_elem(body: str) -> str:
     </html>
     """
 
-def hyper(tag: str, wrap: str | tuple = None, **attrs) -> t.Callable:
+def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Callable:
     """Let the decorated function output hypertext automatically."""
+    if css: attrs['class'] = css
     def _decorator(func: t.Callable, _tag=tag, _wrap=wrap, _attrs=attrs) -> t.Callable:
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
@@ -410,6 +411,8 @@ def header_nav(**context) -> str:
             elem('a', 'ABOUT', href='/about'),
             elem('a', 'CONTACT', href='/contact'),
         ]
+
+@hyper('article', _class='about')
 
 
 @hyper('body', ('header', 'main', 'footer'))
@@ -468,8 +471,9 @@ def _build_ssl_certs(x509, rsa, hashes, ser) -> tuple[str, str]:
     return certname, keyname
 
 @recorded
-def _access_log(address: str, message: str) -> None:
+def access_log(address: str, message: str) -> None:
     """Let the access log be recorded in the database for analysis."""
+    # TODO: Add more parameters to the access log.
     emit(f"Access from {address} {message}")
 
 class RequestHandler(hs.SimpleHTTPRequestHandler):
@@ -477,7 +481,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
 
     def log_message(self, format, *args):
         """Let us not put @recorded on this directly, it messes with *args."""
-        _access_log(self.address_string(), format % args)
+        access_log(self.address_string(), format % args)
 
     def _rfile_read(self, size: int = None) -> bytes:
         """Let us read the request body (ie. for parsing form data)."""
