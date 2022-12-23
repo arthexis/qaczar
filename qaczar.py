@@ -170,7 +170,7 @@ def _stop_py(proc: subprocess.Popen) -> tuple[tuple, dict]:
     atexit.unregister(proc.terminate)
     return proc._args, proc._kwargs
 
-def _restart_py(proc: subprocess.Popen = None, opid=_PID) -> subprocess.Popen:
+def _restart_py(proc: subprocess.Popen = None) -> subprocess.Popen:
     global APP
     if proc and proc.poll() is None: 
         args, kwargs = _stop_py(proc)
