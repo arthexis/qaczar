@@ -458,6 +458,12 @@ def app_roadmap(**context) -> str:
     todos = scan_script(f'{APP}.py', '# TODO:')
     return elem('h2', 'Roadmap'), elem_list(todos)
 
+@hyper('article', ('h2', 'ol'), css='comments')
+def app_comments(**context) -> str:
+    global APP
+    comms = scan_script(f'{APP}.py', '# ')
+    return elem('h2', 'Comments'), elem_list(comms)
+
 @hyper('body', ('header', 'main', 'footer'))
 def hello_world(**context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 	
