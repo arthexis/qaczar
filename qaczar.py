@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# qaczar.py: An Hymn to the Self-Inventing, the Celestial Ladder of Web Systems.
-# by R. J. Guillén-Osorio (r [at] qaczar [dot] com) 2022-2023.
+# qaczar.py: An  web authoring system.
+# by R. J. Guillén-Osorio (rjgo [at] qaczar [dot] com) 2022-2023.
 
 # License: MIT (https://opensource.org/licenses/MIT).
 
@@ -400,6 +400,7 @@ def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Cal
         if not func.__code__.co_flags & 0x08:
             ln = func.__code__.co_firstlineno
             raise TypeError(f"Function @hyper({func.__name__}) ({ln}) must accept **context")
+        _attrs['data-qhf'] = func.__name__
         _COMPONENTS[_tag][func.__name__] = func
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
