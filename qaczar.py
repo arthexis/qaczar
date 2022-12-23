@@ -369,7 +369,6 @@ def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Cal
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
             result = func(*args, **kwargs)
-            emit(f"{func.__name__}({args}, {kwargs}) -> <{tag}>{result}")
             if isinstance(_wrap, str):
                 if isinstance(result, str): result = elem(_wrap, result)
                 else: result = ''.join(elem(_wrap, r) for r in result) 
