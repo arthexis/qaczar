@@ -196,14 +196,14 @@ import contextlib
 
 @contextlib.contextmanager
 def set_site_dir(site: str) -> str:
-    """Set the directory where the site is served from."""
+    """Let us set the directory where the site is served from."""
     global _LOCAL
     setattr(_LOCAL, 'site', site)
     yield os.path.join(os.getcwd(), site)
     delattr(_LOCAL, 'site')
 
 def read_file(fname: str, encoding=None) -> str | bytes:
-    """Let each site read files from their own directory."""
+    """Let each site read files from their own directory first, and the base second."""
     global _LOCAL
     site_fname = os.path.join(_LOCAL.site, fname) if hasattr(_LOCAL, 'site') else None
     if not site_fname or not os.path.exists(site_fname):
@@ -211,7 +211,7 @@ def read_file(fname: str, encoding=None) -> str | bytes:
     return _read_file(site_fname, encoding)
 
 def write_file(fname: str, data: bytes | str, encoding=None) -> None:
-    """Let each site write files to their own directory."""
+    """Let each site write files to their own directory (never to the base)."""
     global _LOCAL
     site_fname = os.path.join(_LOCAL.site, fname)
     _write_file(site_fname, data, encoding)
@@ -322,7 +322,7 @@ import inspect
 import itertools
 
 @functools.lru_cache(maxsize=128)
-def elem(tag: str, content: str=None, cdata: bool=False, **attrs) -> str:
+def elem(tag: str, content: str | list = None, cdata: bool=False, **attrs) -> str:
     """Let all serialization happen through hypertext."""
     if 'data' in attrs: 
         for k, v in attrs['data'].items(): attrs[f'data-{k}'] = v
@@ -422,18 +422,24 @@ def html_build_chain(*func_names: str, **context) -> str:
 
 #@# WEB COMPONENTS
 
-@hyper('header', ('h1', 'nav'))
-def header_nav(**context) -> str:
-    """Let this be the header of the page."""
+@hyper('nav', 'a')
+def nav_links(**context) -> str:
+    """Let this be the navigation bar of the page."""
     global _COMPONENTS
     links = [
         elem('a', page.replace('_', ' ').title() , href=f'/{page}')
         for page in _COMPONENTS['html'].keys()
         if not page.startswith('_')
     ]
+    return links
+
+@hyper('header', ('h1', 'nav'))
+def header_nav(**context) -> str:
+    """Let this be the header of the page."""
+    global _COMPONENTS
     return [
-            elem('a', 'QACZAR', href='/'),
-            elem('a', 'Home', href='/welcome.html'),
+            elem('a', 'QACZAR', href='/'), 
+            nav_links(**context)
         ]
 
 @hyper('footer', 'p')
