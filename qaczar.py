@@ -329,7 +329,7 @@ def recorded(func: t.Callable) -> t.Callable:
 import colorsys
 
 @imports('webcolors')
-def color_scheme(webcolors, primary: str, scheme: str='triadic') -> list[str]:
+def _color_scheme(webcolors, primary: str, scheme: str='triadic') -> list[str]:
     """Generate a list of colors."""
     if scheme == 'triadic':
         return [primary] + list(colorsys.hsv_to_rgb(
@@ -350,7 +350,7 @@ def color_scheme(webcolors, primary: str, scheme: str='triadic') -> list[str]:
     
 def site_css(primary: str, scheme: str='tetradic') -> str:
     """Generate site CSS from a primary color and a color scheme."""
-    colors = color_scheme(primary, scheme)
+    colors = _color_scheme(primary, scheme)
     assert len(colors) == 4
     return f"""
         :root {{
@@ -538,7 +538,7 @@ def site_page(title: str, **attrs) -> str:
 
 #@# SITE PAGES
 
-@site_page('Hello from QACZAR')
+@site_page('Hello from QACZAR')  # Default page.
 def hello_world(**context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 
     return app_features(subject='roadmap', **context)
