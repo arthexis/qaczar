@@ -365,22 +365,27 @@ def elem_input(func: t.Callable) -> str:
     form += f"<button type='submit'>EXECUTE</button></form>"
     return form
 
+def elem_meta() -> str:
+    """Let meta tags be generated automatically from site config."""
+    return """
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    """
+
 def elem_html(body: str, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     global APP, _LOCAL
-    style = read_file(f'{APP}.css', encoding='utf-8')
-    title = _LOCAL.site if hasattr(_LOCAL, 'site') else APP
+    # TODO: Generate the CSS code dynamically instead of reading a file.
     return f"""
-    <!DOCTYPE html><html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <style>{style}</style>
-        <title>{title}</title>
-    </head>
-    <body>{body}</body>
-    </html>
-    """
+        <!DOCTYPE html><html lang="en">
+        <head>
+            {elem_meta()}
+            <style>{read_file(f'{APP}.css', encoding='utf-8')}</style>
+            <title>{_LOCAL.site if hasattr(_LOCAL, 'site') else APP}</title>
+        </head>
+        <body>{body}</body>
+        </html>
+        """
 
 
 #@# HTML GENERATORS
