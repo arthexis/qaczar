@@ -359,6 +359,7 @@ def site_css() -> str:
         a:active {{ color: var(--quaternary); }}
         a:visited {{ color: var(--quaternary); }}
         article {{ background-color: var(--secondary); }}
+        article {{ color: var(--primary); }}
     """
 
 
