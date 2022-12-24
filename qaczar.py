@@ -321,7 +321,7 @@ def site_css() -> str:
     """Generate site CSS from a primary color and a color scheme."""
     return """
         :root {
-            --primary: black;
+            --primary: grey;
             --secondary: green;
             --tertiary: yellow;
             --quaternary: blue;
@@ -330,6 +330,7 @@ def site_css() -> str:
         body {
             background-color: var(--primary);
             color: var(--secondary);
+            font-family: monospace;
         }
         a { color: var(--secondary); }
         a:hover { color: var(--tertiary); }
@@ -482,24 +483,13 @@ def site_footer(**context) -> str:
     """Let this be the footer of the page."""
     return elem('a', f'Powered by the qaczar.py web system.', href=f'/qaczar.py')
 
-def site_page(title: str, **attrs) -> str:
-    """Let us decorate a function to be a top page of the site."""
-    attrs['title'] = title
-    def _decorator(func: t.Callable) -> t.Callable:
-        @hyper('body')
-        @functools.wraps(func)
-        def _site_page(**context):
-            content = '<main>' + func(**context) + '</main>'
-            return site_header(**context), content, site_footer(**context)
-        return _site_page
-    return _decorator
-
 
 #@# SITE PAGES
 
-@site_page('Hello from QACZAR')  # Default page.
+@hyper('body')  # Default page.
 def hello_world(**context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 
+    context['title'] = 'Hello from QACZAR'
     return app_features(subject='roadmap', **context)
 
 
