@@ -344,17 +344,17 @@ def site_css() -> str:
 import inspect
 import itertools
 
-def elem(tag: str, content: str | list = None, cdata: bool=False, **attrs) -> str:
+def elem(tag: str, *contents, cdata: bool=False, **attrs) -> str:
     """Let all serialization happen through hypertext."""
     if 'data' in attrs: 
         for k, v in attrs['data'].items(): attrs[f'data-{k}'] = v
         del attrs['data']
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
-    if content and not isinstance(content, str): content = ''.join(content)
-    if attrs and not content: return f'<{tag} {attrs}/>'
-    if not content: return f'<{tag}/>'
-    if cdata: content = f'<![CDATA[{content}]]>'
-    return f'<{tag} {attrs}>{content}</{tag}>'
+    contents = ''.join(contents)
+    if attrs and not contents: return f'<{tag} {attrs}/>'
+    if not contents: return f'<{tag}/>'
+    if cdata: contents = f'<![CDATA[{contents}]]>'
+    return f'<{tag} {attrs}>{contents}</{tag}>'
 
 def elem_li(items, sep: str = ''):
     return sep.join(elem('li', item, data={'seq': i}) for i, item in enumerate(items))
@@ -371,7 +371,7 @@ def _elem_input(field: str, param: inspect.Parameter) -> str:
         if param.annotation is bool: attrs['checked'] = 'checked'
     return elem('input', **attrs)
 
-def elem_form(func: t.Callable) -> str:
+def _elem_form(func: t.Callable) -> str:
     """Let function signatures determine form fields."""
     func_name = func.__name__
     form = f"<form action='{func_name}' method='POST'>" 
@@ -384,11 +384,10 @@ def elem_form(func: t.Callable) -> str:
     form += f"<button type='submit'>Submit</button></form>"
     return form
 
-def elem_html(content, **attrs) -> str:
+def elem_html(*sections, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     # TODO: Generate the CSS code dynamically instead of reading a file.
-    if isinstance(content, list): content = ''.join(content)
-    body = elem('body', content, **attrs)
+    body_elem = elem('body', *sections, **attrs)
     return f"""
     <!DOCTYPE html><html lang="en">
     <head>
@@ -397,7 +396,7 @@ def elem_html(content, **attrs) -> str:
         <style>{site_css()}</style>
         <title>{current_site()}</title>
     </head>
-    {body}
+    {body_elem}
     </html>
     """
 
