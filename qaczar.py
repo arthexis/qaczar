@@ -422,8 +422,7 @@ def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Cal
         def _hyper(*args, **kwargs):
             result = func(*args, **kwargs)
             if isinstance(_wrap, str):
-                if isinstance(result, str): result = elem(_wrap, result)
-                else: result = ''.join(elem(_wrap, r) for r in result)
+                result = elem(_wrap, result)
             elif isinstance(_wrap, (tuple, list)):
                 result = ''.join(elem(w, r) 
                     for w, r in itertools.zip_longest(_wrap, result, fillvalue=_wrap[-1]))
