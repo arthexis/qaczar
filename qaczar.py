@@ -336,7 +336,7 @@ def elem_list(*items, tag: str='ul') -> str:
     content = ''.join(elem('li', item, data={'seq': i}) for i, item in enumerate(items))
     return elem(tag, content)
 
-def _elem_input(field: str, param: inspect.Parameter) -> str:
+def elem_input(field: str, param: inspect.Parameter) -> str:
     """Let function annotations determine input types and validations."""
     input_type = 'text'
     if param.annotation is not param.empty:
@@ -348,7 +348,7 @@ def _elem_input(field: str, param: inspect.Parameter) -> str:
         if param.annotation is bool: attrs['checked'] = 'checked'
     return elem('input', **attrs)
 
-def _elem_form(func: t.Callable) -> str:
+def elem_form(func: t.Callable) -> str:
     """Let function signatures determine form fields."""
     func_name = func.__name__
     form = f"<form action='{func_name}' method='POST'>" 
@@ -357,11 +357,11 @@ def _elem_form(func: t.Callable) -> str:
         if name.startswith('_'): continue
         if param.annotation is param.empty: continue
         form += f"<label for='{name}'>{name.upper()}:</label>"
-        form += _elem_input(name, param) + "<br>"
+        form += elem_input(name, param) + "<br>"
     form += f"<button type='submit'>Submit</button></form>"
     return form
 
-def elem_html(*sections, **attrs) -> str:
+def elem_body(*sections, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     # TODO: Generate the CSS code dynamically instead of reading a file.
     body_elem = elem('body', *sections, **attrs)
@@ -399,7 +399,7 @@ def hyper(tag: str, css: str = None, **attrs) -> t.Callable:
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
             result = func(*args, **kwargs)
-            if _tag in ('html', 'body'): return elem_html(*result, **_attrs)
+            if _tag == 'body': return elem_body(*result, **_attrs)
             return elem(_tag, *result, **_attrs)
         return _hyper
     return _hyper_decorator
