@@ -489,7 +489,7 @@ def app_features(subject: str, **context) -> str:
         features = scan_file(f'{APP}.py', '# TODO:')
     else: features = []
     if not features: features = ['Nothing to see here.']
-    return elem('h2', subject.title()), elem_list(features)
+    return subject.title(), elem_list(features)
 
 
 #@# SITE COMPONENTS
