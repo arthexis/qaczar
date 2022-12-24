@@ -520,7 +520,7 @@ def site_page(title: str, **attrs) -> str:
     """Let us decorate a function to be a top page of the site."""
     attrs['title'] = title
     def _decorator(func: t.Callable) -> t.Callable:
-        @hyper('body', ('header', 'main', 'footer'))
+        @hyper('body')
         @functools.wraps(func)
         def _site_page(*args, **kwargs):
             return chain(site_header, func, site_footer)(*args, **kwargs)
