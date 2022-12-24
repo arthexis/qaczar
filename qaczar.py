@@ -424,8 +424,8 @@ def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Cal
             if isinstance(_wrap, str):
                 result = elem(_wrap, result)
             elif isinstance(_wrap, (tuple, list)):
-                result = ''.join(elem(w, r) 
-                    for w, r in itertools.zip_longest(_wrap, result, fillvalue=_wrap[-1]))
+                result = [elem(w, r) for w, r in 
+                    itertools.zip_longest(_wrap, result, fillvalue=_wrap[-1])]
             if _tag in ('html', 'body'): return elem_html(result, **_attrs)
             return elem(_tag, result, **_attrs)
         return _hyper
