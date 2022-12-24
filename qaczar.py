@@ -381,7 +381,7 @@ def elem_form(func: t.Callable) -> str:
         if param.annotation is param.empty: continue
         form += f"<label for='{name}'>{name.upper()}:</label>"
         form += _elem_input(name, param) + "<br>"
-    form += f"<button type='submit'>EXECUTE</button></form>"
+    form += f"<button type='submit'>Submit</button></form>"
     return form
 
 def elem_html(body: str, **attrs) -> str:
