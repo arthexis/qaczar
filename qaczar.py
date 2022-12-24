@@ -437,7 +437,7 @@ def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Cal
     """Let the decorated function output hypertext automatically."""
     global _COMPONENTS
     if css: attrs['class'] = css
-    def _decorator(func: t.Callable, _tag=tag, _wrap=wrap, _attrs=attrs) -> t.Callable:
+    def _hyper_decorator(func: t.Callable, _tag=tag, _wrap=wrap, _attrs=attrs) -> t.Callable:
         if not func.__code__.co_flags & 0x08:
             ln = func.__code__.co_firstlineno
             raise TypeError(f"Function @hyper({func.__name__}) ({ln}) must accept **context")
@@ -457,7 +457,7 @@ def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Cal
             if _tag in ('html', 'body'): return elem_html(result, **_attrs)
             return elem(_tag, result, **_attrs)
         return _hyper
-    return _decorator
+    return _hyper_decorator
 
 def html_build_chain(*func_names: str, **context) -> str:
     """Let all HTML content be generated from pure functions and request context."""
@@ -494,7 +494,7 @@ def app_features(subject: str, **context) -> str:
 
 #@# SITE COMPONENTS
 
-@hyper('nav', 'a')
+@hyper('nav')
 def site_nav(**context) -> str:
     """Let there be a list of navigation links to other site pages."""
     global _COMPONENTS
