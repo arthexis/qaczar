@@ -481,7 +481,7 @@ def html_build_chain(*func_names: str, **context) -> str:
 
 #@# APP COMPONENTS
 
-@hyper('section', ('h2', 'ol'), css='roadmap')
+@hyper('section', ('h2', 'p', 'ol'), css='roadmap')
 def app_features(subject: str, **context) -> str:
     """Let there be a function that generates a list of the app's features."""
     global APP
@@ -489,7 +489,7 @@ def app_features(subject: str, **context) -> str:
         features = scan_file(f'{APP}.py', '# TODO:')
     else: features = []
     if not features: features = ['Nothing to see here.']
-    return subject.title(), elem_list(features)
+    return subject.title(), "Features planed for QACZAR.", elem_list(features)
 
 
 #@# SITE COMPONENTS
