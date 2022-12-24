@@ -315,34 +315,9 @@ def recorded(func: t.Callable) -> t.Callable:
     return _recorded
 
 
-#@# CSS GENERATOR
-    
-def site_css() -> str:
-    """Generate site CSS from a primary color and a color scheme."""
-    return """
-        :root {
-            --primary: black;
-            --secondary: green;
-            --tertiary: yellow;
-            --quaternary: blue;
-        }
-        * { margin: 0; padding: 0; }
-        body {
-            background-color: var(--primary);
-            color: var(--secondary);
-            font-family: monospace;
-        }
-        a { color: var(--secondary); }
-        a:hover { color: var(--tertiary); }
-        a:active { color: var(--quaternary); }
-        a:visited { color: var(--quaternary); }
-    """
-
-
 #@# HTML ELEMENTS
 
 import inspect
-import itertools
 
 def elem(tag: str, *contents, cdata: bool=False, **attrs) -> str:
     """Let all serialization happen through hypertext."""
@@ -357,8 +332,9 @@ def elem(tag: str, *contents, cdata: bool=False, **attrs) -> str:
     if cdata: contents = f'<![CDATA[{contents}]]>'
     return f'<{tag} {attrs}>{contents}</{tag}>'
 
-def elem_li(items, sep: str = ''):
-    return sep.join(elem('li', item, data={'seq': i}) for i, item in enumerate(items))
+def elem_list(*items, tag: str='ul') -> str:
+    content = ''.join(elem('li', item, data={'seq': i}) for i, item in enumerate(items))
+    return elem(tag, content)
 
 def _elem_input(field: str, param: inspect.Parameter) -> str:
     """Let function annotations determine input types and validations."""
@@ -394,7 +370,9 @@ def elem_html(*sections, **attrs) -> str:
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <style>{site_css()}</style>
+        <style>
+        * {{ padding: 0; margin: 0; }}
+        </style>
         <title>{current_site()}</title>
     </head>
     {body_elem}
@@ -406,11 +384,11 @@ def elem_html(*sections, **attrs) -> str:
 
 _COMPONENTS = collections.defaultdict(dict)
 
-def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Callable:
+def hyper(tag: str, css: str = None, **attrs) -> t.Callable:
     """Let the decorated function output hypertext automatically."""
     global _COMPONENTS, DEBUG
     if css: attrs['class'] = css
-    def _hyper_decorator(func: t.Callable, _tag=tag, _wrap=wrap, _attrs=attrs) -> t.Callable:
+    def _hyper_decorator(func: t.Callable, _tag=tag, _attrs=attrs) -> t.Callable:
         if not func.__code__.co_flags & 0x08:
             ln = func.__code__.co_firstlineno
             raise TypeError(f"Function @hyper({func.__name__}) ({ln}) must accept **context")
@@ -421,13 +399,8 @@ def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Cal
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
             result = func(*args, **kwargs)
-            if isinstance(_wrap, str):
-                result = elem(_wrap, result)
-            elif isinstance(_wrap, (tuple, list)):
-                result = [elem(w, r) for w, r in 
-                    itertools.zip_longest(_wrap, result, fillvalue=_wrap[-1])]
-            if _tag in ('html', 'body'): return elem_html(result, **_attrs)
-            return elem(_tag, result, **_attrs)
+            if _tag in ('html', 'body'): return elem_html(*result, **_attrs)
+            return elem(_tag, *result, **_attrs)
         return _hyper
     return _hyper_decorator
 
@@ -441,7 +414,6 @@ def html_build_chain(*func_names: str, **context) -> str:
         try:
             funcs = [globals()[name] for name in func_names]
         except (KeyError, TypeError) as e:
-            # TODO: Replace with calling a function that generates the error page.
             return f"<h1>ERROR: {e}</h1>"
     for i, func in enumerate(reversed(funcs)): 
         emit(f"Step #{i} {func.__name__}({context})")
@@ -452,19 +424,19 @@ def html_build_chain(*func_names: str, **context) -> str:
 
 #@# APP COMPONENTS
 
-@hyper('section', ('h2', 'p', 'ol'), css='roadmap')
+@hyper('section', css='roadmap')
 def app_features(subject: str, **context) -> str:
     """Let there be a function that generates a list of the app's features."""
     global APP
     if subject == 'roadmap': features = scan_file(f'{APP}.py', '# TODO:')
     else: features = []
     if not features: features = ['Nothing to see here.']
-    return subject.title(), "Features planed for QACZAR.", elem_li(features)
+    return subject.title(), "Features planed for QACZAR.", elem_list(features)
 
 
 #@# SITE COMPONENTS
 
-@hyper('header', ('h1', 'nav'))
+@hyper('header')
 def site_header(title: str = None, **context) -> str:
     """Let this be the header of the each page on the site."""
     global _COMPONENTS, SITE
@@ -474,7 +446,7 @@ def site_header(title: str = None, **context) -> str:
         if not page.startswith('_') and page not in ('hello_world', 'index')]
     return elem('a', title or SITE, href='/'), site_links
 
-@hyper('footer', 'p')
+@hyper('footer')
 def site_footer(**context) -> str:
     """Let this be the footer of the page."""
     return elem('a', f'Powered by the qaczar.py web system.', href=f'/qaczar.py')
