@@ -24,15 +24,14 @@ import time
 import traceback
 import typing as t
 
-_PYTHON = sys.executable
-_PID = os.getpid()
-_DIR = os.path.dirname(os.path.abspath(__file__))
-
 BRANCH = 'main'
 RELEASE = '0.1'
-DEBUG = True
-APP = os.path.basename(_DIR)  # Currently: 'qaczar'
 LANG = 'en'
+DEBUG = True
+PYTHON = sys.executable
+PID = os.getpid()
+DIR = os.path.dirname(os.path.abspath(__file__))
+APP = os.path.basename(DIR)  # Currently: 'qaczar'
 
 def iso8601() -> str: 
     """Let time flow in a single direction, one second at a time."""
@@ -41,10 +40,10 @@ def iso8601() -> str:
 def emit(msg: str, div: str = '', trace: bool =False,  _at=None) -> None: 
     """Let the music of the spheres guide your steps."""
     # TODO: Consider a debug only function that also stores the message in a log file.
-    global _PID
+    global PID
     frame = _at or sys._getframe(1)  
     if div: print((div or '-') * (100 // len(div)), file=sys.stderr)
-    print(f'[{_PID}:{frame.f_lineno} {iso8601()}] {frame.f_code.co_name}:  {msg}', file=sys.stderr)
+    print(f'[{PID}:{frame.f_lineno} {iso8601()}] {frame.f_code.co_name}:  {msg}', file=sys.stderr)
     if trace: traceback.print_stack(frame, file=sys.stderr)
 
 def halt(msg: str, trace: bool =False) -> t.NoReturn:
@@ -129,26 +128,26 @@ def _split_args(args: list[str]) -> tuple[tuple, dict]:
     return tuple(largs), kwargs
 
 def _setup_py_venv() -> None:
-    global _PYTHON
+    global PYTHON
     if not os.path.isfile('requirements.txt'): 
         _write_file('requirements.txt', '', encoding='utf-8')
     if sys.platform.startswith('win'):
         if not os.path.isfile('.venv/Scripts/python.exe'): 
             subprocess.run([sys.executable, '-m', 'venv', '.venv'])
-        _PYTHON = '.venv/Scripts/python.exe'
+        PYTHON = '.venv/Scripts/python.exe'
     elif not os.path.isfile('.venv/bin/python3'): 
         subprocess.run([sys.executable, '-m', 'venv', '.venv'])
-        _PYTHON = '.venv/bin/python3'
-    subprocess.run([_PYTHON, '-m', 'pip', 'install', '--upgrade', 'pip', '--quiet'])
-    subprocess.run([_PYTHON, '-m', 'pip', 'install', '-r', 'requirements.txt', '--quiet'])
+        PYTHON = '.venv/bin/python3'
+    subprocess.run([PYTHON, '-m', 'pip', 'install', '--upgrade', 'pip', '--quiet'])
+    subprocess.run([PYTHON, '-m', 'pip', 'install', '-r', 'requirements.txt', '--quiet'])
 
 def _start_py(script_path: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
-    global _PYTHON
+    global PYTHON
     line_args = [str(a) for a in _args_line(*args, **kwargs)]
     emit(f"Start python script '{script_path}' {line_args=}.")
     # Popen is a context manager, but we want to keep proc alive and not wait for it.
     # We cannot use run() for this. Remember to manually terminate the process later.
-    proc = subprocess.Popen([_PYTHON, script_path, *line_args],
+    proc = subprocess.Popen([PYTHON, script_path, *line_args],
                             stdout=sys.stdout, stderr=sys.stderr)
     proc._args, proc._kwargs = args, kwargs  # Magic for restart_py
     atexit.register(proc.terminate)
@@ -256,14 +255,14 @@ def _insert(_db, table: str, *values) -> None:
 
 def _connect_db() -> sqlite3.Connection:
     # TODO: Test this with multiple requests that write to the database.
-    global APP, _LOCAL, _PID
+    global APP, _LOCAL, PID
     if hasattr(_LOCAL, '{APP}_db'): return getattr(_LOCAL, '{APP}_db')
     _db = sqlite3.connect(f'{APP}.sqlite3')
     _init_table(_db, f'{APP}_instances', ['app_name TEXT', 'pid TEXT'])
     last_pid = _db.execute(
             f"SELECT pid FROM {APP}_instances ORDER BY id DESC LIMIT 1").fetchone()
-    if last_pid and last_pid[0] != _PID:
-        _insert(_db, f'{APP}_instances', APP, _PID)
+    if last_pid and last_pid[0] != PID:
+        _insert(_db, f'{APP}_instances', APP, PID)
         # Run other code that should only run once per app instance here.
         _db.commit()
     setattr(_LOCAL, '{APP}_db', _db)
@@ -317,23 +316,6 @@ def recorded(func: t.Callable) -> t.Callable:
 
 
 #@# CSS GENERATOR
-
-import colorsys
-
-def _color_shift(red: int, green: int, blue: int, shift: int) -> tuple[int, int, int]:
-    """Shift a color by a given amount."""
-    return (red + shift, green + shift, blue + shift)
-
-@imports('webcolors')
-def _color_scheme(webcolors, primary: str, scheme: str='tetradic') -> list[str]:
-    """Generate a list of colors."""
-    # Each scheme should return a list with the appropriate number of colors, each color
-    # has its own three color components.
-    if scheme == 'tetradic':
-        hls = colorsys.rgb_to_hls(*webcolors.name_to_rgb(primary))
-        emit(f"{primary=} {hls=}")
-        return [primary, primary, primary, primary]
-    else: raise ValueError(f"Unsupported color scheme: {scheme}")
     
 def site_css() -> str:
     """Generate site CSS from a primary color and a color scheme."""
@@ -441,7 +423,6 @@ def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Cal
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
             result = func(*args, **kwargs)
-            if callable(result): return result()
             if isinstance(_wrap, str):
                 if isinstance(result, str): result = elem(_wrap, result)
                 else: result = ''.join(elem(_wrap, r) for r in result)
@@ -455,10 +436,9 @@ def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Cal
 
 def html_build_chain(*func_names: str, **context) -> str:
     """Let all HTML content be generated from pure functions and request context."""
-    global _LOCAL
     try:
-        if _LOCAL.site not in sys.path: sys.path.append(_LOCAL.site)
-        site_module = importlib.import_module(_LOCAL.site)
+        if (site := current_site()) not in sys.path: sys.path.append(site)
+        site_module = importlib.import_module(site)
         funcs = [getattr(site_module, name) for name in func_names]
     except (ModuleNotFoundError, AttributeError):
         try:
