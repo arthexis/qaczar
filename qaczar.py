@@ -321,7 +321,7 @@ def site_css() -> str:
     """Generate site CSS from a primary color and a color scheme."""
     return """
         :root {
-            --primary: grey;
+            --primary: black;
             --secondary: green;
             --tertiary: yellow;
             --quaternary: blue;
