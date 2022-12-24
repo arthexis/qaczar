@@ -350,7 +350,7 @@ def elem(tag: str, *contents, cdata: bool=False, **attrs) -> str:
         for k, v in attrs['data'].items(): attrs[f'data-{k}'] = v
         del attrs['data']
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
-    contents = ''.join(contents)
+    contents = ''.join(str(c) for c in contents)
     if attrs and not contents: return f'<{tag} {attrs}/>'
     if not contents: return f'<{tag}/>'
     if cdata: contents = f'<![CDATA[{contents}]]>'
@@ -486,7 +486,7 @@ def site_footer(**context) -> str:
 def hello_world(**context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 
     context['title'] = 'Hello from QACZAR'
-    return app_features(subject='roadmap', **context)
+    return app_features(subject='roadmap', **context), site_footer(**context)
 
 
 #@# HTTPS SERVER
