@@ -373,6 +373,7 @@ def elem_body(*sections, **attrs) -> str:
         <style>
         * {{ padding: 0; margin: 0; }}
         </style>
+        <script src="https://unpkg.com/htmx.org@1.8.4"></script>
         <title>{current_site()}</title>
     </head>
     {body_elem}
