@@ -505,7 +505,7 @@ def site_nav(**context) -> str:
 @hyper('header', ('h1', 'nav'))
 def site_header(title: str = None, **context) -> str:
     """Let this be the header of the page."""
-    global _COMPONENTS, SITE
+    global SITE
     return elem('a', title or SITE, href='/'), site_nav(**context)
 
 @hyper('footer', 'p')
