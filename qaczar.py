@@ -384,9 +384,11 @@ def elem_form(func: t.Callable) -> str:
     form += f"<button type='submit'>Submit</button></form>"
     return form
 
-def elem_html(body: str, **attrs) -> str:
+def elem_html(content, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     # TODO: Generate the CSS code dynamically instead of reading a file.
+    if isinstance(content, list): content = ''.join(content)
+    body = elem('body', content, **attrs)
     return f"""
     <!DOCTYPE html><html lang="en">
     <head>
@@ -395,7 +397,7 @@ def elem_html(body: str, **attrs) -> str:
         <style>{site_css()}</style>
         <title>{current_site()}</title>
     </head>
-    <body>{body}</body>
+    {body}
     </html>
     """
 
@@ -406,14 +408,15 @@ _COMPONENTS = collections.defaultdict(dict)
 
 def hyper(tag: str, wrap: str | tuple = None, css: str = None, **attrs) -> t.Callable:
     """Let the decorated function output hypertext automatically."""
-    global _COMPONENTS
+    global _COMPONENTS, DEBUG
     if css: attrs['class'] = css
     def _hyper_decorator(func: t.Callable, _tag=tag, _wrap=wrap, _attrs=attrs) -> t.Callable:
         if not func.__code__.co_flags & 0x08:
             ln = func.__code__.co_firstlineno
             raise TypeError(f"Function @hyper({func.__name__}) ({ln}) must accept **context")
-        _attrs['data-qhf'] = func.__name__
-        _attrs['data-qln'] = func.__code__.co_firstlineno
+        if DEBUG:
+            _attrs['data-qhf'] = func.__name__
+            _attrs['data-qln'] = func.__code__.co_firstlineno
         _COMPONENTS[_tag][func.__name__] = func
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
