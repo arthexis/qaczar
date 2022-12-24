@@ -509,7 +509,8 @@ def site_page(title: str, **attrs) -> str:
         @hyper('body')
         @functools.wraps(func)
         def _site_page(**context):
-            return site_header(**context), func(**context), site_footer(**context)
+            content = '<main>' + func(**context) + '</main>'
+            return site_header(**context), content, site_footer(**context)
         return _site_page
     return _decorator
 
