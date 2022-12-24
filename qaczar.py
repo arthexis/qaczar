@@ -496,8 +496,9 @@ def app_features(subject: str, **context) -> str:
 
 @hyper('header', ('h1', 'nav'))
 def site_header(title: str = None, **context) -> str:
-    """Let this be the header of the page."""
+    """Let this be the header of the each page on the site."""
     global _COMPONENTS, SITE
+    # TODO: Consider additional attributes for the header / nav.
     site_links = [elem('a', page.replace('_', ' ').title() , href=f'/{page}')
         for page in _COMPONENTS['body'].keys()
         if not page.startswith('_') and page not in ('hello_world', 'index')]
@@ -506,7 +507,6 @@ def site_header(title: str = None, **context) -> str:
 @hyper('footer', 'p')
 def site_footer(**context) -> str:
     """Let this be the footer of the page."""
-    global SITE
     return elem('a', f'Powered by the qaczar.py web system.', href=f'/qaczar.py')
 
 def site_page(title: str, **attrs) -> str:
@@ -515,8 +515,8 @@ def site_page(title: str, **attrs) -> str:
     def _decorator(func: t.Callable) -> t.Callable:
         @hyper('body')
         @functools.wraps(func)
-        def _site_page(*args, **kwargs):
-            return chain(site_header, func, site_footer)(*args, **kwargs)
+        def _site_page(**context):
+            return chain(site_header, func, site_footer)(**context)
         return _site_page
     return _decorator
 
