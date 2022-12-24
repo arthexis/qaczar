@@ -107,12 +107,6 @@ def imports(*modules: tuple[str]) -> t.Callable:
         return wrapper
     return decorator
 
-def chain(*funcs) -> t.Callable:
-    """Let us generate a callable chain of functions that share a context."""
-    def _chain(*args, **kwargs):
-        for func in funcs: yield func(*args, **kwargs)
-    return _chain
-
 
 #@# SUBPROCESSING
 
@@ -515,7 +509,7 @@ def site_page(title: str, **attrs) -> str:
         @hyper('body')
         @functools.wraps(func)
         def _site_page(**context):
-            return chain(site_header, func, site_footer)(**context)
+            return site_header(**context), func(**context), site_footer(**context)
         return _site_page
     return _decorator
 
