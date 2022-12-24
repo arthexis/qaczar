@@ -356,10 +356,10 @@ def elem(tag: str, content: str | list = None, cdata: bool=False, **attrs) -> st
     if cdata: content = f'<![CDATA[{content}]]>'
     return f'<{tag} {attrs}>{content}</{tag}>'
 
-def elem_list(items, sep: str = ''):
+def elem_li(items, sep: str = ''):
     return sep.join(elem('li', item, data={'seq': i}) for i, item in enumerate(items))
 
-def elem_input(field: str, param: inspect.Parameter) -> str:
+def _elem_input(field: str, param: inspect.Parameter) -> str:
     """Let function annotations determine input types and validations."""
     input_type = 'text'
     if param.annotation is not param.empty:
@@ -380,16 +380,9 @@ def elem_form(func: t.Callable) -> str:
         if name.startswith('_'): continue
         if param.annotation is param.empty: continue
         form += f"<label for='{name}'>{name.upper()}:</label>"
-        form += elem_input(name, param) + "<br>"
+        form += _elem_input(name, param) + "<br>"
     form += f"<button type='submit'>EXECUTE</button></form>"
     return form
-
-def elem_meta() -> str:
-    """Let meta tags be generated automatically from site config."""
-    return """
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    """
 
 def elem_html(body: str, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
@@ -397,7 +390,8 @@ def elem_html(body: str, **attrs) -> str:
     return f"""
     <!DOCTYPE html><html lang="en">
     <head>
-        {elem_meta()}
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <style>{site_css()}</style>
         <title>{current_site()}</title>
     </head>
@@ -463,7 +457,7 @@ def app_features(subject: str, **context) -> str:
     if subject == 'roadmap': features = scan_file(f'{APP}.py', '# TODO:')
     else: features = []
     if not features: features = ['Nothing to see here.']
-    return subject.title(), "Features planed for QACZAR.", elem_list(features)
+    return subject.title(), "Features planed for QACZAR.", elem_li(features)
 
 
 #@# SITE COMPONENTS
