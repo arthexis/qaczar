@@ -322,9 +322,9 @@ def site_css() -> str:
     return """
         :root {
             --primary: black;
-            --secondary: red;
-            --tertiary: green;
-            --quaternary: yellow;
+            --secondary: green;
+            --tertiary: yellow;
+            --quaternary: blue;
         }
         * { margin: 0; padding: 0; }
         body {
