@@ -498,11 +498,9 @@ def app_features(subject: str, **context) -> str:
 def site_nav(**context) -> str:
     """Let there be a list of navigation links to other site pages."""
     global _COMPONENTS
-    return [
-        elem('a', page.replace('_', ' ').title() , href=f'/{page}')
-        for page in _COMPONENTS['body'].keys()
-        if not page.startswith('_') and page not in ('hello_world', 'index')
-    ]
+    return [elem('a', page.replace('_', ' ').title() , href=f'/{page}')
+            for page in _COMPONENTS['body'].keys()
+            if not page.startswith('_') and page not in ('hello_world', 'index')]
 
 @hyper('header', ('h1', 'nav'))
 def site_header(title: str = None, **context) -> str:
