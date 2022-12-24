@@ -485,8 +485,7 @@ def html_build_chain(*func_names: str, **context) -> str:
 def app_features(subject: str, **context) -> str:
     """Let there be a function that generates a list of the app's features."""
     global APP
-    if subject == 'roadmap': 
-        features = scan_file(f'{APP}.py', '# TODO:')
+    if subject == 'roadmap': features = scan_file(f'{APP}.py', '# TODO:')
     else: features = []
     if not features: features = ['Nothing to see here.']
     return subject.title(), "Features planed for QACZAR.", elem_list(features)
