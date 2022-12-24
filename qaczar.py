@@ -349,9 +349,7 @@ def elem(tag: str, content: str | list = None, cdata: bool=False, **attrs) -> st
         for k, v in attrs['data'].items(): attrs[f'data-{k}'] = v
         del attrs['data']
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
-    if content and not isinstance(content, str): 
-        emit(f"content: {content}")
-        content = ''.join(content)
+    if content and not isinstance(content, str): content = ''.join(content)
     if attrs and not content: return f'<{tag} {attrs}/>'
     if not content: return f'<{tag}/>'
     if cdata: content = f'<![CDATA[{content}]]>'
