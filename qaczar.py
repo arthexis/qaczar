@@ -494,19 +494,14 @@ def app_features(subject: str, **context) -> str:
 
 #@# SITE COMPONENTS
 
-@hyper('nav')
-def site_nav(**context) -> str:
-    """Let there be a list of navigation links to other site pages."""
-    global _COMPONENTS
-    return [elem('a', page.replace('_', ' ').title() , href=f'/{page}')
-            for page in _COMPONENTS['body'].keys()
-            if not page.startswith('_') and page not in ('hello_world', 'index')]
-
 @hyper('header', ('h1', 'nav'))
 def site_header(title: str = None, **context) -> str:
     """Let this be the header of the page."""
-    global SITE
-    return elem('a', title or SITE, href='/'), site_nav(**context)
+    global _COMPONENTS, SITE
+    site_links = [elem('a', page.replace('_', ' ').title() , href=f'/{page}')
+            for page in _COMPONENTS['body'].keys()
+            if not page.startswith('_') and page not in ('hello_world', 'index')]
+    return elem('a', title or SITE, href='/'), site_links
 
 @hyper('footer', 'p')
 def site_footer(**context) -> str:
