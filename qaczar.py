@@ -107,12 +107,6 @@ def imports(*modules: tuple[str]) -> t.Callable:
         return wrapper
     return decorator
 
-def chain(*funcs) -> t.Callable:
-    """Let us generate a callable chain of functions that share a context."""
-    def _chain(*args, **kwargs):
-        for func in funcs: yield func(*args, **kwargs)
-    return _chain
-
 
 #@# SUBPROCESSING
 
@@ -520,10 +514,10 @@ def site_page(title: str, **attrs) -> str:
     """Let us decorate a function to be a top page of the site."""
     attrs['title'] = title
     def _decorator(func: t.Callable) -> t.Callable:
-        @hyper('body', ('header', 'main', 'footer'))
+        @hyper('body')
         @functools.wraps(func)
         def _site_page(*args, **kwargs):
-            return chain(site_header, func, site_footer)(*args, **kwargs)
+            return func(*args, **kwargs)
         return _site_page
     return _decorator
 
