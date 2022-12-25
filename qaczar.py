@@ -338,6 +338,9 @@ def elem(
     if cdata: contents = f'<![CDATA[{contents}]]>'
     return f'<{tag} {attrs}>{contents}</{tag}>'
 
+elem_h1 = functools.partial(elem, 'h1')
+elem_h2 = functools.partial(elem, 'h2')
+
 def elem_list(*items, tag: str='ul') -> str:
     if len(items) == 1 and not isinstance(items[0], str): items = items[0]
     content = ''.join(elem('li', item, data={'seq': i}) for i, item in enumerate(items))
@@ -435,14 +438,14 @@ def html_build_chain(*func_names: str, **context) -> str:
 
 #@# APP COMPONENTS
 
-@hyper('section', css='roadmap')
+@hyper('section')
 def app_features(subject: str, **context) -> str:
     """Let there be a function that generates a list of the app's features."""
     global APP
     if subject == 'roadmap': features = scan_file(f'{APP}.py', '# TODO:')
     else: features = []
     if not features: features = ['Nothing to see here.']
-    return subject.title(), "Features planed for QACZAR.", elem_list(features)
+    return (subject.title(), "Features planed for QACZAR.", elem_list(features))
 
 
 #@# SITE COMPONENTS
