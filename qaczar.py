@@ -321,12 +321,14 @@ def recorded(func: t.Callable) -> t.Callable:
 import inspect
 
 def elem(
-        tag: str, *contents, data: dict=None, 
+        tag: str, *contents, data: dict=None, hx: dict=None, 
         cdata: bool=False, css: str = None, **attrs) -> str:
     # TODO: Automate CSS classes and data attributes (htmx)
     """Let all serialization happen through hypertext."""
     if data: 
         for k, v in data.items(): attrs[f'data-{k}'] = v
+    if hx:
+        for k, v in hx.items(): attrs[f'hx-{k}'] = v
     attrs['class'] = css if css else attrs.get('class', '')
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
     contents = ''.join(str(c) for c in contents)
@@ -342,7 +344,7 @@ elem_h2 = functools.partial(elem, 'h2', css='subtitle')
 def elem_list(*items, tag: str='ul') -> str:
     if len(items) == 1 and not isinstance(items[0], str): items = items[0]
     content = ''.join(elem('li', item, data={'seq': i}) for i, item in enumerate(items))
-    return elem(tag, content)
+    return elem(tag, content) if tag else content
 
 # https://picnicss.com/documentation
 CSS = 'https://cdn.jsdelivr.net/npm/picnic'
