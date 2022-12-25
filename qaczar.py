@@ -33,8 +33,6 @@ PID = os.getpid()
 DIR = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.basename(DIR)  # Currently: 'qaczar'
 
-HTMX = 'https://unpkg.com/htmx.org@1.8.4'
-CSS = 'https://cdn.jsdelivr.net/npm/picnic'
 
 def iso8601() -> str: 
     """Let time flow in a single direction, one second at a time."""
@@ -370,6 +368,12 @@ def elem_form(func: t.Callable) -> str:
         form += elem_input(name, param) + "<br>"
     form += f"<button type='submit'>Submit</button></form>"
     return form
+
+# https://htmx.org/docs/#introduction
+HTMX = 'https://unpkg.com/htmx.org@1.8.4'
+
+# https://picnicss.com/documentation
+CSS = 'https://cdn.jsdelivr.net/npm/picnic'
 
 def elem_body(*sections, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
