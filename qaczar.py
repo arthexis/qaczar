@@ -426,7 +426,7 @@ def app_features(subject: str, **context) -> str:
     if subject == 'roadmap': features = scan_file(f'{APP}.py', '# TODO:')
     else: features = []
     if not features: features = ['Nothing to see here.']
-    return (elem_h1(subject.title()), elem('p',"Features planed for QACZAR."), elem_list(features))
+    return (elem_h2(subject.title()), elem('p',"Features planed for QACZAR."), elem_list(features))
 
 
 #@# SITE COMPONENTS
