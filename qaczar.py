@@ -330,7 +330,6 @@ def elem(
     attrs['class'] = css if css else attrs.get('class', '')
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
     contents = ''.join(str(c) for c in contents)
-    emit(f"elem({tag=} {contents=} {attrs=})")
     attrs = ' '.join(a for a in attrs.split() if a.strip())
     if attrs and not contents: return f'<{tag} {attrs}/>'
     if not contents: return f'<{tag}/>'
