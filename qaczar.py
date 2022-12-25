@@ -323,7 +323,7 @@ import inspect
 def elem(
         tag: str, *contents, data: dict=None, 
         cdata: bool=False, css: str = None, **attrs) -> str:
-    # TODO: Automate CSS classes and data attributes (bulma, htmx)
+    # TODO: Automate CSS classes and data attributes (htmx)
     """Let all serialization happen through hypertext."""
     if data: 
         for k, v in data.items(): attrs[f'data-{k}'] = v
@@ -344,30 +344,7 @@ def elem_list(*items, tag: str='ul') -> str:
     content = ''.join(elem('li', item, data={'seq': i}) for i, item in enumerate(items))
     return elem(tag, content)
 
-def elem_input(field: str, param: inspect.Parameter) -> str:
-    """Let function annotations determine input types and validations."""
-    input_type = 'text'
-    if param.annotation is not param.empty:
-        if param.annotation is int: input_type = 'number'
-        elif param.annotation is bool: input_type = 'checkbox'
-    attrs = {'name': field, 'type': input_type, 'title': field}
-    if param.default is not param.empty:
-        attrs['value'] = param.default
-        if param.annotation is bool: attrs['checked'] = 'checked'
-    return elem('input', **attrs)
-
-def elem_form(func: t.Callable) -> str:
-    """Let function signatures determine form fields."""
-    func_name = func.__name__
-    form = f"<form action='{func_name}' method='POST'>" 
-    for name, param in inspect.signature(func).parameters.items():
-        if not param.kind in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD): continue
-        if name.startswith('_'): continue
-        if param.annotation is param.empty: continue
-        form += f"<label for='{name}'>{name.upper()}:</label>"
-        form += elem_input(name, param) + "<br>"
-    form += f"<button type='submit'>Submit</button></form>"
-    return form
+#@# HTMX COMPONENTS
 
 # https://htmx.org/docs/#introduction
 HTMX = 'https://unpkg.com/htmx.org@1.8.4'
