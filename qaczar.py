@@ -323,9 +323,7 @@ def recorded(func: t.Callable) -> t.Callable:
 
 import inspect
 
-def elem(
-        tag: str, *contents, data: dict=None, hx: dict=None, 
-        cdata: bool=False, **attrs) -> str:
+def elem(tag: str, *contents, data: dict=None, hx: dict=None, **attrs) -> str:
     # TODO: Automate CSS classes and data attributes (htmx)
     """Let all serialization happen through hypertext."""
     if data: 
@@ -337,7 +335,6 @@ def elem(
     attrs = ' '.join(a for a in attrs.split() if a.strip())
     if attrs and not contents: return f'<{tag} {attrs}/>'
     if not contents: return f'<{tag}/>'
-    if cdata: contents = f'<![CDATA[{contents}]]>'
     return f'<{tag} {attrs}>{contents}</{tag}>'
 
 elem_h1 = functools.partial(elem, 'h1', css='title')
