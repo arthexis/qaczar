@@ -32,7 +32,9 @@ PYTHON = sys.executable
 PID = os.getpid()
 DIR = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.basename(DIR)  # Currently: 'qaczar'
+
 HTMX = 'https://unpkg.com/htmx.org@1.8.4'
+CSS = 'https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css'
 
 def iso8601() -> str: 
     """Let time flow in a single direction, one second at a time."""
@@ -365,15 +367,14 @@ def elem_form(func: t.Callable) -> str:
 def elem_body(*sections, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     # TODO: Generate the CSS code dynamically instead of reading a file.
-    global HTMX
+    global HTMX, CSS
     body_elem = elem('body', *sections, **attrs)
     return f"""
     <!DOCTYPE html><html lang="en">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" 
-            href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css" type="text/css" />
+        <link rel="stylesheet" href="{CSS}" type="text/css" />
         <script src="{HTMX}"></script>
         <title>{current_site()}</title>
     </head>

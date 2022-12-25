@@ -1,7 +1,4 @@
-* {
-    margin: 0;
-    padding: 0;
-}
+* {margin: 0; padding: 0;}
 html, input {
     background-color: #333;
     font-family: monospace;
