@@ -373,12 +373,6 @@ def elem_body(*sections, **attrs) -> str:
 # https://htmx.org/docs/#introduction
 HTMX = 'https://unpkg.com/htmx.org@1.8.4'
 
-# Ideas for HTMX:
-# Each function decorated with @htmx should be a component.
-# When the component is called, it renders itself as html with htmx attributes.
-# Reuse elem()
-# When interaction is received, it is called again with an event object.
-
 # TODO: Consider tracking components with the database instead of a global.
 _INDEX = collections.defaultdict(dict)
 
