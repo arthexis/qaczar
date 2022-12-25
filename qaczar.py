@@ -394,8 +394,11 @@ def hyper(tag: str, css: str = None, **attrs) -> t.Callable:
         _INDEX[(current_site(), _tag)][func.__name__] = func
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
-            result = func(*args, **kwargs)
-            if callable(result): return result()  
+            try:
+                result = func(*args, **kwargs)
+            except TypeError as e:
+                emit(f"{func.__name__}({args=} {kwargs=})")
+                raise e
             if _tag == 'body': return elem_body(*result, **_attrs)
             return elem(_tag, *result, **_attrs)
         return _hyper
