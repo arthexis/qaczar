@@ -325,14 +325,11 @@ import inspect
 
 def elem(
         tag: str, *contents, data: dict=None, hx: dict=None, 
-        cdata: bool=False, css: str = None, **attrs) -> str:
+        cdata: bool=False, **attrs) -> str:
     # TODO: Automate CSS classes and data attributes (htmx)
     """Let all serialization happen through hypertext."""
     if data: 
         for k, v in data.items(): attrs[f'data-{k}'] = v
-    if hx:
-        for k, v in hx.items(): attrs[f'hx-{k}'] = v
-    attrs['class'] = css if css else attrs.get('class', '')
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
     contents = ''.join(str(c) for c in contents)
     attrs = ' '.join(a for a in attrs.split() if a.strip())
