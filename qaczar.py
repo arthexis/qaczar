@@ -387,7 +387,6 @@ def hyper(tag: str, css: str = None, **attrs) -> t.Callable:
         if not func.__code__.co_flags & 0x08:
             ln = func.__code__.co_firstlineno
             raise TypeError(f"Function @hyper({func.__name__}) ({ln}) must accept **context")
-        _attrs['hx-get'] = f'/{current_site()}/{func.__name__}'
         if DEBUG:
             _attrs['data-qhf'] = func.__name__
             _attrs['data-qln'] = func.__code__.co_firstlineno
@@ -400,6 +399,7 @@ def hyper(tag: str, css: str = None, **attrs) -> t.Callable:
                 emit(f"{func.__name__}({args=} {kwargs=})")
                 raise e
             if _tag == 'body': return elem_body(*result, **_attrs)
+            else: _attrs['hx-get'] = f'/{current_site()}/{func.__name__}'
             return elem(_tag, *result, **_attrs)
         return _hyper
     return _hyper_decorator
@@ -465,6 +465,7 @@ def site_footer(**context) -> str:
 @hyper('body', title="HELLO QACZAR")  # Default page.
 def hello_world(subject='roadmap', **context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 
+    # TODO: This will never receive an event, so it should be a static page?
     return app_features(subject=subject, **context), site_footer(**context)
 
 
