@@ -332,6 +332,7 @@ def elem(tag: str, *contents, data: dict=None, cdata: bool=False, **attrs) -> st
     return f'<{tag} {attrs}>{contents}</{tag}>'
 
 def elem_list(*items, tag: str='ul') -> str:
+    if len(items) == 1 and not isinstance(items[0], str): items = items[0]
     content = ''.join(elem('li', item, data={'seq': i}) for i, item in enumerate(items))
     return elem(tag, content)
 
