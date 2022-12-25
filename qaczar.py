@@ -319,11 +319,10 @@ def recorded(func: t.Callable) -> t.Callable:
 
 import inspect
 
-def elem(tag: str, *contents, cdata: bool=False, **attrs) -> str:
+def elem(tag: str, *contents, data: dict=None, cdata: bool=False, **attrs) -> str:
     """Let all serialization happen through hypertext."""
-    if 'data' in attrs: 
-        for k, v in attrs['data'].items(): attrs[f'data-{k}'] = v
-        del attrs['data']
+    if data: 
+        for k, v in data.items(): attrs[f'data-{k}'] = v
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
     contents = ''.join(str(c) for c in contents)
     emit(f"elem({tag=} {contents=} {attrs=})")
@@ -370,9 +369,8 @@ def elem_body(*sections, **attrs) -> str:
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <style>
-        * {{ padding: 0; margin: 0; }}
-        </style>
+        <link rel="stylesheet" 
+            href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css" type="text/css" />
         <script src="https://unpkg.com/htmx.org@1.8.4"></script>
         <title>{current_site()}</title>
     </head>
@@ -466,8 +464,6 @@ def site_footer(**context) -> str:
 
 
 #@# SITE PAGES
-
-
 
 @hyper('body')  # Default page.
 def hello_world(**context) -> str:
