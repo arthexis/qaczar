@@ -322,11 +322,14 @@ def recorded(func: t.Callable) -> t.Callable:
 
 import inspect
 
-def elem(tag: str, *contents, data: dict=None, cdata: bool=False, **attrs) -> str:
+def elem(
+        tag: str, *contents, data: dict=None, 
+        cdata: bool=False, css: str = None, **attrs) -> str:
     # TODO: Automate CSS classes and data attributes (bulma, htmx)
     """Let all serialization happen through hypertext."""
     if data: 
         for k, v in data.items(): attrs[f'data-{k}'] = v
+    attrs['class'] = css if css else tag
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
     contents = ''.join(str(c) for c in contents)
     emit(f"elem({tag=} {contents=} {attrs=})")
