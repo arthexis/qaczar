@@ -388,8 +388,7 @@ def hyper(tag: str, css: str = None, **attrs) -> t.Callable:
             ln = func.__code__.co_firstlineno
             raise TypeError(f"Function @hyper({func.__name__}) ({ln}) must accept **context")
         if DEBUG:
-            _attrs['data-qhf'] = func.__name__
-            _attrs['data-qln'] = func.__code__.co_firstlineno
+            _attrs['data-ln'] = func.__code__.co_firstlineno
         _INDEX[(current_site(), _tag)][func.__name__] = func
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
