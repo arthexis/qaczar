@@ -327,7 +327,7 @@ def elem(
     """Let all serialization happen through hypertext."""
     if data: 
         for k, v in data.items(): attrs[f'data-{k}'] = v
-    attrs['class'] = css if css else tag
+    attrs['class'] = css if css else attrs.get('class')
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
     contents = ''.join(str(c) for c in contents)
     emit(f"elem({tag=} {contents=} {attrs=})")
@@ -379,7 +379,7 @@ def elem_body(*sections, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     # TODO: Generate the CSS code dynamically instead of reading a file.
     global HTMX, CSS
-    body_elem = elem('body', *sections, **attrs)
+    body_sections = elem('body', *sections, **attrs)
     return f"""
     <!DOCTYPE html><html lang="en">
     <head>
@@ -389,7 +389,7 @@ def elem_body(*sections, **attrs) -> str:
         <script src="{HTMX}"></script>
         <title>{current_site()}</title>
     </head>
-    {body_elem}
+    {body_sections}
     </html>
     """
 
