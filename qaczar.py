@@ -327,7 +327,7 @@ def elem(
     """Let all serialization happen through hypertext."""
     if data: 
         for k, v in data.items(): attrs[f'data-{k}'] = v
-    attrs['class'] = css if css else attrs.get('class')
+    attrs['class'] = css if css else attrs.get('class', '')
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
     contents = ''.join(str(c) for c in contents)
     emit(f"elem({tag=} {contents=} {attrs=})")
