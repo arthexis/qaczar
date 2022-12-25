@@ -345,11 +345,6 @@ def elem_list(*items, tag: str='ul') -> str:
     content = ''.join(elem('li', item, data={'seq': i}) for i, item in enumerate(items))
     return elem(tag, content)
 
-#@# HTMX COMPONENTS
-
-# https://htmx.org/docs/#introduction
-HTMX = 'https://unpkg.com/htmx.org@1.8.4'
-
 # https://picnicss.com/documentation
 CSS = 'https://cdn.jsdelivr.net/npm/picnic'
 
@@ -374,6 +369,15 @@ def elem_body(*sections, **attrs) -> str:
 
 #@# HTML GENERATORS
 
+# https://htmx.org/docs/#introduction
+HTMX = 'https://unpkg.com/htmx.org@1.8.4'
+
+# Ideas for HTMX:
+# Each function decorated with @htmx should be a component.
+# When the component is called, it renders itself as html with htmx attributes.
+# Reuse elem()
+# When interaction is received, it is called again with an event object.
+
 # TODO: Consider tracking components with the database instead of a global.
 _INDEX = collections.defaultdict(dict)
 
@@ -385,6 +389,7 @@ def hyper(tag: str, css: str = None, **attrs) -> t.Callable:
         if not func.__code__.co_flags & 0x08:
             ln = func.__code__.co_firstlineno
             raise TypeError(f"Function @hyper({func.__name__}) ({ln}) must accept **context")
+        _attrs['hx-get'] = f'/{current_site()}/{func.__name__}'
         if DEBUG:
             _attrs['data-qhf'] = func.__name__
             _attrs['data-qln'] = func.__code__.co_firstlineno
