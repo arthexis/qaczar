@@ -383,11 +383,12 @@ def elem_body(*sections, **attrs) -> str:
 
 #@# HTML GENERATORS
 
-_COMPONENTS = collections.defaultdict(dict)
+# TODO: Consider tracking components with the database instead of a global.
+_INDEX = collections.defaultdict(dict)
 
 def hyper(tag: str, css: str = None, **attrs) -> t.Callable:
     """Let the decorated function output hypertext automatically."""
-    global _COMPONENTS, DEBUG
+    global _INDEX, DEBUG
     if css: attrs['class'] = css
     def _hyper_decorator(func: t.Callable, _tag=tag, _attrs=attrs) -> t.Callable:
         if not func.__code__.co_flags & 0x08:
@@ -396,7 +397,7 @@ def hyper(tag: str, css: str = None, **attrs) -> t.Callable:
         if DEBUG:
             _attrs['data-qhf'] = func.__name__
             _attrs['data-qln'] = func.__code__.co_firstlineno
-        _COMPONENTS[_tag][func.__name__] = func
+        _INDEX[(current_site(), _tag)][func.__name__] = func
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
             result = func(*args, **kwargs)
@@ -404,6 +405,9 @@ def hyper(tag: str, css: str = None, **attrs) -> t.Callable:
             return elem(_tag, *result, **_attrs)
         return _hyper
     return _hyper_decorator
+
+def site_index(tag: str) -> t.Dict[str, t.Callable]:
+    return _INDEX[(current_site(), tag)]
 
 def html_build_chain(*func_names: str, **context) -> str:
     """Let all HTML content be generated from pure functions and request context."""
@@ -437,13 +441,21 @@ def app_features(subject: str, **context) -> str:
 
 #@# SITE COMPONENTS
 
+@hyper('style')
+def site_style(**context) -> str:
+    """Let this be the CSS stylesheet for the site."""
+    return """
+    body { padding: 1em; }
+    section { padding: 1em; }
+    """
+
 @hyper('header')
 def site_header(title: str = None, **context) -> str:
     """Let this be the header of the each page on the site."""
-    global _COMPONENTS, SITE
+    global _INDEX, SITE
     # TODO: Consider additional attributes for the header / nav.
     site_links = [elem('a', page.replace('_', ' ').title() , href=f'/{page}')
-        for page in _COMPONENTS['body'].keys()
+        for page in site_index('body').keys()
         if not page.startswith('_') and page not in ('hello_world', 'index')]
     return elem('a', title or SITE, href='/'), site_links
 
@@ -454,6 +466,8 @@ def site_footer(**context) -> str:
 
 
 #@# SITE PAGES
+
+
 
 @hyper('body')  # Default page.
 def hello_world(**context) -> str:
