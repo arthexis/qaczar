@@ -338,8 +338,8 @@ def elem(
     if cdata: contents = f'<![CDATA[{contents}]]>'
     return f'<{tag} {attrs}>{contents}</{tag}>'
 
-elem_h1 = functools.partial(elem, 'h1')
-elem_h2 = functools.partial(elem, 'h2')
+elem_h1 = functools.partial(elem, 'h1', css='title')
+elem_h2 = functools.partial(elem, 'h2', css='subtitle')
 
 def elem_list(*items, tag: str='ul') -> str:
     if len(items) == 1 and not isinstance(items[0], str): items = items[0]
