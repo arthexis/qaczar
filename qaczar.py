@@ -34,7 +34,7 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.basename(DIR)  # Currently: 'qaczar'
 
 HTMX = 'https://unpkg.com/htmx.org@1.8.4'
-CSS = 'https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css'
+CSS = 'https://cdn.jsdelivr.net/npm/picnic'
 
 def iso8601() -> str: 
     """Let time flow in a single direction, one second at a time."""
