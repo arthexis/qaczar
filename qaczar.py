@@ -330,6 +330,8 @@ def elem(
     """Let all serialization happen through hypertext."""
     if data: 
         for k, v in data.items(): attrs[f'data-{k}'] = v
+    if hx:
+        for k, v in hx.items(): attrs[f'hx-{k}'] = v
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
     contents = ''.join(str(c) for c in contents)
     attrs = ' '.join(a for a in attrs.split() if a.strip())
