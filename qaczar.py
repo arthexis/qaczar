@@ -278,8 +278,11 @@ def _storage_type(type_: type) -> str | None:
 def _func_params_cols(func: t.Callable) -> list[str]:
     columns = []
     for name, param in inspect.signature(func).parameters.items():
+        if param.annotation == inspect._empty: continue
         col_type = _storage_type(param.annotation)
         if col_type: columns.append(f'{name} {col_type}')
+    if not columns: 
+        raise TypeError(f"Function {func.__name__} has no supported parameters.")
     return columns
 
 def _purge_database():
@@ -392,6 +395,7 @@ def hyper(tag: str, css: str = None, **attrs) -> t.Callable:
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
             result = func(*args, **kwargs)
+            if callable(result): return result()  
             if _tag == 'body': return elem_body(*result, **_attrs)
             return elem(_tag, *result, **_attrs)
         return _hyper
@@ -433,13 +437,9 @@ def app_features(subject: str, **context) -> str:
 
 #@# SITE COMPONENTS
 
-@hyper('style')
-def site_style(**context) -> str:
-    """Let this be the CSS stylesheet for the site."""
-    return """
-    body { padding: 1em; }
-    section { padding: 1em; }
-    """
+# TODO: Consider what is the benefit of using hyper on site components.
+# IE. how to make the nav bar and the footer be generated from pure functions.
+
 
 @hyper('header')
 def site_header(title: str = None, **context) -> str:
@@ -459,11 +459,10 @@ def site_footer(**context) -> str:
 
 #@# SITE PAGES
 
-@hyper('body')  # Default page.
-def hello_world(**context) -> str:
+@hyper('body', title="HELLO QACZAR")  # Default page.
+def hello_world(subject='roadmap', **context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 
-    context['title'] = 'Hello from QACZAR'
-    return app_features(subject='roadmap', **context), site_footer(**context)
+    return app_features(subject=subject, **context), site_footer(**context)
 
 
 #@# HTTPS SERVER
