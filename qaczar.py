@@ -325,7 +325,7 @@ import inspect
 
 def elem(tag: str, *contents, data: dict=None, hx: dict=None, **attrs) -> str:
     # TODO: Automate CSS classes and data attributes (htmx)
-    """Let all serialization happen through hypertext."""
+    """Let all serialization happen through hypertext, as originally intended."""
     if data: 
         for k, v in data.items(): attrs[f'data-{k}'] = v
     if hx:
