@@ -449,7 +449,7 @@ def site_nav(title: str = None) -> str:
     return elem_h1(title or SITE, href='/'), *links
 
 # A simple blog where articles are executable python code.
-@hyper('main')
+@hyper('section')
 def site_blog(topic: str = None) -> str:
     """Let this be the main content of the page."""
     global _INDEX, SITE
