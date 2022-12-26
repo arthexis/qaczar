@@ -179,12 +179,12 @@ def _watch_forever(proc: subprocess.Popen, fname: str) -> t.NoReturn:
                 proc, stable = _restart_py(proc), False
             continue
         if proc.poll() is not None:  
-            if proc.returncode == 0: sys.exit(0)  # Halt from below.
+            if proc.returncode == 0: sys.exit(0)  # As below so above.
             if stable:
                 emit(f"Script died {proc.returncode=}. Restart and mark unstable.")
                 proc, stable = _restart_py(proc), False
                 continue
-            halt(f"Script died twice. Stopping watcher.")  # Halt from above.
+            halt(f"Script died twice. Stopping watcher.")  # As above so below.
         if not stable:
             emit(f"Stabilizing {proc.pid=}.")
             source, stable = _read_file(fname), True
@@ -334,7 +334,9 @@ def elem(tag: str, *contents,
         for k, v in data.items(): attrs[f'data-{k}'] = v
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
     contents = ''.join(str(c) for c in contents)
-    if link: contents = f'<a href="{link}">{contents}</a>'
+    if link: 
+        if link is True: link = contents
+        contents = f'<a href="{link}">{contents}</a>'
     if attrs and not contents: return f'<{tag} {attrs}/>'
     if not contents: return f'<{tag}/>'
     return f'<{tag} {attrs}>{contents}</{tag}>'
