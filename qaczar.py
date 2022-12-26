@@ -442,7 +442,7 @@ def site_endpoints() -> t.List[str]:
 # TODO: Consider what is the benefit of using hyper on site components.
 # IE. how to make the nav bar and the footer be generated from pure functions.
 
-@hyper('nav')
+@hyper('nav', cls='transparent')
 def site_nav() -> str:
     # TODO: Fix the CSS, because this overlaps with the body.
     links = [elem('a', page.upper(), href=page) for page in site_endpoints()]
