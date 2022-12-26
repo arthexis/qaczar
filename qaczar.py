@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# qaczar.py: A Web Authoring System to honor of the Self-Inventing.
+# qaczar.py: A web authoring system written in honor of the Self-Inventing.
 # by R. J. Guillén-Osorio (rjgo [at] qaczar [dot] com) 2022-2023.
 
 # License: MIT (https://opensource.org/licenses/MIT).
@@ -443,24 +443,29 @@ def site_endpoints() -> t.List[str]:
 # TODO: Consider what is the benefit of using hyper on site components.
 # IE. how to make the nav bar and the footer be generated from pure functions.
 
+@hyper('a')
+def site_brand(title: str = None) -> str:
+    pass
+
 @hyper('nav')
-def site_nav(title: str = None) -> str:
-    """Let this be the header of the each page on the site."""
+def site_nav() -> str:
     # TODO: Fix the CSS, because this overlaps with the body.
     global _INDEX, SITE
-    links = [elem('a', (title or '').upper(), href=page) for page in site_endpoints()]
-    return elem_h1(title or SITE, href='/'), *links
+    links = [elem('a', page.upper(), href=page) for page in site_endpoints()]
+    return '\n'.join(links)
+
+@hyper('header')
+def site_header() -> str:
+    return elem('a', f'Powered by the qaczar.py web system.', href=f'/qaczar.py')
 
 # A simple blog where articles are executable python code.
 @hyper('main')
 def site_blog(topic: str = None) -> str:
-    """Let this be the main content of the page."""
     global _INDEX, SITE
     return elem_h1(topic or 'Blog'), elem('p', 'TODO: Blog content.')
 
 @hyper('footer')
 def site_footer() -> str:
-    """Let this be the footer of the page."""
     return elem('a', f'Powered by the qaczar.py web system.', href=f'/qaczar.py')
 
 
@@ -468,7 +473,7 @@ def site_footer() -> str:
 
 @hyper('body')  # Default page.
 def index(**context) -> str:
-    """Let this be the default page. It shall have a roadmap.""" 
+    """Let this be the default page (minimal functionality).""" 
     # TODO: This will never receive an event, so it should be a static page?
     return (
             site_nav(**context),
