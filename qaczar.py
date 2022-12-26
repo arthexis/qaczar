@@ -196,7 +196,7 @@ def _watch_forever(proc: subprocess.Popen, fname: str) -> t.NoReturn:
 import contextlib
 
 @contextlib.contextmanager
-def _current_site(site: str) -> str:
+def site_context(site: str) -> str:
     """Let us set the directory where the site is served from."""
     global _LOCAL
     setattr(_LOCAL, 'site', site)
@@ -345,6 +345,8 @@ def elem(tag: str, *contents,
 
 elem_h1 = functools.partial(elem, 'h1')
 elem_h2 = functools.partial(elem, 'h2')
+elem_h3 = functools.partial(elem, 'h3')
+elem_h4 = functools.partial(elem, 'h4')
 
 def elem_btn(*contents, **attrs) -> str:
     return elem('button', *contents, **attrs)
@@ -566,7 +568,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
             qs = parse.parse_qs(qs) if qs else {}
             site, *funcs = [func for func in pure_path[1:-5].split('/') if func]
             if not funcs: site, funcs = SITE, [site]
-            with _current_site(site):
+            with site_context(site):
                 emit(f"Building {site=} {funcs=} {qs=} {data=}")
                 for key, value in self.headers.items():
                     # https://htmx.org/docs/#request-headers
