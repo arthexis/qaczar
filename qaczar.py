@@ -708,4 +708,6 @@ if __name__ == "__main__":
     if len(sys.argv) > 1: _ARGS, _KWARGS = _split_args(sys.argv[1:])
     else: _ARGS, _KWARGS = (), {}
     _role_dispatch(*_ARGS, **_KWARGS)
+
+__all__ = [k for k in globals().keys() if not k.startswith('_')]
     
