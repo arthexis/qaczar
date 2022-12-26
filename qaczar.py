@@ -463,15 +463,13 @@ def site_footer() -> str:
 
 #@# SITE PAGES
 
-INDEX = 'hello_world'
-
 @hyper('body')  # Default page.
-def hello_world(topic='roadmap', **context) -> str:
+def index(**context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 
     # TODO: This will never receive an event, so it should be a static page?
     return (
             site_nav(**context),
-            site_blog(topic=topic, **context), 
+            site_blog(**context), 
             site_footer(**context),
         )
 
@@ -548,7 +546,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
         return self.rfile.read(size)
 
     def _build_response(self, method: str = None) -> bool:
-        global SITE, INDEX
+        global SITE
         """Let each request be parsed and processed. If needed, overwrite the response file."""
         # I really hope I don't have to rewrite this one function forever. --Sysyphus
         self.work_path, self.start = None, time.time()
@@ -630,9 +628,9 @@ def request_factory(urllib3):
     
 def test_server(*args, **kwargs) -> t.NoReturn:
     """Let us test the server by making http requests to it."""
-    global SITE, INDEX
+    global SITE
     request = request_factory()
-    assert 'qaczar' in request(f'/{SITE}/{INDEX}.html')
+    assert 'qaczar' in request(f'/{SITE}/index.html')
 
 
 #@#  REPOSITORY
