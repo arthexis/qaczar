@@ -377,12 +377,10 @@ HTMX = 'https://unpkg.com/htmx.org@1.8.4'
 _INDEX = collections.defaultdict(dict)
 
 def hyper(
-        tag: str, method: str = 'get', trigger: str = None, target: str = None,
-        css: str = None, **attrs) -> t.Callable:
+        tag: str, method: str = 'get', trigger: str = None, target: str = None, **attrs) -> t.Callable:
     """Let the decorated function output hypertext automatically."""
     global _INDEX, DEBUG
     # TODO: Use a function to manipulate the class attribute.
-    if css: attrs['class'] = css
     if trigger: attrs['hx-trigger'] = trigger
     if target: attrs['hx-target'] = target
     def _hyper_decorator(
