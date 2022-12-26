@@ -399,7 +399,6 @@ def hyper(tag: str, css: str = None, hx: dict = None, **attrs) -> t.Callable:
                 emit(f"{func.__name__}({args=} {kwargs=})")
                 raise e
             if _tag == 'body': return elem_body(*result, **_attrs)
-            else: _attrs['hx-get'] = f'/{current_site()}/{func.__name__}'
             return elem(_tag, *result, **_attrs)
         return _hyper
     return _hyper_decorator
