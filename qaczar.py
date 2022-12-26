@@ -396,6 +396,7 @@ def hyper(
     """Let the decorated function output hypertext automatically."""
     global _INDEX, DEBUG
     # TODO: Use a function to manipulate the class attribute.
+    # Idea: A cannonica elem is a tag specific for a site that is the default.
     if trigger: attrs['hx-trigger'] = trigger
     if target: attrs['hx-target'] = target
     if history or (tag == 'body' and history is not False): attrs['hx-push-url'] = 'true'
