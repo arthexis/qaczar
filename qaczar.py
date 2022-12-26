@@ -450,7 +450,7 @@ def site_nav(title: str = None) -> str:
 def site_blog(topic: str = None) -> str:
     """Let this be the main content of the page."""
     global _INDEX, SITE
-    return elem('h1', topic or 'Blog'), elem('p', 'TODO: Blog content.')
+    return elem_h1(topic or 'Blog'), elem('p', 'TODO: Blog content.')
 
 @hyper('footer')
 def site_footer() -> str:
