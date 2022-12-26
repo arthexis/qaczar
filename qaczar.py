@@ -452,7 +452,7 @@ def site_nav() -> str:
 @hyper('main')
 def site_main(topic: str = None) -> str:
     global _INDEX, SITE
-    return elem('header', topic or SITE, cls='hero')
+    return elem('header', topic or SITE, cls='hero', style='height: 70vh; background: #333;')
 
 @hyper('footer')
 def site_footer() -> str:
