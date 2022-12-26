@@ -438,15 +438,14 @@ def html_build_chain(*func_names: str, **context) -> str:
 # TODO: Consider what is the benefit of using hyper on site components.
 # IE. how to make the nav bar and the footer be generated from pure functions.
 
-
 @hyper('nav')
 def site_nav(title: str = None) -> str:
     """Let this be the header of the each page on the site."""
     global _INDEX, SITE
     # TODO: Consider additional attributes for the header / nav.
-    site_links = [elem('a', title.upper(), href=f'/{page}')
+    site_links = [elem('a', (title or '').upper(), href=f'/{page}')
         for page in site_index('body').keys()
-        if not page.startswith('_') and page not in ('hello_world', 'index')]
+        if not page.startswith('_') and page not in ('hello_world', )]
     return elem_h1('a', title or SITE, href='/'), site_links
 
 # A simple blog where articles are executable python code.
@@ -480,7 +479,7 @@ def hello_world(topic='roadmap', **context) -> str:
 def scratchpad(**context) -> str:
     """Let this page be used for experimentation.""" 
     # TODO: This will never receive an event, so it should be a static page?
-    return f"Helloooo: {context}"
+    return (site_nav(), f"Helloooo: {context}")
 
 # Blog where articles are executable python code.
 
