@@ -466,6 +466,8 @@ def site_footer(**context) -> str:
 
 #@# SITE PAGES
 
+INDEX = 'hello_world'
+
 @hyper('body')  # Default page.
 def hello_world(topic='roadmap', **context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 
@@ -549,12 +551,12 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
         return self.rfile.read(size)
 
     def _build_response(self, method: str = None) -> bool:
-        global SITE
+        global SITE, INDEX
         """Let each request be parsed and processed. If needed, overwrite the response file."""
         # I really hope I don't have to rewrite this one function forever. --Sysyphus
         self.work_path, self.start = None, time.time()
-        if self.path == '/' or not self.path: self.path = f'/{SITE}/hello_world.html'
-        if self.path.endswith('/'): self.path += 'index.html'
+        if self.path == '/' or not self.path: self.path = f'/{SITE}/{INDEX}.html'
+        # if self.path.endswith('/'): self.path += 'index.html'
         if method != 'POST': data = {}
         else: data = parse.parse_qs(self._rfile_read().decode('utf-8'))
         pure_path, qs = self.path.split('?', 1) if '?' in self.path else (self.path, '')
