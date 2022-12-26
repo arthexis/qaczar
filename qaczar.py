@@ -469,7 +469,7 @@ def index(**context) -> str:
     """Let this be the default page (minimal functionality).""" 
     # TODO: This will never receive an event, so it should be a static page?
     return (
-            site_nav(**context),
+            site_nav(),
             site_blog(**context), 
             site_footer(**context),
         )
