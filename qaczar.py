@@ -330,7 +330,7 @@ CSS = 'https://cdn.jsdelivr.net/npm/picnic'
 def elem(tag: str, *contents, 
         data: dict=None, css: str = None, href: str = None, **attrs) -> str:
     """Let all serialization happen through hypertext, as originally intended."""
-    if css: attrs['class'] = css
+    if css and css.strip(): attrs['class'] = css
     if data: 
         for k, v in data.items(): attrs[f'data-{k}'] = v
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
