@@ -363,6 +363,7 @@ def elem_body(*sections, **attrs) -> str:
     # TODO: Generate the CSS code dynamically instead of reading a file.
     global HTMX, CSS
     body_sections = elem('body', *sections, **attrs)
+    # Don't break the boilerplate down too much unless necessary.
     return f"""
     <!DOCTYPE html><html lang="en">
     <head>
@@ -549,6 +550,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
         self.send_response(301)
         self.send_header('Location', path)
 
+    @timed
     def _build_response(self, method: str = None) -> bool:
         global SITE
         """Let each request be parsed and processed. If needed, overwrite the response file."""
