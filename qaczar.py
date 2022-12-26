@@ -348,6 +348,12 @@ def elem_list(*items, tag: str='ul') -> str:
     content = ''.join(elem('li', item) for item in items)
     return elem(tag, content) if tag else content
 
+def elem_card(tag: str = 'article', *content, **attrs) -> str:
+    return elem(tag, *content, css='card', **attrs)
+
+def elem_label(css: str = '', *content, **attrs) -> str:
+    return elem('span', *content, css=f'label {css}', **attrs)
+
 def elem_body(*sections, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     # TODO: Generate the CSS code dynamically instead of reading a file.
@@ -395,7 +401,9 @@ def hyper(
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
             try:
-                result = func(*args, **kwargs)
+                result = func(*args, **kwargs) or ()
+                if not result:
+                    emit(f"Function @hyper({func.__name__}) returned nothing")
             except TypeError as e:
                 emit(f"{func.__name__}({args=} {kwargs=})")
                 raise e
@@ -425,31 +433,13 @@ def html_build_chain(*func_names: str, **context) -> str:
     return block
 
 
-#@# APP COMPONENTS
-
-@hyper('section', get=True)
-def app_features(subject: str='roadmap', **context) -> str:
-    """Let there be a function that generates a list of the app's features."""
-    global APP
-    emit(f"app_features({subject})")
-    if subject == 'roadmap': features = scan_file(f'{APP}.py', '# TODO:')
-    else: features = []
-    if not features: features = ['Nothing to see here.']
-    return (
-            elem_h2(subject.title()), 
-            elem_btn('Back', hx_get=f'/{APP}'),
-            elem('p',"Features planed for QACZAR."), 
-            elem_list(features)
-        )
-
-
 #@# SITE COMPONENTS
 
 # TODO: Consider what is the benefit of using hyper on site components.
 # IE. how to make the nav bar and the footer be generated from pure functions.
 
 
-@hyper('header')
+@hyper('nav')
 def site_header(title: str = None, **context) -> str:
     """Let this be the header of the each page on the site."""
     global _INDEX, SITE
@@ -457,7 +447,14 @@ def site_header(title: str = None, **context) -> str:
     site_links = [elem('a', page.replace('_', ' ').title() , href=f'/{page}')
         for page in site_index('body').keys()
         if not page.startswith('_') and page not in ('hello_world', 'index')]
-    return elem('a', title or SITE, href='/'), site_links
+    return elem_h1('a', title or SITE, href='/'), site_links
+
+# A simple blog where articles are executable python code.
+@hyper('main')
+def site_blog(topic: str = None, **context) -> str:
+    """Let this be the main content of the page."""
+    global _INDEX, SITE
+
 
 @hyper('footer')
 def site_footer(**context) -> str:
@@ -468,14 +465,22 @@ def site_footer(**context) -> str:
 #@# SITE PAGES
 
 @hyper('body')  # Default page.
-def hello_world(subject='roadmap', **context) -> str:
+def hello_world(topic='roadmap', **context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 
     # TODO: This will never receive an event, so it should be a static page?
     return (
             site_header(**context),
-            app_features(subject=subject, **context), 
+            site_blog(topic=topic, **context), 
             site_footer(**context),
         )
+
+@hyper('body')  
+def scratchpad(**context) -> str:
+    """Let this page be used for experimentation.""" 
+    # TODO: This will never receive an event, so it should be a static page?
+    return f"Helloooo: {context}"
+
+# Blog where articles are executable python code.
 
 
 #@# HTTPS SERVER
