@@ -336,7 +336,6 @@ def elem(tag: str, *contents,
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
     contents = ''.join(str(c) for c in contents)
     if href and tag != 'a':
-        if href is True: href = contents
         contents = f'<a href="{href}">{contents}</a>'
     elif tag == 'a' and not href: 
         raise ValueError(f"Missing href for <a> tag: {contents}")
