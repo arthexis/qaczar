@@ -616,7 +616,7 @@ class SSLServer(ss.ThreadingTCPServer):
 def request_factory(urllib3):
     """Let us make requests to the server and check the response."""	
     # TODO: Design a string for the user-agent and use it to track tests.
-    global HOST, PORT, APP
+    global HOST, PORT
     http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=_build_ssl_certs()[0])
     def _request(fname:str, data:dict = None, status:int = 200):
         if fname.startswith('/'): fname = fname[1:]
@@ -628,8 +628,9 @@ def request_factory(urllib3):
     
 def test_server(*args, **kwargs) -> t.NoReturn:
     """Let us test the server by making http requests to it."""
+    global SITE, INDEX
     request = request_factory()
-    assert 'qaczar' in request(f'/hello_world.html')
+    assert 'qaczar' in request(f'/{SITE}/{INDEX}.html')
 
 
 #@#  REPOSITORY
