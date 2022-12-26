@@ -449,7 +449,7 @@ def site_endpoints() -> t.List[str]:
 def site_nav() -> str:
     # TODO: Fix the CSS, because this overlaps with the body.
     links = [elem('a', page.upper(), href=page) for page in site_endpoints()]
-    return elem('a', current_site(), href='/', css='brand'), *links
+    return elem('span', current_site(), href='/', css='brand'), *links
 
 # A simple blog where articles are executable python code.
 @hyper('main')
