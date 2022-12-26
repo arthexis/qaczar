@@ -626,7 +626,6 @@ def request_factory(urllib3):
         url = f"https://{HOST}:{PORT}/{fname}"
         r = http.request('POST' if data else 'GET', url, fields=data, timeout=30)
         assert r.status == status, f"Request to {url} failed with status {r.status}"
-        # emit(f"Request {_COUNTER} to {url} succeeded with status {r.status}")
         _COUNTER += 1
         return r.data.decode('utf-8')
     return _request
