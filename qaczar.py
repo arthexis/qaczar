@@ -369,12 +369,12 @@ def elem_body(*sections, **attrs) -> str:
     return f"""
     <!DOCTYPE html><html lang="en">
     <head>
+        <title>{current_site()}</title>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="htmx-config" content='{{"defaultSwapStyle":"outerHTML"}}'>
         <script src="{HTMX}"></script>
         <link rel="stylesheet" href="{CSS}" type="text/css" />
-        <title>{current_site()}</title>
     </head>
     {body_sections}
     </html>
