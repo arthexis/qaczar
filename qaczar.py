@@ -374,7 +374,7 @@ def elem_body(*sections, **attrs) -> str:
     """
 
 
-#@# HTML GENERATORS
+#@# HTML GENERATOR
 
 # https://htmx.org/docs/#introduction
 HTMX = 'https://unpkg.com/htmx.org@1.8.4'
@@ -403,20 +403,15 @@ def hyper(
                 result = func(*args, **kwargs) or ()
                 if not result: emit(f"{func.__name__}({args=} {kwargs=}) -> {result=}")
             except TypeError as e:
-                emit(f"{func.__name__}({args=} {kwargs=})")
-                raise e
+                emit(f"Error: {e} {func.__name__}({args=} {kwargs=})"); raise e
             if _tag == 'body': return elem_body(*result, **_attrs)
             return elem(_tag, *result, **_attrs)
         return _hyper
     return _hyper_decorator
 
-def site_index(tag: str) -> t.Dict[str, t.Callable]:
-    return _INDEX[(current_site(), tag)]
-
-def html_build_chain(*func_names: str, **context) -> str:
-    """Let all HTML content be generated from pure functions and request context."""
+def html_builder(*func_names: str, **context) -> str:
+    """Let all HTML content be built from pure functions and request context."""
     # TODO: Make sure we are receiving the context from the request.
-    emit(f"html_build_chain({func_names=} {context=})")
     try:
         if (site := current_site()) not in sys.path: sys.path.append(site)
         site_module = importlib.import_module(site)
@@ -432,6 +427,11 @@ def html_build_chain(*func_names: str, **context) -> str:
         context[func.__name__] = block
     return block
 
+def site_endpoints() -> t.List[str]:
+    """Let there be a list of all the endpoints on the site."""
+    global _INDEX
+    return [f'/{page}' for page in _INDEX[(current_site(), 'body')].keys()]
+
 
 #@# SITE COMPONENTS
 
@@ -442,11 +442,8 @@ def html_build_chain(*func_names: str, **context) -> str:
 def site_nav(title: str = None) -> str:
     """Let this be the header of the each page on the site."""
     global _INDEX, SITE
-    # TODO: Consider additional attributes for the header / nav.
-    site_links = [elem('a', (title or '').upper(), href=f'/{page}')
-        for page in site_index('body').keys()
-        if not page.startswith('_') and page not in ('hello_world', )]
-    return elem_h1('a', title or SITE, href='/'), site_links
+    links = [elem('a', (title or '').upper(), href=page) for page in site_endpoints()]
+    return elem_h1('a', title or SITE, href='/'), links
 
 # A simple blog where articles are executable python code.
 @hyper('main')
@@ -569,7 +566,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
                 for key, value in self.headers.items():
                     # https://htmx.org/docs/#request-headers
                     if key.startswith('HX-'): qs[key[3:].lower().replace('-', '_')] = value
-                content = html_build_chain(*funcs, **qs, **data)
+                content = html_builder(*funcs, **qs, **data)
             self.work_path = os.path.join('.server', pure_path[1:])
             _write_file(self.work_path, content, encoding='utf-8')
         # Everything else is served as-is. Nothing needs to be done.
