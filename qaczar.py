@@ -393,9 +393,6 @@ def hyper(
     if history or (tag == 'body' and history is not False): attrs['hx-push-url'] = 'true'
     def _hyper_decorator(
             func: t.Callable, _tag=tag, _method=method, _attrs=attrs) -> t.Callable:
-        if not func.__code__.co_flags & 0x08:
-            ln = func.__code__.co_firstlineno
-            raise TypeError(f"Function @hyper({func.__name__}) ({ln}) must accept **context")
         _attrs[f'hx-{_method}'] = func.__name__
         if DEBUG:
             _attrs['data-ln'] = func.__code__.co_firstlineno
@@ -443,7 +440,7 @@ def html_build_chain(*func_names: str, **context) -> str:
 
 
 @hyper('nav')
-def site_header(title: str = None, **context) -> str:
+def site_header(title: str = None) -> str:
     """Let this be the header of the each page on the site."""
     global _INDEX, SITE
     # TODO: Consider additional attributes for the header / nav.
@@ -454,13 +451,13 @@ def site_header(title: str = None, **context) -> str:
 
 # A simple blog where articles are executable python code.
 @hyper('main')
-def site_blog(topic: str = None, **context) -> str:
+def site_blog(topic: str = None) -> str:
     """Let this be the main content of the page."""
     global _INDEX, SITE
-
+    return elem('h1', topic or 'Blog'), elem('p', 'TODO: Blog content.')
 
 @hyper('footer')
-def site_footer(**context) -> str:
+def site_footer() -> str:
     """Let this be the footer of the page."""
     return elem('a', f'Powered by the qaczar.py web system.', href=f'/qaczar.py')
 
