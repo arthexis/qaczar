@@ -443,7 +443,7 @@ def site_nav(title: str = None) -> str:
     """Let this be the header of the each page on the site."""
     global _INDEX, SITE
     links = [elem('a', (title or '').upper(), href=page) for page in site_endpoints()]
-    return elem_h1('a', title or SITE, href='/'), *links
+    return elem_h1(title or SITE, href='/'), *links
 
 # A simple blog where articles are executable python code.
 @hyper('main')
