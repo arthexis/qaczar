@@ -375,19 +375,16 @@ HTMX = 'https://unpkg.com/htmx.org@1.8.4'
 # TODO: Consider tracking components with the database instead of a global.
 _INDEX = collections.defaultdict(dict)
 
-def hyper(tag: str, css: str = None, hx: dict = None, **attrs) -> t.Callable:
+def hyper(tag: str, method: str = 'get', css: str = None, **attrs) -> t.Callable:
     """Let the decorated function output hypertext automatically."""
     global _INDEX, DEBUG
     if css: attrs['class'] = css
-    def _hyper_decorator(func: t.Callable, _tag=tag, _attrs=attrs) -> t.Callable:
-        if hx: 
-
-            for k, v in hx.items(): 
-                if v is True: v = func.__name__
-                attrs[f'hx-{k}'] = v 
+    def _hyper_decorator(
+            func: t.Callable, _tag=tag, _method=method, _attrs=attrs) -> t.Callable:
         if not func.__code__.co_flags & 0x08:
             ln = func.__code__.co_firstlineno
             raise TypeError(f"Function @hyper({func.__name__}) ({ln}) must accept **context")
+        _attrs[f'hx-{_method}'] = func.__name__
         if DEBUG:
             _attrs['data-ln'] = func.__code__.co_firstlineno
         _INDEX[(current_site(), _tag)][func.__name__] = func
@@ -461,7 +458,7 @@ def site_footer(**context) -> str:
 
 #@# SITE PAGES
 
-@hyper('body', title="HELLO QACZAR")  # Default page.
+@hyper('body')  # Default page.
 def hello_world(subject='roadmap', **context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 
     # TODO: This will never receive an event, so it should be a static page?
