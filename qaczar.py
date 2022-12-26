@@ -428,7 +428,7 @@ def html_build_chain(*func_names: str, **context) -> str:
 #@# APP COMPONENTS
 
 @hyper('section', get=True)
-def app_features(subject: str, **context) -> str:
+def app_features(subject: str='roadmap', **context) -> str:
     """Let there be a function that generates a list of the app's features."""
     global APP
     emit(f"app_features({subject})")
