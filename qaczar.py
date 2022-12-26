@@ -384,13 +384,13 @@ _INDEX = collections.defaultdict(dict)
 
 def hyper(
         tag: str, method: str = 'get', trigger: str = None, target: str = None, 
-        history: bool = False, **attrs) -> t.Callable:
+        history: bool = None, **attrs) -> t.Callable:
     """Let the decorated function output hypertext automatically."""
     global _INDEX, DEBUG
     # TODO: Use a function to manipulate the class attribute.
     if trigger: attrs['hx-trigger'] = trigger
     if target: attrs['hx-target'] = target
-    if history: attrs['hx-push-url'] = 'true'
+    if history or (tag == 'body' and history is not False): attrs['hx-push-url'] = 'true'
     def _hyper_decorator(
             func: t.Callable, _tag=tag, _method=method, _attrs=attrs) -> t.Callable:
         if not func.__code__.co_flags & 0x08:
