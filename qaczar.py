@@ -327,7 +327,6 @@ import inspect
 CSS = 'https://cdn.jsdelivr.net/npm/picnic'
 
 def elem(tag: str, *contents, data: dict=None, css: str = None, **attrs) -> str:
-    # TODO: Automate CSS classes and data attributes (htmx)
     """Let all serialization happen through hypertext, as originally intended."""
     if css: attrs['class'] = css
     if data: 
