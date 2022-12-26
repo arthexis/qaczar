@@ -333,7 +333,6 @@ def elem(tag: str, *contents, data: dict=None, css: str = None, **attrs) -> str:
         for k, v in data.items(): attrs[f'data-{k}'] = v
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
     contents = ''.join(str(c) for c in contents)
-    attrs = ' '.join(a for a in attrs.split() if a.strip())
     if attrs and not contents: return f'<{tag} {attrs}/>'
     if not contents: return f'<{tag}/>'
     return f'<{tag} {attrs}>{contents}</{tag}>'
