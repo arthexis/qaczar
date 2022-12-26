@@ -426,7 +426,7 @@ def html_build_chain(*func_names: str, **context) -> str:
 
 #@# APP COMPONENTS
 
-@hyper('section')
+@hyper('section', get=True)
 def app_features(subject: str, **context) -> str:
     """Let there be a function that generates a list of the app's features."""
     global APP
