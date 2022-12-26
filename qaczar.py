@@ -417,6 +417,8 @@ def site_index(tag: str) -> t.Dict[str, t.Callable]:
 
 def html_build_chain(*func_names: str, **context) -> str:
     """Let all HTML content be generated from pure functions and request context."""
+    # Show the context in the browser console.
+    emit(f"html_build_chain({func_names=} {context=})")
     try:
         if (site := current_site()) not in sys.path: sys.path.append(site)
         site_module = importlib.import_module(site)
