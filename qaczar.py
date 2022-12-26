@@ -326,13 +326,14 @@ import inspect
 # https://picnicss.com/documentation
 CSS = 'https://cdn.jsdelivr.net/npm/picnic'
 
-def elem(tag: str, *contents, data: dict=None, css: str = None, **attrs) -> str:
+def elem(tag: str, *contents, data: dict=None, css: str = None, link:str=None, **attrs) -> str:
     """Let all serialization happen through hypertext, as originally intended."""
     if css: attrs['class'] = css
     if data: 
         for k, v in data.items(): attrs[f'data-{k}'] = v
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
     contents = ''.join(str(c) for c in contents)
+    if link: contents = f'<a href="{link}">{contents}</a>'
     if attrs and not contents: return f'<{tag} {attrs}/>'
     if not contents: return f'<{tag}/>'
     return f'<{tag} {attrs}>{contents}</{tag}>'
