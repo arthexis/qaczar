@@ -340,6 +340,9 @@ def elem(tag: str, *contents, data: dict=None, css: str = None, **attrs) -> str:
 elem_h1 = functools.partial(elem, 'h1')
 elem_h2 = functools.partial(elem, 'h2')
 
+def elem_btn(*contents, **attrs) -> str:
+    return elem('button', *contents, **attrs)
+
 def elem_list(*items, tag: str='ul') -> str:
     if len(items) == 1 and not isinstance(items[0], str): items = items[0]
     content = ''.join(elem('li', item) for item in items)
