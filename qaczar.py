@@ -93,7 +93,8 @@ def timed(func: t.Callable) -> t.Callable:
     def _timed(*args, **kwargs):
         start = time.time(); elapsed = time.time() - start
         result = func(*args, **kwargs)
-        emit(f"Function <{func.__name__}> {args=} {kwargs=} took {elapsed:.4f} seconds.")
+        ln = sys._getframe(1).f_lineno
+        emit(f"Function <{func.__name__}> ({ln}) {args=} {kwargs=} took {elapsed:.4f} seconds.")
         return result
     return _timed
 
