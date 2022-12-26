@@ -553,7 +553,6 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
         else: data = parse.parse_qs(self._rfile_read().decode('utf-8'))
         pure_path, qs = self.path.split('?', 1) if '?' in self.path else (self.path, '')
         if '.' not in pure_path: 
-            # Redirect to .html if no extension is given.
             self.send_response(301)
             self.send_header('Location', f'{pure_path}.html' + ('?' + qs if qs else ''))
         elif pure_path.endswith('.html'):  
