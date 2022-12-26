@@ -456,7 +456,7 @@ def site_nav() -> str:
 
 @hyper('header')
 def site_header() -> str:
-    return elem('a', f'Powered by the qaczar.py web system.', href=f'/qaczar.py')
+    return site_brand(), site_nav()
 
 # A simple blog where articles are executable python code.
 @hyper('main')
