@@ -336,8 +336,8 @@ def elem(tag: str, *contents, data: dict=None, css: str = None, **attrs) -> str:
     if not contents: return f'<{tag}/>'
     return f'<{tag} {attrs}>{contents}</{tag}>'
 
-elem_h1 = functools.partial(elem, 'h1', css='title')
-elem_h2 = functools.partial(elem, 'h2', css='subtitle')
+elem_h1 = functools.partial(elem, 'h1')
+elem_h2 = functools.partial(elem, 'h2')
 
 def elem_list(*items, tag: str='ul') -> str:
     if len(items) == 1 and not isinstance(items[0], str): items = items[0]
