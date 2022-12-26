@@ -445,15 +445,11 @@ def site_endpoints() -> t.List[str]:
 # TODO: Consider what is the benefit of using hyper on site components.
 # IE. how to make the nav bar and the footer be generated from pure functions.
 
-@hyper('h1')
-def site_brand(title: str = None) -> str:
-    return elem('a', title or current_site(), href='/')
-
 @hyper('nav')
 def site_nav() -> str:
     # TODO: Fix the CSS, because this overlaps with the body.
     links = [elem('a', page.upper(), href=page) for page in site_endpoints()]
-    return site_brand(), *links
+    return elem('a', current_site(), href='/'), *links
 
 # A simple blog where articles are executable python code.
 @hyper('main')
