@@ -440,11 +440,11 @@ def html_build_chain(*func_names: str, **context) -> str:
 
 
 @hyper('nav')
-def site_header(title: str = None) -> str:
+def site_nav(title: str = None) -> str:
     """Let this be the header of the each page on the site."""
     global _INDEX, SITE
     # TODO: Consider additional attributes for the header / nav.
-    site_links = [elem('a', page.replace('_', ' ').title() , href=f'/{page}')
+    site_links = [elem('a', title.upper(), href=f'/{page}')
         for page in site_index('body').keys()
         if not page.startswith('_') and page not in ('hello_world', 'index')]
     return elem_h1('a', title or SITE, href='/'), site_links
@@ -471,7 +471,7 @@ def hello_world(topic='roadmap', **context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 
     # TODO: This will never receive an event, so it should be a static page?
     return (
-            site_header(**context),
+            site_nav(**context),
             site_blog(topic=topic, **context), 
             site_footer(**context),
         )
