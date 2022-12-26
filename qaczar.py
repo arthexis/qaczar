@@ -452,7 +452,7 @@ def site_nav() -> str:
     return elem('span', current_site(), href='/', css='brand'), *links
 
 # A simple blog where articles are executable python code.
-@hyper('main')
+@hyper('main', css='documentation')
 def site_blog(topic: str = None) -> str:
     global _INDEX, SITE
     return elem_h1(topic or 'Blog'), elem('p', 'TODO: Blog content.')
