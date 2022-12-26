@@ -325,7 +325,7 @@ def recorded(func: t.Callable) -> t.Callable:
 import inspect
 
 # https://picnicss.com/documentation
-CSS = 'https://cdn.jsdelivr.net/npm/picnic'
+CSS_HREF = 'https://cdn.jsdelivr.net/npm/picnic'
 
 def elem(tag: str, *contents, data: dict=None, cls: str = None, **attrs) -> str:
     """Let all serialization happen through hypertext, as originally intended."""
@@ -361,18 +361,20 @@ def elem_label(css: str = '', *content, **attrs) -> str:
 def elem_html_body(*sections, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     # TODO: Generate the CSS code dynamically instead of reading a file.
-    global HTMX, CSS
+    global HTMX_SRC, CSS_HREF
+    site = current_site()
     body_sections = elem('body', *sections, **attrs)
     # Don't break the boilerplate down too much unless necessary.
     return f"""
     <!DOCTYPE html><html lang="en">
     <head>
-        <title>{current_site()}</title>
+        <title>{site.upper()}</title>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="htmx-config" content='{{"defaultSwapStyle":"outerHTML"}}'>
-        <script src="{HTMX}"></script>
-        <link rel="stylesheet" href="{CSS}" type="text/css" />
+        <script src="{HTMX_SRC}"></script>
+        <link rel="stylesheet" href="{CSS_HREF}" type="text/css" />
+        <link rel="stylesheet" href="/{site}/style.css" type="text/css" />
     </head>
     {body_sections}
     </html>
@@ -382,7 +384,7 @@ def elem_html_body(*sections, **attrs) -> str:
 #@# HTML GENERATOR
 
 # https://htmx.org/docs/#introduction
-HTMX = 'https://unpkg.com/htmx.org@1.8.4'
+HTMX_SRC = 'https://unpkg.com/htmx.org@1.8.4'
 
 # TODO: Consider tracking components with the database instead of a global.
 _INDEX = collections.defaultdict(dict)
