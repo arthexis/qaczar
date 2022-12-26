@@ -566,6 +566,9 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
             if not funcs: site, funcs = SITE, [site]
             with set_current_site(site):
                 emit(f"Building {site=} {funcs=} {qs=} {data=}")
+                # Extract HX Request Headers and pass them to the function.
+                for key, value in self.headers.items():
+                    if key.startswith('HX-'): qs[key[3:].lower()] = value
                 content = html_build_chain(*funcs, **qs, **data)
             self.work_path = os.path.join('.server', pure_path[1:])
             _write_file(self.work_path, content, encoding='utf-8')
