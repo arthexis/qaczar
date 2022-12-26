@@ -358,8 +358,9 @@ def elem_body(*sections, **attrs) -> str:
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href="{CSS}" type="text/css" />
+        <meta name="htmx-config" content='{{"defaultSwapStyle":"outerHTML"}}'>
         <script src="{HTMX}"></script>
+        <link rel="stylesheet" href="{CSS}" type="text/css" />
         <title>{current_site()}</title>
     </head>
     {body_sections}
