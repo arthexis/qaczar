@@ -77,6 +77,14 @@ def _write_file(fname: str, data: bytes | str, encoding=None) -> None:
 import importlib
 import functools
 
+def _pip_import(module: str) -> t.Any:
+    name = module.split('.')[0]
+    requirements = _read_file('requirements.txt', encoding='utf-8').splitlines()
+    if name not in requirements:    
+        subprocess.run([sys.executable, '-m', 'pip', 'install', name, '--quiet'])
+        with open('requirements.txt', 'a', encoding='utf-8') as f: f.write(f'{name}\n')
+    return importlib.import_module(module)
+
 def timed(func: t.Callable) -> t.Callable:
     """Let every function be judged with its proper measure."""
     global DEBUG
@@ -88,14 +96,6 @@ def timed(func: t.Callable) -> t.Callable:
         emit(f"Function <{func.__name__}> {args=} {kwargs=} took {elapsed:.4f} seconds.")
         return result
     return _timed
-
-def _pip_import(module: str) -> t.Any:
-    name = module.split('.')[0]
-    requirements = _read_file('requirements.txt', encoding='utf-8').splitlines()
-    if name not in requirements:    
-        subprocess.run([sys.executable, '-m', 'pip', 'install', name, '--quiet'])
-        with open('requirements.txt', 'a', encoding='utf-8') as f: f.write(f'{name}\n')
-    return importlib.import_module(module)
 
 def imports(*modules: tuple[str]) -> t.Callable:
     """Let every function reach as far as it needs for its dependencies."""
@@ -195,7 +195,7 @@ def _watch_forever(proc: subprocess.Popen, fname: str) -> t.NoReturn:
 import contextlib
 
 @contextlib.contextmanager
-def set_current_site(site: str) -> str:
+def _current_site(site: str) -> str:
     """Let us set the directory where the site is served from."""
     global _LOCAL
     setattr(_LOCAL, 'site', site)
@@ -563,7 +563,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
             qs = parse.parse_qs(qs) if qs else {}
             site, *funcs = [func for func in pure_path[1:-5].split('/') if func]
             if not funcs: site, funcs = SITE, [site]
-            with set_current_site(site):
+            with _current_site(site):
                 emit(f"Building {site=} {funcs=} {qs=} {data=}")
                 for key, value in self.headers.items():
                     # https://htmx.org/docs/#request-headers
