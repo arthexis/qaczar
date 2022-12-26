@@ -542,21 +542,22 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
         if size is None: size = int(self.headers['Content-Length'])
         return self.rfile.read(size)
 
+    def _send_redirect(self, path: str):
+        self.send_response(301)
+        self.send_header('Location', path)
+
     def _build_response(self, method: str = None) -> bool:
         global SITE
         """Let each request be parsed and processed. If needed, overwrite the response file."""
         # I really hope I don't have to rewrite this one function forever. --Sysyphus
         self.work_path, self.start = None, time.time()
         if self.path == '/' or not self.path: self.path = f'/index.html'
-        # if self.path.endswith('/'): self.path += 'index.html'
         if method != 'POST': data = {}
         else: data = parse.parse_qs(self._rfile_read().decode('utf-8'))
         pure_path, qs = self.path.split('?', 1) if '?' in self.path else (self.path, '')
         if '.' not in pure_path: 
-            self.send_response(301)
-            self.send_header('Location', f'{pure_path}.html' + ('?' + qs if qs else ''))
+            self._send_redirect(f'{pure_path}.html' + ('?' + qs if qs else ''))
         elif pure_path.endswith('.html'):  
-            emit(f"Request: {self.path} {data=} {qs=}")
             qs = parse.parse_qs(qs) if qs else {}
             site, *funcs = [func for func in pure_path[1:-5].split('/') if func]
             if not funcs: site, funcs = SITE, [site]
