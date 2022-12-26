@@ -326,7 +326,8 @@ import inspect
 # https://picnicss.com/documentation
 CSS = 'https://cdn.jsdelivr.net/npm/picnic'
 
-def elem(tag: str, *contents, data: dict=None, css: str = None, link:str=None, **attrs) -> str:
+def elem(tag: str, *contents, 
+        data: dict=None, css: str = None, link: str = None, **attrs) -> str:
     """Let all serialization happen through hypertext, as originally intended."""
     if css: attrs['class'] = css
     if data: 
