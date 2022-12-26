@@ -453,13 +453,8 @@ def site_brand(title: str = None) -> str:
 @hyper('nav')
 def site_nav() -> str:
     # TODO: Fix the CSS, because this overlaps with the body.
-    global _INDEX, SITE
     links = [elem('a', page.upper(), href=page) for page in site_endpoints()]
-    return '\n'.join(links)
-
-@hyper('header')
-def site_header(**context) -> str:
-    return site_brand(), site_nav()
+    return site_brand(), *links
 
 # A simple blog where articles are executable python code.
 @hyper('main')
@@ -479,7 +474,7 @@ def index(**context) -> str:
     """Let this be the default page (minimal functionality).""" 
     # TODO: This will never receive an event, so it should be a static page?
     return (
-            site_header(**context),
+            site_nav(**context),
             site_blog(**context), 
             site_footer(**context),
         )
