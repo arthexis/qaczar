@@ -346,9 +346,10 @@ elem_h4 = functools.partial(elem, 'h4')
 def elem_button(*contents, **attrs) -> str:
     return elem('button', *contents, **attrs)
 
-def elem_list(*items, tag: str='ul') -> str:
+def elem_list(*items, tag: str='ul', attr_func: t.Callable = None) -> str:
     if len(items) == 1 and not isinstance(items[0], str): items = items[0]
-    content = ''.join(elem('li', item) for item in items)
+    if attr_func: content = ''.join(elem('li', item, **attr_func(item)) for item in items)
+    else: content = ''.join(elem('li', item) for item in items)
     return elem(tag, content) if tag else content
 
 def elem_article(tag: str = 'article', *content, **attrs) -> str:
