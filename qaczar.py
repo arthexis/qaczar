@@ -471,7 +471,11 @@ def site_footer(**context) -> str:
 def hello_world(subject='roadmap', **context) -> str:
     """Let this be the default page. It shall have a roadmap.""" 
     # TODO: This will never receive an event, so it should be a static page?
-    return app_features(subject=subject, **context), site_footer(**context)
+    return (
+            site_header(**context),
+            app_features(subject=subject, **context), 
+            site_footer(**context),
+        )
 
 
 #@# HTTPS SERVER
