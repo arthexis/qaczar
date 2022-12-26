@@ -327,10 +327,9 @@ import inspect
 # https://picnicss.com/documentation
 CSS = 'https://cdn.jsdelivr.net/npm/picnic'
 
-def elem(tag: str, *contents, 
-        data: dict=None, css: str = None, **attrs) -> str:
+def elem(tag: str, *contents, data: dict=None, cls: str = None, **attrs) -> str:
     """Let all serialization happen through hypertext, as originally intended."""
-    if css and css.strip(): attrs['class'] = css
+    if cls and cls.strip(): attrs['class'] = cls
     if data: 
         for k, v in data.items(): attrs[f'data-{k}'] = v
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
@@ -353,10 +352,10 @@ def elem_list(*items, tag: str='ul') -> str:
     return elem(tag, content) if tag else content
 
 def elem_article(tag: str = 'article', *content, **attrs) -> str:
-    return elem(tag, *content, css='card', **attrs)
+    return elem(tag, *content, cls='card', **attrs)
 
 def elem_label(css: str = '', *content, **attrs) -> str:
-    return elem('span', *content, css=f'label {css}', **attrs)
+    return elem('span', *content, cls=f'label {css}', **attrs)
 
 def elem_html_body(*sections, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
@@ -446,13 +445,13 @@ def site_endpoints() -> t.List[str]:
 def site_nav() -> str:
     # TODO: Fix the CSS, because this overlaps with the body.
     links = [elem('a', page.upper(), href=page) for page in site_endpoints()]
-    return elem('a', current_site(), href='/', css='brand'), *links
+    return elem('a', current_site(), href='/', cls='brand'), *links
 
 # A simple blog where articles are executable python code.
 @hyper('main')
 def site_main(topic: str = None) -> str:
     global _INDEX, SITE
-    return elem('header', topic or SITE, css='hero')
+    return elem('header', topic or SITE, cls='hero')
 
 @hyper('footer')
 def site_footer() -> str:
