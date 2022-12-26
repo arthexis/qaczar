@@ -587,9 +587,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
     def end_headers(self) -> None:
         """Let us add some headers to the end of the response (before the body)."""
         duration = time.time() - self.start
-        self.send_header('Server-Timing', f'miss;dur={duration:.4f}')
-        if not self.work_path:
-            self.send_header('Cache-Control', f'Etag: {_mtime_file(self.path)}')
+        self.send_header('Server-Timing', f'miss;dur={duration:.6f}')
         return super().end_headers()
     
     def send_header(self, keyword: str, value: str) -> None:
