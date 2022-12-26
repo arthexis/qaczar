@@ -562,6 +562,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
         pure_path, qs = self.path.split('?', 1) if '?' in self.path else (self.path, '')
         if '.' not in pure_path: pure_path += '.html'
         if pure_path.endswith('.html'):  # Everything else is served as-is.
+            emit(f"Request: {self.path} {data=} {qs=}")
             qs = parse.parse_qs(qs) if qs else {}
             site, *funcs = [func for func in pure_path[1:-5].split('/') if func]
             if not funcs: site, funcs = SITE, [site]
