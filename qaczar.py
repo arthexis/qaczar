@@ -568,7 +568,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
             with set_current_site(site):
                 emit(f"Building {site=} {funcs=} {qs=} {data=}")
                 content = html_build_chain(*funcs, **qs, **data)
-            self.work_path = os.path.join('.server', self.path[1:])
+            self.work_path = os.path.join('.server', pure_path[1:])
             _write_file(self.work_path, content, encoding='utf-8')
         
     def translate_path(self, path: str = None) -> str:
