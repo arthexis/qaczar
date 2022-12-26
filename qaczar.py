@@ -341,7 +341,7 @@ elem_h2 = functools.partial(elem, 'h2', css='subtitle')
 
 def elem_list(*items, tag: str='ul') -> str:
     if len(items) == 1 and not isinstance(items[0], str): items = items[0]
-    content = ''.join(elem('li', item, data={'seq': i}) for i, item in enumerate(items))
+    content = ''.join(elem('li', item) for item in items)
     return elem(tag, content) if tag else content
 
 # https://picnicss.com/documentation
