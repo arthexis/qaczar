@@ -632,9 +632,6 @@ def request_factory(urllib3):
     
 def test_server(*args, **kwargs) -> t.NoReturn:
     """Let us test the server by making http requests to it."""
-    # TODO: Test other special paths such as blank, /, etc.
-    # TODO: Test submitting a form (ie. sign_guestbook).
-    global APP
     request = request_factory()
     assert 'qaczar' in request(f'/hello_world.html')
 
