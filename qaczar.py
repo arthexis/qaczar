@@ -455,7 +455,7 @@ def site_nav() -> str:
     return '\n'.join(links)
 
 @hyper('header')
-def site_header() -> str:
+def site_header(**context) -> str:
     return site_brand(), site_nav()
 
 # A simple blog where articles are executable python code.
@@ -476,7 +476,7 @@ def index(**context) -> str:
     """Let this be the default page (minimal functionality).""" 
     # TODO: This will never receive an event, so it should be a static page?
     return (
-            site_nav(**context),
+            site_header(**context),
             site_blog(**context), 
             site_footer(**context),
         )
