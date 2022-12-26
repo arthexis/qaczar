@@ -348,7 +348,7 @@ elem_h2 = functools.partial(elem, 'h2')
 elem_h3 = functools.partial(elem, 'h3')
 elem_h4 = functools.partial(elem, 'h4')
 
-def elem_btn(*contents, **attrs) -> str:
+def elem_button(*contents, **attrs) -> str:
     return elem('button', *contents, **attrs)
 
 def elem_list(*items, tag: str='ul') -> str:
@@ -356,13 +356,13 @@ def elem_list(*items, tag: str='ul') -> str:
     content = ''.join(elem('li', item) for item in items)
     return elem(tag, content) if tag else content
 
-def elem_card(tag: str = 'article', *content, **attrs) -> str:
+def elem_article(tag: str = 'article', *content, **attrs) -> str:
     return elem(tag, *content, css='card', **attrs)
 
 def elem_label(css: str = '', *content, **attrs) -> str:
     return elem('span', *content, css=f'label {css}', **attrs)
 
-def elem_body(*sections, **attrs) -> str:
+def elem_html_body(*sections, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     # TODO: Generate the CSS code dynamically instead of reading a file.
     global HTMX, CSS
@@ -413,7 +413,7 @@ def hyper(
                 if not result: emit(f"{func.__name__}({args=} {kwargs=}) -> {result=}")
             except TypeError as e:
                 emit(f"Error: {e} {func.__name__}({args=} {kwargs=})"); raise e
-            if _tag == 'body': return elem_body(*result, **_attrs)
+            if _tag == 'body': return elem_html_body(*result, **_attrs)
             return elem(_tag, *result, **_attrs)
         return _hyper
     return _hyper_decorator
@@ -455,7 +455,7 @@ def site_nav() -> str:
 
 # A simple blog where articles are executable python code.
 @hyper('main')
-def site_blog(topic: str = None) -> str:
+def site_main(topic: str = None) -> str:
     global _INDEX, SITE
     return elem_h1(topic or 'Blog'), elem('p', 'TODO: Blog content.')
 
@@ -472,7 +472,7 @@ def index(**context) -> str:
     # TODO: This will never receive an event, so it should be a static page?
     return (
             site_nav(),
-            site_blog(**context), 
+            site_main(**context), 
             site_footer(**context),
         )
 
