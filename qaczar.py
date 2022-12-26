@@ -323,6 +323,9 @@ def recorded(func: t.Callable) -> t.Callable:
 
 import inspect
 
+# https://picnicss.com/documentation
+CSS = 'https://cdn.jsdelivr.net/npm/picnic'
+
 def elem(tag: str, *contents, data: dict=None, css: str = None, **attrs) -> str:
     # TODO: Automate CSS classes and data attributes (htmx)
     """Let all serialization happen through hypertext, as originally intended."""
@@ -343,9 +346,6 @@ def elem_list(*items, tag: str='ul') -> str:
     if len(items) == 1 and not isinstance(items[0], str): items = items[0]
     content = ''.join(elem('li', item) for item in items)
     return elem(tag, content) if tag else content
-
-# https://picnicss.com/documentation
-CSS = 'https://cdn.jsdelivr.net/npm/picnic'
 
 def elem_body(*sections, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
