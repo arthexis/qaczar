@@ -394,17 +394,16 @@ _INDEX = collections.defaultdict(dict)
 def hyper(
         tag: str, method: str = 'get', trigger: str = None, target: str = None, 
         history: bool = None, **attrs) -> t.Callable:
-    """Let the decorated function output hypertext automatically."""
+    """Let us decorate a function to output hypertext."""
     global _INDEX, DEBUG
-    # TODO: Use a function to manipulate the class attribute.
-    # Idea: A cannonical elem is a tag specific for a site that is the default.
     if trigger: attrs['hx-trigger'] = trigger
     if target: attrs['hx-target'] = target
     if history or (tag == 'body' and history is not False): attrs['hx-push-url'] = 'true'
     def _hyper_decorator(
             func: t.Callable, _tag=tag, _method=method, _attrs=attrs) -> t.Callable:
         _attrs[f'hx-{_method}'] = func.__name__
-        if DEBUG: _attrs['data-ln'] = func.__code__.co_firstlineno
+        # TODO: Consider a function to generate common debug info for a function.
+        if DEBUG: _attrs['data-dbg'] = func.__code__.co_firstlineno
         _INDEX[(current_site(), _tag)][func.__name__] = func
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
@@ -457,7 +456,7 @@ def site_nav() -> str:
 @hyper('main')
 def site_main(topic: str = None) -> str:
     global _INDEX, SITE
-    return elem_h1(topic or 'Blog'), elem('p', 'TODO: Blog content.')
+    return elem('header', topic or SITE, css='hero')
 
 @hyper('footer')
 def site_footer() -> str:
