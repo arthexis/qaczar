@@ -568,7 +568,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
                 emit(f"Building {site=} {funcs=} {qs=} {data=}")
                 for key, value in self.headers.items():
                     # https://htmx.org/docs/#request-headers
-                    if key.startswith('HX-'): qs[key[3:].lower()] = value.replace('-', '_')
+                    if key.startswith('HX-'): qs[key[3:].lower().replace('-', '_')] = value
                 content = html_build_chain(*funcs, **qs, **data)
             self.work_path = os.path.join('.server', pure_path[1:])
             _write_file(self.work_path, content, encoding='utf-8')
