@@ -379,9 +379,12 @@ def hyper(tag: str, css: str = None, hx: dict = None, **attrs) -> t.Callable:
     """Let the decorated function output hypertext automatically."""
     global _INDEX, DEBUG
     if css: attrs['class'] = css
-    if hx: 
-        for k, v in hx.items(): attrs[f'hx-{k}'] = v
     def _hyper_decorator(func: t.Callable, _tag=tag, _attrs=attrs) -> t.Callable:
+        if hx: 
+
+            for k, v in hx.items(): 
+                if v is True: v = func.__name__
+                attrs[f'hx-{k}'] = v 
         if not func.__code__.co_flags & 0x08:
             ln = func.__code__.co_firstlineno
             raise TypeError(f"Function @hyper({func.__name__}) ({ln}) must accept **context")
