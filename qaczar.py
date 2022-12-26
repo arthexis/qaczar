@@ -335,9 +335,11 @@ def elem(tag: str, *contents,
         for k, v in data.items(): attrs[f'data-{k}'] = v
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
     contents = ''.join(str(c) for c in contents)
-    if href: 
+    if href and tag != 'a':
         if href is True: href = contents
         contents = f'<a href="{href}">{contents}</a>'
+    elif tag == 'a' and not href: 
+        raise ValueError(f"Missing href for <a> tag: {contents}")
     if attrs and not contents: return f'<{tag} {attrs}/>'
     if not contents: return f'<{tag}/>'
     return f'<{tag} {attrs}>{contents}</{tag}>'
@@ -443,9 +445,9 @@ def site_endpoints() -> t.List[str]:
 # TODO: Consider what is the benefit of using hyper on site components.
 # IE. how to make the nav bar and the footer be generated from pure functions.
 
-@hyper('a')
+@hyper('h1')
 def site_brand(title: str = None) -> str:
-    pass
+    return elem('a', title or current_site(), href='/')
 
 @hyper('nav')
 def site_nav() -> str:
