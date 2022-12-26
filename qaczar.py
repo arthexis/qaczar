@@ -375,10 +375,14 @@ HTMX = 'https://unpkg.com/htmx.org@1.8.4'
 # TODO: Consider tracking components with the database instead of a global.
 _INDEX = collections.defaultdict(dict)
 
-def hyper(tag: str, method: str = 'get', css: str = None, **attrs) -> t.Callable:
+def hyper(
+        tag: str, method: str = 'get', trigger: str = None, target: str = None,
+        css: str = None, **attrs) -> t.Callable:
     """Let the decorated function output hypertext automatically."""
     global _INDEX, DEBUG
+    # TODO: Use a function to manipulate the class attribute.
     if css: attrs['class'] = css
+    if trigger: attrs['hx-trigger'] = trigger
     def _hyper_decorator(
             func: t.Callable, _tag=tag, _method=method, _attrs=attrs) -> t.Callable:
         if not func.__code__.co_flags & 0x08:
