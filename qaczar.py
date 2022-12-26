@@ -404,6 +404,7 @@ def hyper(
         def _hyper(*args, **kwargs):
             try:
                 result = func(*args, **kwargs) or ()
+                if not result: emit(f"{func.__name__}({args=} {kwargs=}) -> {result=}")
             except TypeError as e:
                 emit(f"{func.__name__}({args=} {kwargs=})")
                 raise e
