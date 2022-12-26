@@ -559,7 +559,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
             # Redirect to .html if no extension is given.
             self.send_response(301)
             self.send_header('Location', f'{pure_path}.html' + ('?' + qs if qs else ''))
-        elif pure_path.endswith('.html'):  # Everything else is served as-is.
+        elif pure_path.endswith('.html'):  
             emit(f"Request: {self.path} {data=} {qs=}")
             qs = parse.parse_qs(qs) if qs else {}
             site, *funcs = [func for func in pure_path[1:-5].split('/') if func]
@@ -572,6 +572,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
                 content = html_build_chain(*funcs, **qs, **data)
             self.work_path = os.path.join('.server', pure_path[1:])
             _write_file(self.work_path, content, encoding='utf-8')
+        # Everything else is served as-is. Nothing needs to be done.
         
     def translate_path(self, path: str = None) -> str:
         """Let each request be served from its work path (.server) when needed."""
