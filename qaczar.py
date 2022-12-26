@@ -328,7 +328,7 @@ import inspect
 CSS = 'https://cdn.jsdelivr.net/npm/picnic'
 
 def elem(tag: str, *contents, 
-        data: dict=None, css: str = None, href: str = None, **attrs) -> str:
+        data: dict=None, css: str = None, **attrs) -> str:
     """Let all serialization happen through hypertext, as originally intended."""
     if css and css.strip(): attrs['class'] = css
     if data: 
