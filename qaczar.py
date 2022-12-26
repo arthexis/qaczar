@@ -383,6 +383,7 @@ def hyper(
     # TODO: Use a function to manipulate the class attribute.
     if css: attrs['class'] = css
     if trigger: attrs['hx-trigger'] = trigger
+    if target: attrs['hx-target'] = target
     def _hyper_decorator(
             func: t.Callable, _tag=tag, _method=method, _attrs=attrs) -> t.Callable:
         if not func.__code__.co_flags & 0x08:
