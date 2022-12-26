@@ -452,7 +452,7 @@ def site_nav() -> str:
     return elem('span', current_site(), href='/', css='brand'), *links
 
 # A simple blog where articles are executable python code.
-@hyper('main', css='documentation')
+@hyper('main')
 def site_blog(topic: str = None) -> str:
     global _INDEX, SITE
     return elem_h1(topic or 'Blog'), elem('p', 'TODO: Blog content.')
@@ -464,7 +464,7 @@ def site_footer() -> str:
 
 #@# SITE PAGES
 
-@hyper('body')  # Default page.
+@hyper('body', css='documentation')  # Default page.
 def index(**context) -> str:
     """Let this be the default page (minimal functionality).""" 
     # TODO: This will never receive an event, so it should be a static page?
