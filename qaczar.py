@@ -428,7 +428,7 @@ def html_builder(*func_names: str, **context) -> str:
         try:
             funcs = [globals()[name] for name in func_names]
         except (KeyError, TypeError) as e:
-            return f"<h1>ERROR: {e}</h1>"
+            return elem('h1', f"Error: {e}")
     for i, func in enumerate(reversed(funcs)): 
         emit(f"Step #{i} {func.__name__}({context})")
         block = func(**context)
