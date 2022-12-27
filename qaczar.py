@@ -124,6 +124,8 @@ def scheduled(interval: int = 60, once: bool = False) -> t.Callable:
         return __scheduled
     return _scheduled
 
+def _safe_globals() -> list[str]:
+    return [k for k in globals().keys() if not k.startswith('_') and k not in sys.modules]
 
 #@# SUBPROCESSING
 
@@ -778,5 +780,4 @@ if __name__ == "__main__":
     else: _ARGS, _KWARGS = (), {}
     _role_dispatch(*_ARGS, **_KWARGS)
 
-__all__ = [k for k in globals().keys() if not k.startswith('_') and k not in sys.modules]
-    
+__all__ = _safe_globals()
