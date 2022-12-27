@@ -107,6 +107,23 @@ def imports(*modules: tuple[str]) -> t.Callable:
         return wrapper
     return decorator
 
+SCHEDULE = {}
+
+def scheduled(freq: int = 60, once: bool = False) -> t.Callable:
+    """Let every function be scheduled to run at the right time."""
+    global SCHEDULE
+    def _scheduled(f):
+        @functools.wraps(f)
+        def __scheduled(*args, **kwargs):
+            if once and f.__name__ in SCHEDULE: return
+            SCHEDULE[f.__name__] = time.time() + freq
+            result = f(*args, **kwargs)
+            if once: del SCHEDULE[f.__name__]
+            return result
+        return __scheduled
+    _scheduled.freq = freq
+    return _scheduled
+
 
 #@# SUBPROCESSING
 
