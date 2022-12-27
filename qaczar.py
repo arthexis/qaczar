@@ -384,13 +384,13 @@ def elem_html_body(*sections, **attrs) -> str:
 HTMX_SRC = 'https://unpkg.com/htmx.org@1.8.4'
 
 # TODO: Consider tracking components with the database instead of a global.
-_INDEX = collections.defaultdict(dict)
+INDEX = collections.defaultdict(dict)
 
 def hyper(
         tag: str, method: str = 'get', trigger: str = None, target: str = None, 
         history: bool = None, **attrs) -> t.Callable:
     """Let us decorate a function to output hypertext."""
-    global _INDEX, DEBUG
+    global INDEX, DEBUG
     if trigger: attrs['hx-trigger'] = trigger
     if target: attrs['hx-target'] = target
     if history or (tag == 'body' and history is not False): attrs['hx-push-url'] = 'true'
@@ -398,12 +398,12 @@ def hyper(
             func: t.Callable, _tag=tag, _method=method, _attrs=attrs) -> t.Callable:
         _attrs[f'hx-{_method}'] = func.__name__
         if DEBUG: _attrs['data-ln'] = func.__code__.co_firstlineno
-        _INDEX[_tag][func.__name__] = func
+        INDEX[_tag][func.__name__] = func
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
             try:
                 result = func(*args, **kwargs) or ()
-                if not result: emit(f"{func.__name__}({args=} {kwargs=}) -> {result=}")
+                if not result: emit(f"{func.__name__}({args=} {kwargs=}) -> Empty result.")
             except TypeError as e:
                 emit(f"Error: {e} {func.__name__}({args=} {kwargs=})"); raise e
             if _tag == 'body': return elem_html_body(*result, **_attrs)
@@ -433,21 +433,20 @@ def html_builder(*func_names: str) -> str:
 
 def site_endpoints() -> t.List[str]:
     """Let there be a list of all the endpoints on the site."""
-    global _INDEX
-    return [f'/{page}' for page in _INDEX['body'].keys()]
+    global INDEX
+    return [f'/{page}' for page in INDEX['body'].keys()]
 
 @hyper('nav', cls='transparent')
 def site_nav() -> str:
     # TODO: Fix the CSS (add transparent class in the .css file).
     links = [elem('a', page.upper(), href=page) for page in site_endpoints()]
-    with site_context() as context:
-        site = context['site']
+    with site_context() as context: site = context['site']
     return elem('a', site, href='/', cls='brand'), *links
 
 # A simple blog where articles are executable python code.
 @hyper('main')
 def site_main(topic: str = None) -> str:
-    global _INDEX, MAIN_SITE
+    global INDEX, MAIN_SITE
     header = elem('header', topic or MAIN_SITE, cls='hero', style='height: 40vh; background: #333;')
     return header, elem('section', *site_endpoints())
 
