@@ -646,10 +646,10 @@ import random
 @imports('urllib3')
 def request_factory(urllib3):
     """Let us make requests to the server and check the responses are valid."""	
-    global HOST, PORT, PID
     http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=_build_ssl_certs()[0])
     session_id = None
     def _request(path: str, data: dict = None):
+        global HOST, PORT, PID
         nonlocal session_id
         if path.startswith('/'): path = path[1:]
         url = f"https://{HOST}:{PORT}/{path}"
