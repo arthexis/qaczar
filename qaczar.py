@@ -638,7 +638,9 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
         self.work_path, self.start = None, time.time()
         if not self._check_session(): 
             self.send_response(401); return
-        if self.path == '/' or not self.path: self.path = f'/{MAIN_SITE}/index.html'
+        if self.path == '/' or not self.path: 
+            self._send_redirect(f'/{MAIN_SITE}/index.html')
+            return
         if method != 'POST': data = {}
         else: data = parse.parse_qs(self._rfile_read().decode('utf-8'))
         pure_path, qs = self.path.split('?', 1) if '?' in self.path else (self.path, '')
