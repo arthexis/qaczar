@@ -551,9 +551,8 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
         global SESSIONS
         session_id = self.headers.get('Session-ID')
         if session_id is None or session_id not in SESSIONS:
-            session_id = secrets.token_urlsafe(32)
-            SESSIONS[session_id] = {}
-        # self.send_header('Session-ID', session_id)
+            self.session_id = secrets.token_urlsafe(32)
+            SESSIONS[self.session_id] = {}
         return True
 
     def _build_response(self, method: str = None) -> None:
