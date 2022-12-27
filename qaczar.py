@@ -488,9 +488,10 @@ def html_builder(*func_names: str) -> str:
 @hyper('nav')
 def site_nav() -> str:
     global _INDEX
-    body_links = [elem('a', page, href=page) 
-        for page in _INDEX['body'].keys() if page != 'index']
     context = site_context()
+    site = context.get('site')
+    body_links = [elem('a', func_name, href=f'/{site}/{func_name}.html') 
+        for func_name in _INDEX['body'].keys() if func_name != 'index']
     span = elem('span', context.get('site').upper())
     brand = elem('a', span, href='/', cls='brand')
     return brand, *body_links
