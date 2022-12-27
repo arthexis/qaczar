@@ -778,6 +778,5 @@ if __name__ == "__main__":
     else: _ARGS, _KWARGS = (), {}
     _role_dispatch(*_ARGS, **_KWARGS)
 
-# Exclude modules.
 __all__ = [k for k in globals().keys() if not k.startswith('_') and k not in sys.modules]
     
