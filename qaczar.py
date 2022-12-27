@@ -633,7 +633,7 @@ def test_server_load(*args, **kwargs) -> t.NoReturn:
 
 #@#  REPOSITORY
 
-def _commit_source() -> t.NoReturn:
+def _commit_source() -> None:
     """Let us commit the source code to the git repository."""
     # TODO: Create missing branch if not exists when pushing to git.
     global BRANCH
