@@ -672,7 +672,7 @@ def _keep_alive(*args, **kwargs) -> t.NoReturn:
     global MAIN_SITE
     request = request_factory()
     while True: 
-        time.sleep(wait := 60)
+        time.sleep(wait := 300)  # Every 5 minutes.
         assert 'qaczar' in request(url := f'/{MAIN_SITE}/index.html')
         emit(f"Keep-alive ({wait}s) to {url}")
 
