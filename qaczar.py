@@ -646,7 +646,6 @@ def test_server_load(*args, **kwargs) -> t.NoReturn:
     emit(f"ART: {duration/30:.6f} secs, {runs/duration:.2f} reqs/sec.")
 
 
-
 #@#  REPOSITORY
 
 def _commit_source() -> str:
@@ -656,7 +655,7 @@ def _commit_source() -> str:
     os.system('git add .')
     os.system('git commit -m "auto commit" -q')
     os.system(f'git push origin {BRANCH} -q')
-    return os.popen('git rev-parse HEAD').read().strip()
+    return os.popen('git rev-parse HEAD').read().strip()[0:8]
 
 
 #@# BASE ROLES
