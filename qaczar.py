@@ -593,8 +593,9 @@ def _build_ssl_certs(x509, rsa, hashes, ser) -> tuple[str, str]:
 @recorded
 def access_log(address: str, message: str) -> None:
     """Let the access log be recorded in the database for analysis."""
-    # TODO: Add more parameters to the access log.
-    emit(f"Access from {address} {message}")
+    # Only emit when not from localhost.
+    if address != '127.0.0.1':	
+        emit(f"Access from {address} {message}")
 
 SESSIONS = {}
 
