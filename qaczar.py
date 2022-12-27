@@ -527,10 +527,8 @@ def index() -> str:
     """Let this be the default page (showcase functionality).""" 
     # Look all the section endpoints, render them and combine them in a main tag.
     global _INDEX
-    # Find all elements of type 'section' and render them.
-    sections = [func() for func in _INDEX['section'].values()]
     # emit(f"Rendering {len(sections)} sections.")
-    return elem('main', site_nav(), *sections, site_footer())
+    return elem('main', site_nav(), site_index(), site_footer())
 
 @hyper('body')  
 def debugger() -> str:
