@@ -690,6 +690,7 @@ def _role_dispatch(*args, **kwargs) -> t.NoReturn:
     try:
         emit(f"Started '{role_name}' {args=} {kwargs=}.")
         role_func(*args, **kwargs)
+        emit(f"Finished '{role_name}' without errors.")
     except AssertionError as e:
         halt(f"Assertion failed: {e}", trace=True)
     except KeyboardInterrupt:
