@@ -633,7 +633,8 @@ def _keep_alive(*args, **kwargs) -> t.NoReturn:
     global MAIN_SITE
     request = _request_factory()
     while True: 
-        assert 'qaczar' in request(f'/{MAIN_SITE}/index.html')
+        assert 'qaczar' in request(url := f'/{MAIN_SITE}/index.html')
+        emit(f"Keep-alive request sent to {url}")
         time.sleep(30)
 
 def test_server_load(*args, **kwargs) -> t.NoReturn:
