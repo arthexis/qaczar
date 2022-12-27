@@ -247,12 +247,9 @@ def site_context(site: str = None, context: dict = None) -> str:
         if site not in _CACHE or _CACHE[site][site_fname] != site_mtime:
             with open(site_fname, 'rb') as f:
                 emit(f"Loading site config {site_fname=}.")
-                loaded = tomllib.load(f)
-                emit(f"Loaded {loaded=}.")
-                _CACHE[site] = {site_fname: site_mtime, **loaded}
+                _CACHE[site] = {site_fname: site_mtime, **tomllib.load(f)}
         context.update(_CACHE[site])
         setattr(_LOCAL, 'context', context)
-        emit(f"Setting {context=}.")
     return _LOCAL.context
 
 def read_file(fname: str, encoding=None) -> str | bytes:
