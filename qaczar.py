@@ -441,7 +441,8 @@ def site_nav() -> str:
     # TODO: Fix the CSS (add transparent class in the .css file).
     links = [elem('a', page.upper(), href=page) for page in site_endpoints()]
     with site_context() as context: 
-        brand = elem('a', context['site'], href='/', cls='brand')
+        title = elem('span', context['site'])
+        brand = elem('a', title, href='/', cls='brand')
     return brand, *links
 
 # A simple blog where articles are executable python code.
