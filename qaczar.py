@@ -662,18 +662,20 @@ def server_role(*args, **kwargs) -> t.NoReturn:
         emit(f"Server ready at https://{HOST}:{PORT}")
         httpd.serve_forever()
 
-def tester_role(*args, **kwargs) -> t.NoReturn:
+def tester_role(*args, **kwargs) -> None:
     """Let us test the server by making http requests to it."""
     # TODO: Add automatic tests to prevent public API regressions.
     # TODO: Have a keep-alive ping to detect when the server is down.
-    for passed, test in enumerate(globals().keys()):
-        if test.startswith(f'test_'): 
-            globals()[test](*args, **kwargs)
+    passed = 0
+    for gkey in globals().keys():
+        if gkey.startswith(f'test_'): 
+            globals()[gkey](*args, **kwargs)
+            passed += 1
     else:
         emit(f"Tests passed: {passed}.")
         _commit_source()
 
-def worker_role(*args, **kwargs) -> t.NoReturn:
+def worker_role(*args, **kwargs) -> None:
     """Let us do work that is not related to the serving requests."""
     raise NotImplementedError("Worker role not implemented.")
 
