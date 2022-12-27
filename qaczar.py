@@ -364,13 +364,13 @@ def elem_html_body(*sections, **attrs) -> str:
         # Don't break this boilerplate into smaller functions unless needed.
         return f"""
         <!DOCTYPE html><html lang="en"><head>
-            <title>{title}</title>
-            <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1" />
-            <meta name="htmx-config" content='{{"defaultSwapStyle":"outerHTML"}}'>
-            <script src="{HTMX_SRC}"></script>
-            <link rel="stylesheet" href="{CSS_HREF}" type="text/css" />
-            <link rel="stylesheet" href="/{site}/style.css" type="text/css" />
+        <title>{title}</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="htmx-config" content='{{"defaultSwapStyle":"outerHTML"}}'>
+        <script src="{HTMX_SRC}"></script>
+        <link rel="stylesheet" href="{CSS_HREF}" type="text/css" />
+        <link rel="stylesheet" href="/{site}/style.css" type="text/css" />
         </head>{body}</html>
         """
 
