@@ -334,6 +334,7 @@ def recorded(func: t.Callable) -> t.Callable:
 
 #@# HTML ELEMENTS
 
+import html
 import inspect
 
 def elem(tag: str, *contents, data: dict=None, cls: str = None, **attrs) -> str:
@@ -366,6 +367,8 @@ def elem_section(title: str = None, *content, **attrs) -> str:
     return elem('section', *content, **attrs)
 
 def elem_pre(*content, **attrs) -> str:
+    # Escape HTML special characters.
+    content = (html.escape(str(c)) for c in content)
     return elem('pre', *content, **attrs)
 
 def elem_article(tag: str = 'article', *content, **attrs) -> str:
