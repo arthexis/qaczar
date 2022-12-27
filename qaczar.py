@@ -484,8 +484,10 @@ def debugger() -> str:
     """Let this page be used for experimentation.""" 
     with site_context() as context:
         reports = [elem_section('Context', elem_pre(pprint.pformat(context)))]
-    vars = {k: v for k, v in globals().items() if not k.startswith('_') and not callable(v)}
-    reports.append(elem_section('Variables', elem_pre(pprint.pformat(vars))))
+    # Find all variables in the global scope that are pprint-able.
+    vars = {k: v for k, v in globals().items() if not k.startswith('_') and 
+        not callable(v) and not isinstance(v, (type, hs.HTTPServer, ss.TCPServer))}
+    reports.append(elem_section('Globals', elem_pre(pprint.pformat(vars))))
     # Remove the footer in case it messes up the debugger output, but keep the nav.
     return elem('main', site_nav(), *reports)
 
