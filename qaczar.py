@@ -527,7 +527,6 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
         self.send_response(301)
         self.send_header('Location', path)
 
-    @timed
     def _build_response(self, method: str = None) -> bool:
         global MAIN_SITE
         """Let each request be parsed and processed. If needed, overwrite the response file."""
@@ -612,6 +611,16 @@ def test_server(*args, **kwargs) -> t.NoReturn:
     global MAIN_SITE
     request = request_factory()
     assert 'qaczar' in request(f'/{MAIN_SITE}/index.html')
+
+def test_server_performance(*args, **kwargs) -> t.NoReturn:
+    """Let us test the server by making http requests to it."""
+    global MAIN_SITE
+    request = request_factory()
+    start = time.time()
+    for _ in range(60): request(f'/{MAIN_SITE}/index.html')
+    duration = time.time() - start
+    emit(f"Average response time: {duration/100:.6f} seconds.")
+
 
 
 #@#  REPOSITORY
