@@ -623,11 +623,11 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
         if (address := self.address_string()) not in SESSIONS: 
             self.session_id = secrets.token_urlsafe(32)
             SESSIONS[address] = (self.session_id, agent := self.headers['User-Agent'])
-            emit(f"Session {self.session_id} created for {address}: {agent}.")
+            emit(f"Session '{self.session_id[0:8]}' created for {address}: {agent}.")
         else: 
             self.session_id, agent = SESSIONS[address]
             if agent != self.headers['User-Agent']:
-                emit(f"Session {self.session_id} invalidated for {address} (User-Agent).")
+                emit(f"Session '{self.session_id[0:8]}' invalidated for {address}: {agent}.")
                 del SESSIONS[address]
         return True
     
