@@ -604,7 +604,12 @@ def request_factory(urllib3):
         url = f"https://{HOST}:{PORT}/{path}"
         r = http.request('POST' if data else 'GET', url, fields=data, timeout=1)
         assert r.status == 200, f"Request to {url} failed with status {r.status}"
-        return r.data.decode('utf-8')
+        # Ensure the result is hyper-text if the path ends with .html
+        if path.endswith('.html'): 
+            assert 'text/html' in r.headers['content-type']
+            content = r.data.decode('utf-8')
+            assert '<!DOCTYPE html>' in content
+        return content
     return _request
     
 def _test_server(*args, **kwargs) -> t.NoReturn:
@@ -613,7 +618,7 @@ def _test_server(*args, **kwargs) -> t.NoReturn:
     request = request_factory()
     assert 'qaczar' in request(f'/{MAIN_SITE}/index.html')
 
-def test_server_perf(*args, **kwargs) -> t.NoReturn:
+def test_server_load(*args, **kwargs) -> t.NoReturn:
     """Let us test the server by making http requests to it."""
     global MAIN_SITE
     request = request_factory()
