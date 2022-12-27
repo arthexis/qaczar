@@ -624,7 +624,7 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
         if address not in SESSIONS or agent not in SESSIONS[address]: 
             self.session_id = sid = secrets.token_urlsafe(32)
             SESSIONS[address][agent] = sid
-            emit(f"Session '{sid[0:8]}' created for {address}: {agent}.")
+            emit(f"Session {sid[0:8]=} created for {address=} {agent=}.")
         else: self.session_id = SESSIONS[address][agent]
         return True
     
