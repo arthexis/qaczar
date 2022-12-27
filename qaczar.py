@@ -681,8 +681,6 @@ def server_role(*args, **kwargs) -> t.NoReturn:
 
 def tester_role(*args, **kwargs) -> None:
     """Let us test the server by making http requests to it."""
-    # TODO: Add automatic tests to prevent public API regressions.
-    # TODO: Have a keep-alive ping to detect when the server is down.
     passed = 0
     for gkey in globals().keys():
         if gkey.startswith(f'test_'): 
