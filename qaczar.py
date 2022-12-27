@@ -238,7 +238,7 @@ import collections
 _CACHE = collections.defaultdict(dict)
 
 @contextlib.contextmanager
-def site_context(site: str = None, **context) -> str:
+def site_context(site: str = None, context: dict = None) -> str:
     """Let us keep a running context for every request to a site."""
     global _LOCAL, _CACHE
     if site: 
@@ -254,7 +254,7 @@ def site_context(site: str = None, **context) -> str:
                 _CACHE[site] = {site_fname: site_mtime, **loaded}
             context.update(_CACHE[site])
         setattr(_LOCAL, 'context', context)
-    try: yield _LOCAL.context | context
+    try: yield _LOCAL.context
     finally:
         if site: delattr(_LOCAL, 'context')
 
@@ -656,7 +656,7 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
             qs = parse.parse_qs(qs) if qs else {}
             site, *funcs = [func for func in pure_path[1:-5].split('/') if func]
             if not funcs: site, funcs = MAIN_SITE, [site]
-            with site_context(site, **self._request_context(**qs, **data)):
+            with site_context(site, self._request_context(**qs, **data)):
                 for key, value in self.headers.items():
                     if key.startswith('HX-'): qs[key[3:].lower().replace('-', '_')] = value
                 content = html_builder(*funcs)
