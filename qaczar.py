@@ -748,7 +748,7 @@ def worker_role(*args, **kwargs) -> None:
         for func_name, next_run in SCHEDULE.items():
             if time.time() >= next_run:
                 func = globals()[func_name]
-                result = func()  # TODO: Catch exceptions and log them.
+                result = func() 
                 emit(f"Ran {func_name} {result=}.")
                 SCHEDULE[func_name] = next_run + func.__interval__
         time.sleep(1)
