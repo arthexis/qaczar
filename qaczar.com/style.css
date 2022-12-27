@@ -23,6 +23,7 @@ section {
     width: -moz-fit-content;
     width: fit-content;
     display: inline-block;
+    padding-bottom: 1.5em;
 }
 section:hover {
     background-color: #111;

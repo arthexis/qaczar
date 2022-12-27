@@ -511,8 +511,8 @@ def site_welcome() -> str:
 @hyper('section')
 def site_index() -> str:
     global _INDEX
-    # Show a tree of all the elements of any type for this site.
-    links = [elem('a', f' [{name}] ', href=f'/{name}')
+    context = site_context()
+    links = [elem('a', f' [{name}] ', href=f'/{context["site"]}/{name}')
         for name in _INDEX.keys()]
     return elem('section', elem_h1('Index'), *links)
 
