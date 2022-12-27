@@ -509,12 +509,12 @@ def site_welcome() -> str:
     return elem('section', elem_h1(title), elem_p(description))
 
 @hyper('section')
-def site_directory() -> str:
+def site_index() -> str:
     global _INDEX
     # Show a tree of all the elements of any type for this site.
     links = [elem('a', f' [{name}] ', href=f'/{name}')
         for name in _INDEX.keys()]
-    return elem('section', elem_h1('Functions'), *links)
+    return elem('section', elem_h1('Index'), *links)
 
 @hyper('footer')
 def site_footer() -> str:
