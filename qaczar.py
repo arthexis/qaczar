@@ -422,7 +422,7 @@ def html_builder(*func_names: str) -> str:
         funcs = [getattr(site_module, name) for name in func_names]
     except (ModuleNotFoundError, AttributeError):
         try: funcs = [globals()[name] for name in func_names]
-        except (KeyError, TypeError) as e: return elem('h1', f"Error: {e}")
+        except (KeyError, TypeError) as e: return elem_h1(f"Error: {e}")
     for hyper_func in reversed(funcs): 
         html_block = hyper_func()
         context[hyper_func.__name__] = html_block
