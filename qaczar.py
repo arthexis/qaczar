@@ -397,7 +397,6 @@ def hyper(
     def _hyper_decorator(
             func: t.Callable, _tag=tag, _method=method, _attrs=attrs) -> t.Callable:
         _attrs[f'hx-{_method}'] = func.__name__
-        # TODO: Consider a function to generate common debug info for a function.
         if DEBUG: _attrs['data-dbg'] = func.__code__.co_firstlineno
         _INDEX[_tag][func.__name__] = func
         @functools.wraps(func)
