@@ -111,6 +111,7 @@ SCHEDULE = {}
 
 def scheduled(interval: int = 60, once: bool = False) -> t.Callable:
     """Let every function be scheduled to run at the right time."""
+    assert interval > 0
     global SCHEDULE
     def _scheduled(f):
         SCHEDULE[f.__name__] = time.time() + interval
