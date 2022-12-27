@@ -254,7 +254,7 @@ def site_context(site: str = None, **context) -> str:
                 _CACHE[site] = {site_fname: site_mtime, **loaded}
             context.update(_CACHE[site])
         setattr(_LOCAL, 'context', context)
-    try: yield _LOCAL.context 
+    try: yield _LOCAL.context | context
     finally:
         if site: delattr(_LOCAL, 'context')
 
