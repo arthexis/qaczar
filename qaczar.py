@@ -593,7 +593,7 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
             qs = parse.parse_qs(qs) if qs else {}
             site, *funcs = [func for func in pure_path[1:-5].split('/') if func]
             if not funcs: site, funcs = MAIN_SITE, [site]
-            with site_context(site,  **qs, **data):
+            with site_context(site, method=method,  **qs, **data):
                 for key, value in self.headers.items():
                     if key.startswith('HX-'): qs[key[3:].lower().replace('-', '_')] = value
                 content = html_builder(*funcs)
