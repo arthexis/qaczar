@@ -224,7 +224,7 @@ def site_context(site: str = None, **context) -> str:
     global _LOCAL, _CACHE
     if site: 
         context['site'] = site
-        context['work_path'] = wp = os.path.join(os.getcwd(), site)
+        context['path'] = wp = os.path.join(os.getcwd(), site)
         site_fname = os.path.join(wp, 'site.toml')
         site_mtime = _mtime_file(site_fname)
         if site not in _CACHE or _CACHE[site][site_fname] != site_mtime:
@@ -232,15 +232,15 @@ def site_context(site: str = None, **context) -> str:
                 emit(f"Loading site config for {site_fname=}.")
                 _CACHE[site] = {site_fname: site_mtime, **tomllib.load(f)}
             context.update(_CACHE[site])
-        setattr(_LOCAL, 'site_context', context)
-    try: yield _LOCAL.site_context 
+        setattr(_LOCAL, 'context', context)
+    try: yield _LOCAL.context 
     finally:
-        if site: delattr(_LOCAL, 'site_context')
+        if site: delattr(_LOCAL, 'context')
 
 def read_file(fname: str, encoding=None) -> str | bytes:
     """Let each site read files from their own directory first, and the base second."""
     with site_context() as context:
-        site_fname = os.path.join(context['work_path'], fname)
+        site_fname = os.path.join(context['path'], fname)
     if not site_fname or not os.path.exists(site_fname):
         site_fname = os.path.join(os.getcwd(), fname)
     return _read_file(site_fname, encoding)
@@ -248,7 +248,7 @@ def read_file(fname: str, encoding=None) -> str | bytes:
 def write_file(fname: str, data: bytes | str, encoding=None) -> None:
     """Let each site write files to their own directory (never to the base)."""
     with site_context() as context:
-        site_fname = os.path.join(context['work_path'], fname)
+        site_fname = os.path.join(context['path'], fname)
     _write_file(site_fname, data, encoding)
 
 
