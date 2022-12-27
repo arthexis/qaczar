@@ -485,6 +485,7 @@ def debugger() -> str:
     with site_context() as context:
         reports = [elem_section('Context', elem_pre(pprint.pformat(context)))]
     # Find all variables in the global scope that are pprint-able.
+    # Exclude modules.
     vars = {k: v for k, v in globals().items() if not k.startswith('_') and 
         not callable(v) and not isinstance(v, (type, hs.HTTPServer, ss.TCPServer))}
     reports.append(elem_section('Globals', elem_pre(pprint.pformat(vars))))
@@ -774,5 +775,5 @@ if __name__ == "__main__":
     else: _ARGS, _KWARGS = (), {}
     _role_dispatch(*_ARGS, **_KWARGS)
 
-__all__ = [k for k in globals().keys() if not k.startswith('_')]
+__all__ = [k for k in globals().keys() if not k.startswith('_') and k not in sys.modules]
     
