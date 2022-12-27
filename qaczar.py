@@ -520,7 +520,7 @@ def site_footer() -> str:
     context = site_context()
     links = [elem('a', f' [{name}] ', href=href, target='_blank') 
         for name, href in context['links'].items()]
-    return elem('a', f'Powered by qaczar.py (source)', href=f'/qaczar.py'), *links
+    return elem('a', f'Powered by qaczar.py [source]', href=f'/qaczar.py'), *links
 
 
 #@# SITE PAGES
