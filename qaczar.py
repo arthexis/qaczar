@@ -473,10 +473,9 @@ def index() -> str:
 @hyper('body')  
 def debugger() -> str:
     """Let this page be used for experimentation.""" 
-    # TODO: This will never receive an event, so it should be a static page?
     with site_context() as context:
         # Remove the footer in case it messes up the debugger output, but keep the nav.
-        reports = [elem('pre', f"{context=}", cls='report')]
+        reports = [elem('section', elem_h2('Context'), f"{context=}", cls='report')]
         return elem('main', site_nav(), *reports)
 
 # Blog where articles are executable python code.
