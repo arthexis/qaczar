@@ -483,11 +483,9 @@ def index() -> str:
 def debugger() -> str:
     """Let this page be used for experimentation.""" 
     with site_context() as context:
-        # Remove the footer in case it messes up the debugger output, but keep the nav.
-        reports = [
-                elem_section('Context', elem_pre(pprint.pformat(context))),
-                elem_section('Globals', elem_pre(pprint.pformat(globals()))),
-            ]
+        reports = [elem_section('Context', elem_pre(pprint.pformat(context)))]
+    reports.append(elem_section('Globals', elem_pre(pprint.pformat(globals()))))
+    # Remove the footer in case it messes up the debugger output, but keep the nav.
     return elem('main', site_nav(), *reports)
 
 # Blog where articles are executable python code.
