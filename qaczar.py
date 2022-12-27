@@ -337,6 +337,7 @@ def recorded(func: t.Callable) -> t.Callable:
 #@# HTML ELEMENTS
 
 import html
+import pprint
 import inspect
 
 def elem(tag: str, *contents, data: dict=None, cls: str = None, **attrs) -> str:
@@ -369,7 +370,9 @@ def elem_section(title: str = None, *content, **attrs) -> str:
     return elem('section', *content, **attrs)
 
 def elem_pre(*content, **attrs) -> str:
-    # Escape HTML special characters.
+    # If the first element of content is a dict, pprint it.
+    if content and isinstance(content[0], dict):
+        content = (pprint.pformat(content[0]), *content[1:])
     content = (html.escape(str(c)) for c in content)
     return elem('pre', *content, **attrs)
 
@@ -471,8 +474,6 @@ def site_footer() -> str:
 
 
 #@# SITE PAGES
-
-import pprint
 
 @hyper('body')  # Default page.
 def index() -> str:
