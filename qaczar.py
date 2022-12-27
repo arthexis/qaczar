@@ -495,8 +495,8 @@ def site_nav() -> str:
     body_links = [elem('a', page, href=page) 
         for page in _INDEX['body'].keys() if page != 'index']
     context = site_context()
-    title = elem('span', context['site'])
-    brand = elem('a', title.upper(), href='/', cls='brand')
+    span = elem('span', context.get('site').upper())
+    brand = elem('a', span, href='/', cls='brand')
     return brand, *body_links
 
 @hyper('section')
