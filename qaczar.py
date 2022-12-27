@@ -644,6 +644,7 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
             if not funcs: site, funcs = MAIN_SITE, [site]
             # TODO: Insert additional parameters into the context.
             context = {'session_id': self.session_id, 'address': self.address_string()}
+            context['headers'] = dict(self.headers.items())
             with site_context(site, method=method, **context, **qs, **data):
                 for key, value in self.headers.items():
                     if key.startswith('HX-'): qs[key[3:].lower().replace('-', '_')] = value
