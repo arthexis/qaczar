@@ -622,11 +622,13 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
         global SESSIONS
         if (address := self.address_string()) not in SESSIONS: 
             self.session_id = secrets.token_urlsafe(32)
-            SESSIONS[address] = (self.session_id, self.headers['User-Agent'])
+            SESSIONS[address] = (self.session_id, agent := self.headers['User-Agent'])
+            emit(f"Session {self.session_id} created for {address}: {agent}.")
         else: 
-            self.session_id, original_agent = SESSIONS[address]
-            if original_agent != self.headers['User-Agent']:
-                del SESSIONS[address]; return False
+            self.session_id, agent = SESSIONS[address]
+            if agent != self.headers['User-Agent']:
+                emit(f"Session {self.session_id} invalidated for {address} (User-Agent).")
+                del SESSIONS[address]
         return True
     
     def _request_context(self, **kwargs) -> dict:
@@ -643,9 +645,9 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
         global MAIN_SITE
         """Let each request be parsed and processed. If needed, overwrite the response file."""
         # I hope I don't have to rewrite this one function forever. --Sysyphus
-        if not self._check_session(): 
-            self.send_response(401); self.end_headers(); return
         self.work_path, self.start = None, time.time()
+        if not self._check_session(): 
+            self.send_response(401); return
         if self.path == '/' or not self.path: self.path = f'/index.html'
         if method != 'POST': data = {}
         else: data = parse.parse_qs(self._rfile_read().decode('utf-8'))
