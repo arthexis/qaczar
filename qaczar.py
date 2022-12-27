@@ -739,16 +739,13 @@ def tester_role(*args, **kwargs) -> None:
 def worker_role(*args, **kwargs) -> None:
     """Let us perform scheduled work in the background."""
     # TODO: A scheduled task should update the schedule from the server.
-    # TODO: After a threshold of load, start adding more workers.
-    # TODO: A scheduled task should trigger a git pull to update the code.
     global SCHEDULE
     if not SCHEDULE: 
         emit("No scheduled tasks."); return
     while True:
         for func_name, next_run in SCHEDULE.items():
             if time.time() >= next_run:
-                func = globals()[func_name]
-                result = func() 
+                func = globals()[func_name]; func()
                 SCHEDULE[func_name] = next_run + func.__interval__
         time.sleep(1)
 
