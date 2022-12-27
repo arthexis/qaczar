@@ -356,6 +356,7 @@ elem_h1 = functools.partial(elem, 'h1')
 elem_h2 = functools.partial(elem, 'h2')
 elem_h3 = functools.partial(elem, 'h3')
 elem_h4 = functools.partial(elem, 'h4')
+elem_p = functools.partial(elem, 'p')
 
 def elem_button(*contents, **attrs) -> str:
     return elem('button', *contents, **attrs)
@@ -468,6 +469,14 @@ def site_nav() -> str:
         title = elem('span', context['site'])
         brand = elem('a', title, href='/', cls='brand')
     return brand, *links
+
+@hyper('section')
+def site_welcome() -> str:
+    with site_context() as context: 
+        site = context.get('site')
+        title = context.get('title') or site
+        description = context.get('description')
+    return elem('section', elem_h1(title), elem_p(description))
 
 @hyper('section')
 def site_functions() -> str:
