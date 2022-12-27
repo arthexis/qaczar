@@ -214,19 +214,24 @@ def _watch_forever(proc: subprocess.Popen, fname: str) -> t.NoReturn:
 
 import tomllib
 import contextlib
+import collections
+
+_CACHE = collections.defaultdict(dict)
 
 @contextlib.contextmanager
 def site_context(site: str = None, **context) -> str:
     """Let us keep a running context for every request to a site."""
-    global _LOCAL
+    global _LOCAL, _CACHE
     if site: 
         context['site'] = site
         context['work_path'] = wp = os.path.join(os.getcwd(), site)
+        site_fname = os.path.join(wp, 'site.toml')
+        site_mtime = _mtime_file(site_fname)
+        if site not in _CACHE or _CACHE[site][site_fname] != site_mtime:
+            with open(site_fname, 'rb') as f:
+                _CACHE[site] = {site_fname: site_mtime, **tomllib.load(f)}
+            context.update(_CACHE[site])
         setattr(_LOCAL, 'site_context', context)
-        if os.path.isfile(site_fname := os.path.join(wp, 'site.toml')):
-            with open(site_fname, 'rb') as f: 
-                emit(f"Loading {site_fname=}.")
-                context.update(tomllib.load(f))
     try: yield _LOCAL.site_context 
     finally:
         if site: delattr(_LOCAL, 'site_context')
@@ -250,7 +255,6 @@ def write_file(fname: str, data: bytes | str, encoding=None) -> None:
 
 import sqlite3
 import threading
-import collections
 
 _LOCAL = threading.local()
 _SCHEMA = collections.defaultdict(dict)
