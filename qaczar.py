@@ -643,7 +643,7 @@ def test_server_load(*args, **kwargs) -> t.NoReturn:
     start = time.time()
     for _ in range(runs := 20): request(f'/{MAIN_SITE}/index.html')
     duration = time.time() - start
-    emit(f"ART: {duration/20:.6f} secs, {runs/duration:.2f} reqs/sec.")
+    emit(f"Avg. RT: {duration/20:.6f} secs, {runs/duration:.2f} reqs/sec.")
 
 
 #@#  REPOSITORY
