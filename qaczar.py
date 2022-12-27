@@ -420,7 +420,7 @@ def html_builder(*func_names: str) -> str:
 
 
 #@# SITE COMPONENTS
-# The objective is to have a single set of function to generate all possible websites.
+# The objective is to have a single set of functions to generate all possible websites.
 
 def site_endpoints() -> t.List[str]:
     """Let there be a list of all the endpoints on the site."""
