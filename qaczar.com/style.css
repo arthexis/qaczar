@@ -3,7 +3,7 @@
     box-sizing: border-box;
 }
 html, input {
-    background-color: #333;
+    background-color: #222;
     font-family: monospace;
     font-size: 1rem;
     color: #93c572;
@@ -19,14 +19,13 @@ header {
 }
 section {
     padding: 1rem;
-    background-color: #333;
+    background-color: #222;
     width: -moz-fit-content;
     width: fit-content;
     display: inline-block;
 }
-/* Odd sections are a lighter grey */
-section:nth-child(odd) {
-    background-color: #444;
+section:hover {
+    background-color: #111;
 }
 h1, h2, h3, h4, h5, h6 {
     font-weight: bold;
