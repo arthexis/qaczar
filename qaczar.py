@@ -732,7 +732,7 @@ def test_server_load(*args, **kwargs) -> t.NoReturn:
     global MAIN_SITE
     request = request_factory()
     start = time.time()
-    for _ in range(runs := 12): request(f'/{MAIN_SITE}/index.html')
+    for _ in range(runs := 20): request(f'/{MAIN_SITE}/index.html')
     duration = time.time() - start
     emit(f"Avg. RT: {duration/runs:.6f} secs ({runs/duration:.2f} reqs/sec).")
 
