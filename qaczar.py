@@ -125,7 +125,8 @@ def scheduled(interval: int = 60, once: bool = False) -> t.Callable:
     return _scheduled
 
 def _safe_globals() -> list[str]:
-    return [k for k in globals().keys() if not k.startswith('_') and k not in sys.modules]
+    return {k: v for k, v in globals().items() 
+        if not k.startswith('_') and k not in sys.modules}
 
 #@# SUBPROCESSING
 
