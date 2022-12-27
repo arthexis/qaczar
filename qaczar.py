@@ -625,7 +625,7 @@ import random
 SESSION_ID = None
 
 @imports('urllib3')
-def _request_factory(urllib3):
+def request_factory(urllib3):
     """Let us make requests to the server and check the responses are valid."""	
     global HOST, PORT
     http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=_build_ssl_certs()[0])
@@ -648,16 +648,16 @@ def _request_factory(urllib3):
 def _keep_alive(*args, **kwargs) -> t.NoReturn:
     """Let us keep the server active by making periodic http requests to it."""
     global MAIN_SITE
-    request = _request_factory()
+    request = request_factory()
     while True: 
         assert 'qaczar' in request(url := f'/{MAIN_SITE}/index.html')
         emit(f"Keep-alive to {url}")
-        time.sleep(60)
+        time.sleep(120)
 
 def test_server_load(*args, **kwargs) -> t.NoReturn:
     """Let us test the server by making http requests to it."""
     global MAIN_SITE
-    request = _request_factory()
+    request = request_factory()
     start = time.time()
     for _ in range(runs := 20): 
         # TODO: Interrupt if the server restarts or crashes.
@@ -729,11 +729,12 @@ def worker_role(*args, **kwargs) -> None:
     if not SCHEDULE: 
         emit("No scheduled tasks."); return
     while True:
-        for func, next_run in SCHEDULE.items():
+        for func_name, next_run in SCHEDULE.items():
             if time.time() >= next_run:
-                result = func()
-                emit(f"Ran {func.__name__} {result=}.")
-                SCHEDULE[func] = next_run + func.__interval__
+                func = globals()[func_name]
+                result = func(*args, **kwargs)
+                emit(f"Ran {func_name} {result=}.")
+                SCHEDULE[func_name] = next_run + func.__interval__
         time.sleep(1)
 
 
