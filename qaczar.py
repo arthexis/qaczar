@@ -681,7 +681,7 @@ def test_server_load(*args, **kwargs) -> t.NoReturn:
     global MAIN_SITE
     request = request_factory()
     start = time.time()
-    for _ in range(runs := 20): 
+    for _ in range(runs := 12): 
         # TODO: Interrupt if the server restarts or crashes.
         # Currently it will just hang forever or until the server is restarted.
         request(f'/{MAIN_SITE}/index.html')
