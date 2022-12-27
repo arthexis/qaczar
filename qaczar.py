@@ -509,10 +509,11 @@ def site_welcome() -> str:
     return elem('section', elem_h1(title), elem_p(description))
 
 @hyper('section')
-def site_functions() -> str:
+def site_directory() -> str:
     global _INDEX
-    links = [elem('a', func, href=f'/{func}') 
-        for func in _INDEX['body'].keys() if func != 'index']
+    # Show a tree of all the elements of any type for this site.
+    links = [elem('a', f' [{name}] ', href=f'/{name}')
+        for name in _INDEX.keys()]
     return elem('section', elem_h1('Functions'), *links)
 
 @hyper('footer')
