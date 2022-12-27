@@ -479,6 +479,7 @@ def debugger() -> str:
 #@# HTTPS SERVER
 
 import ssl
+import secrets
 import importlib
 import datetime as dt
 import http.server as hs
@@ -527,6 +528,8 @@ def access_log(address: str, message: str) -> None:
     # TODO: Add more parameters to the access log.
     # emit(f"Access from {address} {message}")
 
+SESSIONS = {}
+
 class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
     # TODO: Performance testing is needed to ensure this approach will work in the long run.
 
@@ -543,10 +546,23 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
         self.send_response(301)
         self.send_header('Location', path)
 
-    def _build_response(self, method: str = None) -> bool:
+    # Check if the Session-ID is valid, and if not, create a new one.
+    def _check_session_auth(self) -> bool:
+        global SESSIONS
+        session_id = self.headers.get('Session-ID')
+        if session_id is None or session_id not in SESSIONS:
+            session_id = secrets.token_urlsafe(32)
+            SESSIONS[session_id] = {}
+        # self.send_header('Session-ID', session_id)
+        return True
+
+    def _build_response(self, method: str = None) -> None:
         global MAIN_SITE
         """Let each request be parsed and processed. If needed, overwrite the response file."""
         # I really hope I don't have to rewrite this one function forever. --Sysyphus
+        if not self._check_session_auth(): 
+            self.send_response(401); self.end_headers()
+            return
         self.work_path, self.start = None, time.time()
         if self.path == '/' or not self.path: self.path = f'/index.html'
         if method != 'POST': data = {}
@@ -561,12 +577,11 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
             with site_context(site,  **qs, **data) as context:
                 # emit(f"Building {site=} {funcs=} {context=}")
                 for key, value in self.headers.items():
-                    # https://htmx.org/docs/#request-headers
                     if key.startswith('HX-'): qs[key[3:].lower().replace('-', '_')] = value
                 content = html_builder(*funcs)
             self.work_path = os.path.join('.server', pure_path[1:])
             _write_file(self.work_path, content, encoding='utf-8')
-        # Everything else is served as-is. Nothing needs to be done.
+        # Everything else is served as-is by SimpleHTTPRequestHandler.
         
     def translate_path(self, path: str = None) -> str:
         """Let each request be served from its work path (.server) when needed."""
@@ -641,6 +656,8 @@ def test_server_load(*args, **kwargs) -> t.NoReturn:
     request = _request_factory()
     start = time.time()
     for _ in range(runs := 20): 
+        # TODO: Interrupt if the server restarts or crashes.
+        # Currently it will just hang forever or until the server is restarted.
         request(f'/{MAIN_SITE}/index.html')
     duration = time.time() - start
     emit(f"Avg. RT: {duration/20:.6f} secs, {runs/duration:.2f} reqs/sec.")
