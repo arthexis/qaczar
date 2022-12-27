@@ -432,13 +432,6 @@ def site_nav() -> str:
         brand = elem('a', title, href='/', cls='brand')
     return brand, *links
 
-# A simple blog where articles are executable python code.
-@hyper('section')
-def site_main(topic: str = None) -> str:
-    global INDEX, MAIN_SITE
-    header = elem('header', topic or MAIN_SITE, cls='hero', style='height: 40vh; background: #333;')
-    return header, elem('section', elem('h1', 'Coming soon...'))
-
 @hyper('footer')
 def site_footer() -> str:
     return elem('a', f'Powered by the qaczar.py web system.', href=f'/qaczar.py')
@@ -450,15 +443,18 @@ def site_footer() -> str:
 def index() -> str:
     """Let this be the default page (showcase functionality).""" 
     # Look all the section endpoints, render them and combine them in a main tag.
-    main = elem('main', site_nav(), site_main(), site_footer())
     global INDEX
-    return (site_nav(), site_main(), site_footer())
+    # Find all elements of type 'section' and render them.
+    sections = [func() for func in INDEX['section'].values()]
+    main_content = elem('main', site_nav(), *sections, site_footer())
+    return (site_nav(), main_content, site_footer())
 
 @hyper('body')  
 def debugger() -> str:
     """Let this page be used for experimentation.""" 
     # TODO: This will never receive an event, so it should be a static page?
     with site_context() as context:
+        # Remove the footer in case it messes up the debugger output, but keep the nav.
         return (site_nav(), elem('main', f"CONTEXT: {context}"))
 
 # Blog where articles are executable python code.
