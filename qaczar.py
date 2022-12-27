@@ -549,8 +549,8 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
     # Check if the Session-ID is valid, and if not, create a new one.
     def _check_session_auth(self) -> bool:
         global SESSIONS
-        session_id = self.headers.get('Session-ID')
-        if session_id is None or session_id not in SESSIONS:
+        self.session_id = self.headers.get('Session-ID')
+        if self.session_id is None or self.session_id not in SESSIONS:
             self.session_id = secrets.token_urlsafe(32)
             SESSIONS[self.session_id] = {}
         return True
@@ -599,6 +599,7 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
         """Let us add some headers to the end of the response (before the body)."""
         duration = time.time() - self.start
         self.send_header('Server-Timing', f'miss;dur={duration:.6f}')
+        self.send_header('Session-ID', self.session_id)
         return super().end_headers()
     
     def send_header(self, keyword: str, value: str) -> None:
