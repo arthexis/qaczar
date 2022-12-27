@@ -434,7 +434,7 @@ def site_nav() -> str:
     return brand, *links
 
 # A simple blog where articles are executable python code.
-@hyper('main')
+@hyper('section')
 def site_main(topic: str = None) -> str:
     global INDEX, MAIN_SITE
     header = elem('header', topic or MAIN_SITE, cls='hero', style='height: 40vh; background: #333;')
@@ -451,11 +451,9 @@ def site_footer() -> str:
 def index() -> str:
     """Let this be the default page (minimal functionality).""" 
     # TODO: This will never receive an event, so it should be a static page?
-    return (
-            site_nav(),
-            site_main(), 
-            site_footer(),
-        )
+    # Get all main sections and execute them.
+    global INDEX
+    return (site_nav(), site_main(), site_footer())
 
 @hyper('body')  
 def scratchpad() -> str:
