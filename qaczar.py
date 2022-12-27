@@ -319,9 +319,6 @@ def recorded(func: t.Callable) -> t.Callable:
 
 import inspect
 
-# https://picnicss.com/documentation
-CSS_HREF = 'https://cdn.jsdelivr.net/npm/picnic'
-
 def elem(tag: str, *contents, data: dict=None, cls: str = None, **attrs) -> str:
     """Let all serialization happen through hypertext, as originally intended."""
     if cls and cls.strip(): attrs['class'] = cls
@@ -369,7 +366,6 @@ def elem_html_body(*sections, **attrs) -> str:
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="htmx-config" content='{{"defaultSwapStyle":"outerHTML"}}'>
         <script src="{HTMX_SRC}"></script>
-        <link rel="stylesheet" href="{CSS_HREF}" type="text/css" />
         <link rel="stylesheet" href="/{site}/style.css" type="text/css" />
         </head>{body}</html>
         """
