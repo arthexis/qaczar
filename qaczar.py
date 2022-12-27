@@ -491,9 +491,7 @@ def debugger() -> str:
         reports = [elem_section('Context', elem_pre(pprint.pformat(context)))]
     # Find all variables in the global scope that are pprint-able.
     # Exclude modules.
-    vars = {k: v for k, v in globals().items() if not k.startswith('_') and 
-        not callable(v) and not isinstance(v, (type, hs.HTTPServer, ss.TCPServer))}
-    reports.append(elem_section('Globals', elem_pre(pprint.pformat(vars))))
+    reports.append(elem_section('Globals', elem_pre(pprint.pformat(_safe_globals()))))
     # Remove the footer in case it messes up the debugger output, but keep the nav.
     return elem('main', site_nav(), *reports)
 
