@@ -460,6 +460,8 @@ def site_footer() -> str:
 
 #@# SITE PAGES
 
+import pprint
+
 @hyper('body')  # Default page.
 def index() -> str:
     """Let this be the default page (showcase functionality).""" 
