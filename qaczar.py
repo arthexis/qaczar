@@ -593,7 +593,7 @@ class ThreadingSSLServer(ss.ThreadingTCPServer):
 #@#  SELF TESTING
 
 @imports('urllib3')
-def request_factory(urllib3):
+def _request_factory(urllib3):
     """Let us make requests to the server and check the response."""	
     # TODO: Design a string for the user-agent and use it to track tests.
     # TODO: Add a way to stop the tester when the server is down.
@@ -612,16 +612,24 @@ def request_factory(urllib3):
         return content
     return _request
     
+def _keep_alive(*args, **kwargs) -> t.NoReturn:
+    """Let us keep the server active by making periodic http requests to it."""
+    global MAIN_SITE
+    request = _request_factory()
+    while True: 
+        assert 'qaczar' in request(f'/{MAIN_SITE}/index.html')
+        time.sleep(30)
+
 def _test_server(*args, **kwargs) -> t.NoReturn:
     """Let us test the server by making http requests to it."""
     global MAIN_SITE
-    request = request_factory()
+    request = _request_factory()
     assert 'qaczar' in request(f'/{MAIN_SITE}/index.html')
 
 def test_server_load(*args, **kwargs) -> t.NoReturn:
     """Let us test the server by making http requests to it."""
     global MAIN_SITE
-    request = request_factory()
+    request = _request_factory()
     start = time.time()
     for _ in range(runs := 60): request(f'/{MAIN_SITE}/index.html')
     duration = time.time() - start
@@ -672,8 +680,12 @@ def tester_role(*args, **kwargs) -> None:
             globals()[gkey](*args, **kwargs)
             passed += 1
     else:
-        emit(f"Tests passed: {passed}.")
+        now = iso8601()
+        emit(f"Tests passed: {passed} at {now}")
         _commit_source()
+        kwargs['tester'] = now
+        _start_py(f'{APP}.py', *args, **kwargs)
+        _keep_alive()
 
 def worker_role(*args, **kwargs) -> None:
     """Let us do work that is not related to the serving requests."""
