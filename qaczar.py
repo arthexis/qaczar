@@ -518,12 +518,16 @@ def site_functions() -> str:
         for func in _INDEX['body'].keys() if func != 'index']
     return elem('section', elem_h1('Functions'), *links)
 
+LINKS = {
+    'twitter': 'https://twitter.com/arthexis',
+    'github': 'https://github.com/arthexis/qaczar',
+}
+
 @hyper('footer')
 def site_footer() -> str:
-    links = [
-            elem('a', ' [twitter] ', href='https://twitter.com/arthexis', target='_blank'),
-            elem('a', ' [github] ', href='https://github.com/arthexis/qaczar', target='_blank')
-        ]
+    global LINKS
+    links = [elem('a', f' [{name}] ', href=href, target='_blank') 
+        for name, href in LINKS.items()]
     return elem('a', f'Powered by qaczar.py (source)', href=f'/qaczar.py'), *links
 
 
