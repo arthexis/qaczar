@@ -646,7 +646,7 @@ import random
 @imports('urllib3')
 def request_factory(urllib3):
     """Let us make requests to the server and check the responses are valid."""	
-    global HOST, PORT
+    global HOST, PORT, PID
     http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=_build_ssl_certs()[0])
     session_id = None
     def _request(path: str, data: dict = None):
@@ -661,7 +661,7 @@ def request_factory(urllib3):
             assert '<!DOCTYPE html>' in (content := r.data.decode('utf-8'))
         if not session_id: session_id = r.headers['Session-ID']
         elif session_id != r.headers['Session-ID']:
-            emit(f"Session ID changed, possible server restart. Terminating.")
+            emit(f"Session ID changed, possible server restart. Terminate {PID=}")
             sys.exit(1)  
         return content
     return _request
