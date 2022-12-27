@@ -659,9 +659,6 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
             content = html_builder(*call_path)
             self.work_path = os.path.join('.server', pure_path[1:])
             _write_file(self.work_path, content, encoding='utf-8')
-        # If the file has not changed, we don't need to send it again.
-        if self.headers.get('If-None-Match') == self.session_id:
-            self.send_response(304); self.end_headers(); return
         # Everything else is served as-is by SimpleHTTPRequestHandler.
         
     def translate_path(self, path: str = None) -> str:
