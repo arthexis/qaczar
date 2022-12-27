@@ -606,7 +606,7 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
     def _build_response(self, method: str = None) -> None:
         global MAIN_SITE
         """Let each request be parsed and processed. If needed, overwrite the response file."""
-        # I really hope I don't have to rewrite this one function forever. --Sysyphus
+        # I hope I don't have to rewrite this one function forever. --Sysyphus
         if not self._check_session(): 
             self.send_response(401); self.end_headers(); return
         self.work_path, self.start = None, time.time()
