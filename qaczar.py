@@ -4,6 +4,8 @@
 # qaczar.py: A web authoring system written in honor of the Self-Inventing.
 # by R. J. Guillén-Osorio (rjgo [at] qaczar [dot] com) 2022-2023.
 
+# Anyone can create their own web presence by running this script on their own computer. Try it!
+
 # License: MIT (https://opensource.org/licenses/MIT).
 
 #   Coding Guidelines:
