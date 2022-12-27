@@ -622,9 +622,11 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
         global SESSIONS
         if (address := self.address_string()) not in SESSIONS: 
             self.session_id = secrets.token_urlsafe(32)
-            # Include user agent in the session ID to prevent session hijacking.
             SESSIONS[address] = (self.session_id, self.headers['User-Agent'])
-        else: self.session_id, _ = SESSIONS[address]
+        else: 
+            self.session_id, original_agent = SESSIONS[address]
+            if original_agent != self.headers['User-Agent']:
+                del SESSIONS[address]; return False
         return True
     
     def _request_context(self, **kwargs) -> dict:
