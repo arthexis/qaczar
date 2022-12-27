@@ -40,12 +40,11 @@ def iso8601() -> str:
 
 def emit(msg: str, div: str = '', trace: bool =False,  _at=None) -> None: 
     """Let the music of the spheres guide your steps."""
-    # TODO: Consider a debug only function that also stores the message in a log file.
     global PID
-    frame = _at or sys._getframe(1)  
+    fr = _at or sys._getframe(1)  
     if div: print((div or '-') * (100 // len(div)), file=sys.stderr)
-    print(f'[{PID}:{frame.f_lineno} {iso8601()}] {frame.f_code.co_name}:  {msg}', file=sys.stderr)
-    if trace: traceback.print_stack(frame, file=sys.stderr)
+    print(f'[{PID}:{fr.f_lineno} {iso8601()}] {fr.f_code.co_name}:  {msg}', file=sys.stderr)
+    if trace: traceback.print_stack(fr, file=sys.stderr)
 
 def halt(msg: str, trace: bool =False) -> t.NoReturn:
     """Let the halting problem be proven empirically."""
@@ -196,34 +195,30 @@ def _watch_forever(proc: subprocess.Popen, fname: str) -> t.NoReturn:
 import contextlib
 
 @contextlib.contextmanager
-def site_context(site: str) -> str:
-    """Let us set the directory where the site is served from."""
+def site_context(site: str = None, **context) -> str:
+    """Let us keep a running context for every request to a site."""
     global _LOCAL
-    setattr(_LOCAL, 'site', site)
-    yield os.path.join(os.getcwd(), site)
-    delattr(_LOCAL, 'site')
-
-def current_site() -> str:
-    global APP, _LOCAL
-    return _LOCAL.site if hasattr(_LOCAL, 'site') else APP
+    if site: 
+        context['site'] = site
+        context['work_path'] = os.path.join(os.getcwd(), site)
+        setattr(_LOCAL, 'site_context', context)
+    try: yield _LOCAL.site_context 
+    finally:
+        if site: delattr(_LOCAL, 'site_context')
 
 def read_file(fname: str, encoding=None) -> str | bytes:
     """Let each site read files from their own directory first, and the base second."""
-    site_fname = os.path.join(current_site(), fname)
+    with site_context() as context:
+        site_fname = os.path.join(context['work_path'], fname)
     if not site_fname or not os.path.exists(site_fname):
         site_fname = os.path.join(os.getcwd(), fname)
     return _read_file(site_fname, encoding)
 
 def write_file(fname: str, data: bytes | str, encoding=None) -> None:
     """Let each site write files to their own directory (never to the base)."""
-    site_fname = os.path.join(current_site(), fname)
+    with site_context() as context:
+        site_fname = os.path.join(context['work_path'], fname)
     _write_file(site_fname, data, encoding)
-
-def scan_file(fname: str, prefix: str = None) -> t.Generator[str, None, None]:
-    """Let us read a script from the site directory, filtering by prefix optionally."""
-    for line in read_file(fname, encoding='utf-8').splitlines():
-        if not prefix: yield line
-        elif line.strip().startswith(prefix): yield line.strip()[len(prefix):]
 
 
 #@# DATABASE
@@ -362,23 +357,25 @@ def elem_html_body(*sections, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     # TODO: Generate the CSS code dynamically instead of reading a file.
     global HTMX_SRC, CSS_HREF
-    site = current_site()
-    body_sections = elem('body', *sections, **attrs)
-    # Don't break the boilerplate down too much unless necessary.
-    return f"""
-    <!DOCTYPE html><html lang="en">
-    <head>
-        <title>{site.upper()}</title>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="htmx-config" content='{{"defaultSwapStyle":"outerHTML"}}'>
-        <script src="{HTMX_SRC}"></script>
-        <link rel="stylesheet" href="{CSS_HREF}" type="text/css" />
-        <link rel="stylesheet" href="/{site}/style.css" type="text/css" />
-    </head>
-    {body_sections}
-    </html>
-    """
+    with site_context() as context:
+        site = context.get('site')
+        title = context.get('title') or site
+        body_sections = elem('body', *sections, **attrs)
+        # Don't break this boilerplate into smaller functions unless needed.
+        return f"""
+        <!DOCTYPE html><html lang="en">
+        <head>
+            <title>{title}</title>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <meta name="htmx-config" content='{{"defaultSwapStyle":"outerHTML"}}'>
+            <script src="{HTMX_SRC}"></script>
+            <link rel="stylesheet" href="{CSS_HREF}" type="text/css" />
+            <link rel="stylesheet" href="/{site}/style.css" type="text/css" />
+        </head>
+        {body_sections}
+        </html>
+        """
 
 
 #@# HTML GENERATOR
@@ -402,7 +399,7 @@ def hyper(
         _attrs[f'hx-{_method}'] = func.__name__
         # TODO: Consider a function to generate common debug info for a function.
         if DEBUG: _attrs['data-dbg'] = func.__code__.co_firstlineno
-        _INDEX[(current_site(), _tag)][func.__name__] = func
+        _INDEX[_tag][func.__name__] = func
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
             try:
@@ -415,11 +412,13 @@ def hyper(
         return _hyper
     return _hyper_decorator
 
-def html_builder(*func_names: str, **context) -> str:
+def html_builder(*func_names: str) -> str:
     """Let all HTML content be built from pure functions and request context."""
     # TODO: Make sure we are receiving the context from the request.
     try:
-        if (site := current_site()) not in sys.path: sys.path.append(site)
+        with site_context() as context:
+            site = context['site']
+        if site not in sys.path: sys.path.append(site)
         site_module = importlib.import_module(site)
         funcs = [getattr(site_module, name) for name in func_names]
     except (ModuleNotFoundError, AttributeError):
@@ -433,28 +432,31 @@ def html_builder(*func_names: str, **context) -> str:
         context[func.__name__] = block
     return block
 
-def site_endpoints() -> t.List[str]:
-    """Let there be a list of all the endpoints on the site."""
-    global _INDEX
-    return [f'/{page}' for page in _INDEX[(current_site(), 'body')].keys()]
-
 
 #@# SITE COMPONENTS
 
 # TODO: Consider what is the benefit of using hyper on site components.
 # IE. how to make the nav bar and the footer be generated from pure functions.
 
+def site_endpoints() -> t.List[str]:
+    """Let there be a list of all the endpoints on the site."""
+    global _INDEX
+    return [f'/{page}' for page in _INDEX['body'].keys()]
+
 @hyper('nav', cls='transparent')
 def site_nav() -> str:
-    # TODO: Fix the CSS, because this overlaps with the body.
+    # TODO: Fix the CSS (add transparent class in the .css file).
     links = [elem('a', page.upper(), href=page) for page in site_endpoints()]
-    return elem('a', current_site(), href='/', cls='brand'), *links
+    with site_context() as context:
+        site = context['site']
+    return elem('a', site, href='/', cls='brand'), *links
 
 # A simple blog where articles are executable python code.
 @hyper('main')
 def site_main(topic: str = None) -> str:
-    global _INDEX, SITE
-    return elem('header', topic or SITE, cls='hero', style='height: 70vh; background: #333;')
+    global _INDEX, MAIN_SITE
+    header = elem('header', topic or MAIN_SITE, cls='hero', style='height: 40vh; background: #333;')
+    return header, elem('section', *site_endpoints())
 
 @hyper('footer')
 def site_footer() -> str:
@@ -469,15 +471,16 @@ def index(**context) -> str:
     # TODO: This will never receive an event, so it should be a static page?
     return (
             site_nav(),
-            site_main(**context), 
-            site_footer(**context),
+            site_main(), 
+            site_footer(),
         )
 
 @hyper('body')  
 def scratchpad(**context) -> str:
     """Let this page be used for experimentation.""" 
     # TODO: This will never receive an event, so it should be a static page?
-    return (site_nav(), f"Helloooo: {context}")
+    with site_context() as context:
+        return (site_nav(), f"Helloooo: {context}")
 
 # Blog where articles are executable python code.
 
@@ -491,7 +494,7 @@ import http.server as hs
 import socketserver as ss
 import urllib.parse as parse
 
-SITE = 'qaczar.com'
+MAIN_SITE = 'qaczar.com'
 HOST, PORT = 'localhost', 9443
 
 @imports('cryptography.x509',
@@ -551,7 +554,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
 
     @timed
     def _build_response(self, method: str = None) -> bool:
-        global SITE
+        global MAIN_SITE
         """Let each request be parsed and processed. If needed, overwrite the response file."""
         # I really hope I don't have to rewrite this one function forever. --Sysyphus
         self.work_path, self.start = None, time.time()
@@ -564,7 +567,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
         elif pure_path.endswith('.html'):  
             qs = parse.parse_qs(qs) if qs else {}
             site, *funcs = [func for func in pure_path[1:-5].split('/') if func]
-            if not funcs: site, funcs = SITE, [site]
+            if not funcs: site, funcs = MAIN_SITE, [site]
             with site_context(site):
                 emit(f"Building {site=} {funcs=} {qs=} {data=}")
                 for key, value in self.headers.items():
@@ -631,9 +634,9 @@ def request_factory(urllib3):
     
 def test_server(*args, **kwargs) -> t.NoReturn:
     """Let us test the server by making http requests to it."""
-    global SITE
+    global MAIN_SITE
     request = request_factory()
-    assert 'qaczar' in request(f'/{SITE}/index.html')
+    assert 'qaczar' in request(f'/{MAIN_SITE}/index.html')
 
 
 #@#  REPOSITORY
