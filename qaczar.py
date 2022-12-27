@@ -641,22 +641,22 @@ def test_server_load(*args, **kwargs) -> t.NoReturn:
     global MAIN_SITE
     request = _request_factory()
     start = time.time()
-    for _ in range(runs := 60): request(f'/{MAIN_SITE}/index.html')
+    for _ in range(runs := 30): request(f'/{MAIN_SITE}/index.html')
     duration = time.time() - start
-    emit(f"ART: {duration/60:.6f} secs, {runs/duration:.2f} reqs/sec.")
+    emit(f"ART: {duration/30:.6f} secs, {runs/duration:.2f} reqs/sec.")
 
 
 
 #@#  REPOSITORY
 
-def _commit_source() -> None:
+def _commit_source() -> str:
     """Let us commit the source code to the git repository."""
     # TODO: Create missing branch if not exists when pushing to git.
     global BRANCH
     os.system('git add .')
     os.system('git commit -m "auto commit" -q')
     os.system(f'git push origin {BRANCH} -q')
-    emit(f"Source committed to {BRANCH}.")
+    return os.popen('git rev-parse HEAD').read().strip()
 
 
 #@# BASE ROLES
@@ -689,16 +689,17 @@ def tester_role(*args, **kwargs) -> None:
         if gkey.startswith(f'test_'): 
             globals()[gkey](*args, **kwargs)
             passed += 1
-    else:
-        now = iso8601()
-        emit(f"Tests passed: {passed} at {now}")
-        _commit_source()  # TODO: Commit only if all tests really passed.
-        kwargs['tester'] = now
-        _start_py(f'{APP}.py', *args, **kwargs)
-        _keep_alive()
+    commit_hash = _commit_source() 
+    kwargs['tester'] = commit_hash
+    emit(f"Tests passed: {passed} -> Committed: {commit_hash}")
+    _start_py(f'{APP}.py', *args, **kwargs)
+    _keep_alive()
 
 def worker_role(*args, **kwargs) -> None:
-    """Let us do work that is not related to the serving requests."""
+    """Let us perform scheduled work in the background."""
+    # TODO: A scheduled task should update the schedule from the server.
+    # TODO: After a threshold of load, start adding more workers.
+    # TODO: A scheduled task should trigger a git pull to update the code.
     global SCHEDULE
     if not SCHEDULE: 
         emit("No scheduled tasks."); return
