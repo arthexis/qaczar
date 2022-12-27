@@ -408,13 +408,13 @@ def elem_html_body(*sections, **attrs) -> str:
 #@# HTML GENERATOR
 
 # TODO: Consider tracking components with the database instead of a global.
-INDEX = collections.defaultdict(dict)
+_INDEX = collections.defaultdict(dict)
 
 def hyper(
         tag: str, method: str = 'get', trigger: str = None, target: str = None, 
         history: bool = None, **attrs) -> t.Callable:
     """Let us decorate a function to output hypertext."""
-    global INDEX, DEBUG
+    global _INDEX, DEBUG
     if trigger: attrs['hx-trigger'] = trigger
     if target: attrs['hx-target'] = target
     if history or (tag == 'body' and history is not False): attrs['hx-push-url'] = 'true'
@@ -422,7 +422,7 @@ def hyper(
             func: t.Callable, _tag=tag, _method=method, _attrs=attrs) -> t.Callable:
         _attrs[f'hx-{_method}'] = func.__name__
         if DEBUG: _attrs['data-ln'] = func.__code__.co_firstlineno
-        INDEX[_tag][func.__name__] = func
+        _INDEX[_tag][func.__name__] = func
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
             try:
@@ -455,9 +455,9 @@ def html_builder(*func_names: str) -> str:
 
 @hyper('nav')
 def site_nav() -> str:
-    global INDEX
+    global _INDEX
     links = [elem('a', page, href=page) 
-        for page in INDEX['body'].keys() if page != 'index']
+        for page in _INDEX['body'].keys() if page != 'index']
     with site_context() as context: 
         title = elem('span', context['site'])
         brand = elem('a', title, href='/', cls='brand')
@@ -476,9 +476,9 @@ import pprint
 def index() -> str:
     """Let this be the default page (showcase functionality).""" 
     # Look all the section endpoints, render them and combine them in a main tag.
-    global INDEX
+    global _INDEX
     # Find all elements of type 'section' and render them.
-    sections = [func() for func in INDEX['section'].values()]
+    sections = [func() for func in _INDEX['section'].values()]
     # emit(f"Rendering {len(sections)} sections.")
     return elem('main', site_nav(), *sections, site_footer())
 
