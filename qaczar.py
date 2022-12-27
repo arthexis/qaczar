@@ -366,7 +366,7 @@ def elem_html_body(*sections, **attrs) -> str:
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="htmx-config" content='{{"defaultSwapStyle":"outerHTML"}}'>
         <script src="{HTMX_SRC}"></script>
-        <link rel="stylesheet" href="/{site}/style.css" type="text/css" />
+        <link rel="stylesheet" href="style.css" type="text/css" />
         </head>{body}</html>
         """
 
