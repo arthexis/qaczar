@@ -619,8 +619,7 @@ def test_server_perf(*args, **kwargs) -> t.NoReturn:
     start = time.time()
     for _ in range(runs := 60): request(f'/{MAIN_SITE}/index.html')
     duration = time.time() - start
-    emit(f"Average response time: {duration/100:.6f} seconds. {runs} requests in {duration:.6f} seconds.")
-    time.sleep(60)
+    emit(f"Average response time: {duration/60:.6f} seconds.")
 
 
 
