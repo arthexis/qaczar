@@ -110,7 +110,7 @@ def imports(*modules: tuple[str]) -> t.Callable:
 SCHEDULE = {}
 
 def scheduled(interval: int = 60, once: bool = False) -> t.Callable:
-    """Let every function be scheduled to run at the right time."""
+    """Let us schedule functions to be run periodically by a worker."""
     assert interval > 0
     global SCHEDULE
     def _scheduled(f):
