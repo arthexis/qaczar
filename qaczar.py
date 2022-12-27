@@ -361,6 +361,13 @@ def elem_list(*items, tag: str='ul', attr_func: t.Callable = None) -> str:
     else: content = ''.join(elem('li', item) for item in items)
     return elem(tag, content) if tag else content
 
+def elem_section(title: str = None, *content, **attrs) -> str:
+    if title: content = (elem_h2(title), *content)
+    return elem('section', *content, **attrs)
+
+def elem_pre(*content, **attrs) -> str:
+    return elem('pre', *content, **attrs)
+
 def elem_article(tag: str = 'article', *content, **attrs) -> str:
     return elem(tag, *content, cls='card', **attrs)
 
@@ -477,8 +484,11 @@ def debugger() -> str:
     """Let this page be used for experimentation.""" 
     with site_context() as context:
         # Remove the footer in case it messes up the debugger output, but keep the nav.
-        reports = [elem('section', elem_h2('Context'), f"{context=}", cls='report')]
-        return elem('main', site_nav(), *reports)
+        reports = [
+                elem_section('Context', elem_pre(pprint.pformat(context))),
+                elem_section('Globals', elem_pre(pprint.pformat(globals()))),
+            ]
+    return elem('main', site_nav(), *reports)
 
 # Blog where articles are executable python code.
 
