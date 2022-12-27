@@ -105,11 +105,12 @@ button:hover {
     background-color: #430;
 }
 footer {
-    margin-top: 1rem;
-    width: 98%;
+    background-color: #702973;
+    padding: 0.5rem;
 }
 footer a, footer a:visited, footer a:link {
-    color: #702973;
+    
+    color: black;
 }
 .traceback {
     color: #FF6666;
@@ -128,6 +129,4 @@ nav {
 nav a {
     color: #66FF66;
     margin-right: 0.5rem;
-    /* Dark green bg */
-    
 }

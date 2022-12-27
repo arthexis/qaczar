@@ -350,6 +350,9 @@ def elem_article(tag: str = 'article', *content, **attrs) -> str:
 def elem_label(css: str = '', *content, **attrs) -> str:
     return elem('span', *content, cls=f'label {css}', **attrs)
 
+# https://htmx.org/docs/#introduction
+HTMX_SRC = 'https://unpkg.com/htmx.org@1.8.4'
+
 def elem_html_body(*sections, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     # TODO: Generate the CSS code dynamically instead of reading a file.
@@ -372,9 +375,6 @@ def elem_html_body(*sections, **attrs) -> str:
 
 
 #@# HTML GENERATOR
-
-# https://htmx.org/docs/#introduction
-HTMX_SRC = 'https://unpkg.com/htmx.org@1.8.4'
 
 # TODO: Consider tracking components with the database instead of a global.
 INDEX = collections.defaultdict(dict)
@@ -511,7 +511,7 @@ def access_log(address: str, message: str) -> None:
     # TODO: Add more parameters to the access log.
     emit(f"Access from {address} {message}")
 
-class RequestHandler(hs.SimpleHTTPRequestHandler):
+class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
     # TODO: Performance testing is needed to ensure this approach will work in the long run.
 
     def log_message(self, format, *args):
@@ -581,7 +581,7 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
         # emit(f"HTTP header {keyword}: {value}")
         return super().send_header(keyword, value)
 
-class SSLServer(ss.ThreadingTCPServer):
+class ThreadingSSLServer(ss.ThreadingTCPServer):
     """Let us subclass the ThreadingTCPServer to add SSL support."""
     # TODO: This creates 1 thread per request, which is not ideal. Implement a thread pool.
     def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True):
@@ -640,7 +640,7 @@ def server_role(*args, **kwargs) -> t.NoReturn:
     # TODO: Catch port being in use and suggest a different port.
     global APP, HOST, PORT
     _purge_database()
-    with SSLServer((HOST, int(PORT)), RequestHandler) as httpd:
+    with ThreadingSSLServer((HOST, int(PORT)), ComplexHTTPRequestHandler) as httpd:
         atexit.register(httpd.shutdown)
         kwargs['server'] = f'{HOST}:{PORT}'
         _start_py(f'{APP}.py', *args, **kwargs)
