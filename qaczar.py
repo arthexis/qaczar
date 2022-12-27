@@ -360,7 +360,7 @@ def elem_html_body(*sections, **attrs) -> str:
     with site_context() as context:
         site = context.get('site')
         title = context.get('title') or site
-        body_sections = elem('body', *sections, **attrs)
+        body = elem('body', *sections, **attrs)
         # Don't break this boilerplate into smaller functions unless needed.
         return f"""
         <!DOCTYPE html><html lang="en">
@@ -372,9 +372,7 @@ def elem_html_body(*sections, **attrs) -> str:
             <script src="{HTMX_SRC}"></script>
             <link rel="stylesheet" href="{CSS_HREF}" type="text/css" />
             <link rel="stylesheet" href="/{site}/style.css" type="text/css" />
-        </head>
-        {body_sections}
-        </html>
+        </head>{body}</html>
         """
 
 
