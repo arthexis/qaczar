@@ -733,8 +733,8 @@ def test_server_load(*args, **kwargs) -> t.NoReturn:
     request = request_factory()
     start = time.time()
     for _ in range(runs := 20): request(f'/{MAIN_SITE}/index.html')
-    duration = time.time() - start
-    emit(f"Avg. RT: {duration/runs:.6f} secs ({runs/duration:.2f} reqs/sec).")
+    dur = time.time() - start
+    emit(f"Avg. RT: {dur/runs:.6f} secs ({runs/dur:.2f} reqs/sec).")
 
 
 #@# SCHEDULED TASKS
