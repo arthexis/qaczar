@@ -470,9 +470,14 @@ def hyper(
         return __hyper
     return _hyper
 
-def html_builder(*call_path: str) -> str:
+def html_builder(*func_names: str) -> str:
     """Let all HTML content be built from pure functions and request context."""
-    return globals()[call_path[0]](*call_path[1:])
+    try: funcs = [globals()[name] for name in func_names]
+    except (KeyError, TypeError) as e: return elem_h1(f"Error: {e}")
+    kwargs = {}
+    for hyper_func in reversed(funcs): 
+        kwargs[hyper_func.__name__] = html_block = hyper_func(**kwargs)
+    return html_block
 
 
 #@# SITE COMPONENTS
