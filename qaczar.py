@@ -459,7 +459,7 @@ def debugger() -> str:
     """Let this page be used for experimentation.""" 
     # TODO: This will never receive an event, so it should be a static page?
     with site_context() as context:
-        return (site_nav(), f"CONTEXT: {context}")
+        return (site_nav(), elem('main', f"CONTEXT: {context}"))
 
 # Blog where articles are executable python code.
 
