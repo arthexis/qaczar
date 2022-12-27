@@ -679,6 +679,14 @@ def _commit_source() -> str:
     return os.popen('git rev-parse HEAD').read().strip()[0:8]
 
 
+#@# SCHEDULED TASKS
+
+@scheduled(60)
+def _backup_database() -> None:
+    """Let us backup the database to the git repository."""
+    emit(f"Database backup (faked).")
+
+
 #@# BASE ROLES
 
 def watcher_role(*args, **kwargs) -> t.NoReturn:
