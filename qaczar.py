@@ -446,7 +446,7 @@ def index() -> str:
     global INDEX
     # Find all elements of type 'section' and render them.
     sections = [func() for func in INDEX['section'].values()]
-    emit(f"Rendering {len(sections)} sections.")
+    # emit(f"Rendering {len(sections)} sections.")
     return elem('main', site_nav(), *sections, site_footer())
 
 @hyper('body')  
@@ -509,7 +509,7 @@ def _build_ssl_certs(x509, rsa, hashes, ser) -> tuple[str, str]:
 def access_log(address: str, message: str) -> None:
     """Let the access log be recorded in the database for analysis."""
     # TODO: Add more parameters to the access log.
-    emit(f"Access from {address} {message}")
+    # emit(f"Access from {address} {message}")
 
 class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
     # TODO: Performance testing is needed to ensure this approach will work in the long run.
@@ -543,7 +543,7 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
             site, *funcs = [func for func in pure_path[1:-5].split('/') if func]
             if not funcs: site, funcs = MAIN_SITE, [site]
             with site_context(site,  **qs, **data) as context:
-                emit(f"Building {site=} {funcs=} {context=}")
+                # emit(f"Building {site=} {funcs=} {context=}")
                 for key, value in self.headers.items():
                     # https://htmx.org/docs/#request-headers
                     if key.startswith('HX-'): qs[key[3:].lower().replace('-', '_')] = value
@@ -606,18 +606,18 @@ def request_factory(urllib3):
         return r.data.decode('utf-8')
     return _request
     
-def test_server(*args, **kwargs) -> t.NoReturn:
+def _test_server(*args, **kwargs) -> t.NoReturn:
     """Let us test the server by making http requests to it."""
     global MAIN_SITE
     request = request_factory()
     assert 'qaczar' in request(f'/{MAIN_SITE}/index.html')
 
-def test_server_performance(*args, **kwargs) -> t.NoReturn:
+def test_server_perf(*args, **kwargs) -> t.NoReturn:
     """Let us test the server by making http requests to it."""
     global MAIN_SITE
     request = request_factory()
     start = time.time()
-    for _ in range(60): request(f'/{MAIN_SITE}/index.html')
+    for _ in range(30): request(f'/{MAIN_SITE}/index.html')
     duration = time.time() - start
     emit(f"Average response time: {duration/100:.6f} seconds.")
 
