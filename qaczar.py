@@ -476,7 +476,8 @@ def debugger() -> str:
     # TODO: This will never receive an event, so it should be a static page?
     with site_context() as context:
         # Remove the footer in case it messes up the debugger output, but keep the nav.
-        return (site_nav(), elem('main', f"CONTEXT: {context}"))
+        reports = [elem('pre', f"{context=}", cls='report')]
+        return elem('main', site_nav(), *reports)
 
 # Blog where articles are executable python code.
 
