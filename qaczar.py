@@ -109,18 +109,18 @@ def imports(*modules: tuple[str]) -> t.Callable:
 
 SCHEDULE = {}
 
-def scheduled(freq: int = 60, once: bool = False) -> t.Callable:
+def scheduled(interval: int = 60, once: bool = False) -> t.Callable:
     """Let every function be scheduled to run at the right time."""
     global SCHEDULE
     def _scheduled(f):
-        SCHEDULE[f.__name__] = time.time() + freq
+        SCHEDULE[f.__name__] = time.time() + interval
         @functools.wraps(f)
         def __scheduled(*args, **kwargs):
             result = f(*args, **kwargs)
-            if not once: SCHEDULE[f.__name__] = time.time() + freq
+            if not once: SCHEDULE[f.__name__] = time.time() + interval
             return result
         return __scheduled
-    _scheduled.freq = freq
+    _scheduled.__interval__ = interval
     return _scheduled
 
 
@@ -692,17 +692,23 @@ def tester_role(*args, **kwargs) -> None:
     else:
         now = iso8601()
         emit(f"Tests passed: {passed} at {now}")
-        _commit_source()
+        _commit_source()  # TODO: Commit only if all tests really passed.
         kwargs['tester'] = now
         _start_py(f'{APP}.py', *args, **kwargs)
         _keep_alive()
 
 def worker_role(*args, **kwargs) -> None:
     """Let us do work that is not related to the serving requests."""
-    # The worker keeps track of all the functions that need to be scheduled.
-    # This is done by adding a decorator to the function that adds it to the
-    # list of functions to be scheduled. The worker then calls each function.
-    raise NotImplementedError("Worker role not implemented.")
+    global SCHEDULE
+    if not SCHEDULE: 
+        emit("No scheduled tasks."); return
+    while True:
+        for func, next_run in SCHEDULE.items():
+            if time.time() >= next_run:
+                result = func()
+                emit(f"Ran {func.__name__} {result=}.")
+                SCHEDULE[func] = next_run + func.__interval__
+        time.sleep(1)
 
 
 #@# ROLE SELECTOR
