@@ -606,7 +606,9 @@ class ThreadingSSLServer(ss.ThreadingTCPServer):
         self.socket = ssl_ctx.wrap_socket(self.socket, server_side=True) 
 
 
-#@#  SELF TESTING
+#@#  CHAOS TESTING
+
+import random
 
 @imports('urllib3')
 def _request_factory(urllib3):
@@ -642,7 +644,8 @@ def test_server_load(*args, **kwargs) -> t.NoReturn:
     global MAIN_SITE
     request = _request_factory()
     start = time.time()
-    for _ in range(runs := 20): request(f'/{MAIN_SITE}/index.html')
+    for _ in range(runs := 20): 
+        request(f'/{MAIN_SITE}/index.html')
     duration = time.time() - start
     emit(f"Avg. RT: {duration/20:.6f} secs, {runs/duration:.2f} reqs/sec.")
 
