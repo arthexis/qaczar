@@ -510,7 +510,7 @@ def site_articles() -> str:
     context = site_context()
     return (
             elem_h1(context.get('title')), 
-            elem_p(context.get('description'))
+            elem_p(context.get('description')),
         )
 
 @hyper('footer')
@@ -524,10 +524,10 @@ def site_footer() -> str:
 #@# SITE PAGES
 
 @hyper('body')  # Default page.
-def index() -> str:
+def index(*articles) -> str:
     """Let this be the default page (showcase functionality).""" 
     global _INDEX
-    return elem('main', site_nav(), site_index(), site_articles(), site_footer())
+    return elem('main', site_nav(), site_index(), site_articles(*articles), site_footer())
 
 @hyper('body')  
 def debugger() -> str:
