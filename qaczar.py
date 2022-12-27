@@ -503,7 +503,8 @@ def site_nav() -> str:
 def site_index() -> str:
     global _INDEX
     context = site_context()
-    links = [elem('a', f' [{name}] ', href=f'/{context["site"]}/{name}')
+    site = context['site']
+    links = [elem('a', f' [{name}] ', href=f'/{site}/{name}')
         for name in _INDEX.keys()]
     return elem('section', elem_h1('Index'), *links)
 
@@ -511,8 +512,7 @@ def site_index() -> str:
 def site_articles() -> str:
     # TODO: Find why the line number is not being added to the section html.
     context = site_context()
-    site = context.get('site')
-    title = context.get('title') or site
+    title = context.get('title')
     description = context.get('description')
     return elem('section', elem_h1(title), elem_p(description))
 
