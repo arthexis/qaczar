@@ -647,7 +647,9 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
         elif pure_path.endswith('.html'):  
             qs = parse.parse_qs(qs) if qs else {}
             site, *call_path = [func for func in pure_path[1:-5].split('/') if func]
-            if not call_path: site, call_path = MAIN_SITE, [site]
+            if not call_path: 
+                self._send_redirect(f'/{MAIN_SITE}/{pure_path[1:]}' + ('?' + qs if qs else ''))
+                return
             for key, value in self.headers.items():
                 if key.startswith('HX-'): qs[key[3:].lower().replace('-', '_')] = value
             site_context(site, self._request_context(**qs, **data))
