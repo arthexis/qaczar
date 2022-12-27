@@ -505,8 +505,9 @@ def site_index() -> str:
     return elem_h1('Index'), *links
 
 @hyper('section')
-def site_articles() -> str:
+def site_articles(*articles) -> str:
     # TODO: Find why the line number is not being added to the section html.
+    # TODO: Context also doesn't appear to be rendering.
     context = site_context()
     return (
             elem_h1(context.get('title')), 
