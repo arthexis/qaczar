@@ -414,7 +414,6 @@ def hyper(
 
 def html_builder(*func_names: str) -> str:
     """Let all HTML content be built from pure functions and request context."""
-    # TODO: Make sure we are receiving the context from the request.
     try:
         with site_context() as context: site = context['site']
         if site not in sys.path: sys.path.append(site)
