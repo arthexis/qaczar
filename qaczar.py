@@ -93,7 +93,7 @@ def timed(func: t.Callable) -> t.Callable:
         start = time.time(); elapsed = time.time() - start
         result = func(*args, **kwargs)
         ln = sys._getframe(1).f_lineno
-        emit(f"Function <{func.__name__}> ({ln}) {args=} {kwargs=} took {elapsed:.4f} seconds.")
+        emit(f"Func <{func.__name__}> ({ln}) {args=} {kwargs=} took {elapsed:.4f} secs.")
         return result
     return _timed
 
@@ -661,7 +661,7 @@ def server_role(*args, **kwargs) -> t.NoReturn:
         atexit.register(httpd.shutdown)
         kwargs['server'] = f'{HOST}:{PORT}'
         _start_py(f'{APP}.py', *args, **kwargs)
-        emit(f"Server ready at https://{HOST}:{PORT}")
+        emit(f"Ready at https://{HOST}:{PORT}")
         httpd.serve_forever()
 
 def tester_role(*args, **kwargs) -> None:
@@ -683,6 +683,9 @@ def tester_role(*args, **kwargs) -> None:
 
 def worker_role(*args, **kwargs) -> None:
     """Let us do work that is not related to the serving requests."""
+    # The worker keeps track of all the functions that need to be scheduled.
+    # This is done by adding a decorator to the function that adds it to the
+    # list of functions to be scheduled. The worker then calls each function.
     raise NotImplementedError("Worker role not implemented.")
 
 
