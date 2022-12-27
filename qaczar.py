@@ -623,15 +623,14 @@ class ThreadingSSLServer(ss.ThreadingTCPServer):
 
 import random
 
-SESSION_ID = None
-
 @imports('urllib3')
 def request_factory(urllib3):
     """Let us make requests to the server and check the responses are valid."""	
     global HOST, PORT
     http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=_build_ssl_certs()[0])
+    session_id = None
     def _request(path: str, data: dict = None):
-        global SESSION_ID
+        nonlocal session_id
         if path.startswith('/'): path = path[1:]
         url = f"https://{HOST}:{PORT}/{path}"
         r = http.request('POST' if data else 'GET', url, fields=data, timeout=1)
@@ -639,8 +638,8 @@ def request_factory(urllib3):
         if path.endswith('.html'): 
             assert 'text/html' in r.headers['content-type']
             assert '<!DOCTYPE html>' in (content := r.data.decode('utf-8'))
-        if not SESSION_ID: SESSION_ID = r.headers['Session-ID']
-        elif SESSION_ID != r.headers['Session-ID']:
+        if not session_id: session_id = r.headers['Session-ID']
+        elif session_id != r.headers['Session-ID']:
             emit(f"Session ID changed, possible server restart. Stop testing.")
             sys.exit(1)  
         return content
