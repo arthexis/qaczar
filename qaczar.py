@@ -551,6 +551,7 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
         global SESSIONS
         self.session_id = self.headers.get('Session-ID')
         if self.session_id is None or self.session_id not in SESSIONS:
+            emit(f"Creating new session for {self.address_string()}.")
             self.session_id = secrets.token_urlsafe(32)
             SESSIONS[self.session_id] = {}
         return True
