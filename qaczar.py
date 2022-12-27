@@ -520,9 +520,10 @@ def site_functions() -> str:
 
 @hyper('footer')
 def site_footer() -> str:
-    # Add link to Twitter, GitHub, etc.
-    links = [elem('a', 'Twitter ', href='https://twitter.com/arthexis'),
-        elem('a', 'GitHub ', href='https://github.com/arthexis/qaczar.py')]
+    links = [
+            elem('a', ' [twitter] ', href='https://twitter.com/arthexis'),
+            elem('a', ' [github] ', href='https://github.com/arthexis/qaczar.py')
+        ]
     return elem('a', f'Powered by qaczar.py (source)', href=f'/qaczar.py'), *links
 
 
