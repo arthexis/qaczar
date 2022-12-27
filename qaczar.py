@@ -632,7 +632,6 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
                 'path': self.path, 
                 'headers': dict(self.headers.items()),  
                 'method': self.command,
-                'start': self.start,
                 **kwargs
             }
 
