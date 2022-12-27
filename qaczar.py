@@ -416,16 +416,13 @@ def html_builder(*func_names: str) -> str:
     """Let all HTML content be built from pure functions and request context."""
     # TODO: Make sure we are receiving the context from the request.
     try:
-        with site_context() as context:
-            site = context['site']
+        with site_context() as context: site = context['site']
         if site not in sys.path: sys.path.append(site)
         site_module = importlib.import_module(site)
         funcs = [getattr(site_module, name) for name in func_names]
     except (ModuleNotFoundError, AttributeError):
-        try:
-            funcs = [globals()[name] for name in func_names]
-        except (KeyError, TypeError) as e:
-            return elem('h1', f"Error: {e}")
+        try: funcs = [globals()[name] for name in func_names]
+        except (KeyError, TypeError) as e: return elem('h1', f"Error: {e}")
     for hyper_func in reversed(funcs): 
         html_block = hyper_func()
         context[hyper_func.__name__] = html_block
