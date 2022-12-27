@@ -665,7 +665,7 @@ def test_server_load(*args, **kwargs) -> t.NoReturn:
         # Currently it will just hang forever or until the server is restarted.
         request(f'/{MAIN_SITE}/index.html')
     duration = time.time() - start
-    emit(f"Avg. RT: {duration/20:.6f} secs, {runs/duration:.2f} reqs/sec.")
+    emit(f"Avg. RT: {duration/20:.6f} secs ({runs/duration:.2f} reqs/sec).")
 
 
 #@#  REPOSITORY
