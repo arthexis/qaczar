@@ -162,7 +162,7 @@ def _setup_py_venv() -> None:
 def _start_py(script_path: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
     global PYTHON
     line_args = [str(a) for a in _args_line(*args, **kwargs)]
-    emit(f"Start python script '{script_path}' {line_args=}.")
+    emit(f"Spawn'{script_path}' {line_args=}.")
     # Popen is a context manager, but we want to keep proc alive and not wait for it.
     # We cannot use run() for this. Remember to manually terminate the process later.
     proc = subprocess.Popen([PYTHON, script_path, *line_args],
