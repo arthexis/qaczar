@@ -212,6 +212,7 @@ def _watch_forever(proc: subprocess.Popen, fname: str) -> t.NoReturn:
 
 #@# SITE DIRECTORY
 
+import tomllib
 import contextlib
 
 @contextlib.contextmanager
@@ -220,8 +221,10 @@ def site_context(site: str = None, **context) -> str:
     global _LOCAL
     if site: 
         context['site'] = site
-        context['work_path'] = os.path.join(os.getcwd(), site)
+        context['work_path'] = wp = os.path.join(os.getcwd(), site)
         setattr(_LOCAL, 'site_context', context)
+        if os.path.isfile(site_fname := os.path.join(wp, 'site.toml')):
+            with open(site_fname, 'rb') as f: context.update(tomllib.load(f))
     try: yield _LOCAL.site_context 
     finally:
         if site: delattr(_LOCAL, 'site_context')
