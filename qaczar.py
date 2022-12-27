@@ -367,6 +367,7 @@ def elem_list(*items, tag: str='ul', attr_func: t.Callable = None) -> str:
     return elem(tag, content) if tag else content
 
 def elem_section(title: str = None, *content, **attrs) -> str:
+    # Sections are full width, so they can contain a title.
     if title: content = (elem_h2(title), *content)
     return elem('section', *content, **attrs)
 
@@ -467,6 +468,13 @@ def site_nav() -> str:
         title = elem('span', context['site'])
         brand = elem('a', title, href='/', cls='brand')
     return brand, *links
+
+@hyper('section')
+def site_functions() -> str:
+    global _INDEX
+    links = [elem('a', func, href=f'/{func}') 
+        for func in _INDEX['body'].keys() if func != 'index']
+    return elem('section', elem_h1('Functions'), *links)
 
 @hyper('footer')
 def site_footer() -> str:
