@@ -232,12 +232,10 @@ def _commit_source() -> str:
 #@# SITE DIRECTORY
 
 import tomllib
-import contextlib
 import collections
 
 _CACHE = collections.defaultdict(dict)
 
-@contextlib.contextmanager
 def site_context(site: str = None, context: dict = None) -> str:
     """Let us keep a running context for every request to a site."""
     global _LOCAL, _CACHE
@@ -252,24 +250,23 @@ def site_context(site: str = None, context: dict = None) -> str:
                 loaded = tomllib.load(f)
                 emit(f"Loaded {loaded=}.")
                 _CACHE[site] = {site_fname: site_mtime, **loaded}
-            context.update(_CACHE[site])
+        context.update(_CACHE[site])
         setattr(_LOCAL, 'context', context)
-    try: yield _LOCAL.context
-    finally:
-        if site: delattr(_LOCAL, 'context')
+        emit(f"Setting {context=}.")
+    return _LOCAL.context
 
 def read_file(fname: str, encoding=None) -> str | bytes:
     """Let each site read files from their own directory first, and the base second."""
-    with site_context() as context:
-        site_fname = os.path.join(context['work_path'], fname)
+    context = site_context()
+    site_fname = os.path.join(context['work_path'], fname)
     if not site_fname or not os.path.exists(site_fname):
         site_fname = os.path.join(os.getcwd(), fname)
     return _read_file(site_fname, encoding)
 
 def write_file(fname: str, data: bytes | str, encoding=None) -> None:
     """Let each site write files to their own directory (never to the base)."""
-    with site_context() as context:
-        site_fname = os.path.join(context['work_path'], fname)
+    context = site_context()
+    site_fname = os.path.join(context['work_path'], fname)
     _write_file(site_fname, data, encoding)
 
 
@@ -427,21 +424,21 @@ def elem_html_body(*sections, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     # TODO: Generate the CSS code dynamically instead of reading a file.
     global HTMX_SRC, LANG
-    with site_context() as context:
-        site = context.get('site')
-        title = context.get('title') or site
-        body = elem('body', *sections, **attrs)
-        # Don't break this boilerplate into smaller functions unless needed.
-        return f"""
-        <!DOCTYPE html><html lang="{LANG}"><head>
-        <title>{title}</title>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="htmx-config" content='{{"defaultSwapStyle":"outerHTML"}}'>
-        <script src="{HTMX_SRC}"></script>
-        <link rel="stylesheet" href="/{site}/style.css" type="text/css" />
-        </head>{body}</html>
-        """
+    context = site_context()
+    site = context.get('site')
+    title = context.get('title') or site
+    body = elem('body', *sections, **attrs)
+    # Don't break this boilerplate into smaller functions unless needed.
+    return f"""
+    <!DOCTYPE html><html lang="{LANG}"><head>
+    <title>{title}</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="htmx-config" content='{{"defaultSwapStyle":"outerHTML"}}'>
+    <script src="{HTMX_SRC}"></script>
+    <link rel="stylesheet" href="/{site}/style.css" type="text/css" />
+    </head>{body}</html>
+    """
 
 
 #@# HTML GENERATOR
@@ -477,7 +474,8 @@ def hyper(
 def html_builder(*func_names: str) -> str:
     """Let all HTML content be built from pure functions and request context."""
     try:
-        with site_context() as context: site = context['site']
+        context = site_context()
+        site = context['site']
         if site not in sys.path: sys.path.append(site)
         site_module = importlib.import_module(site)
         funcs = [getattr(site_module, name) for name in func_names]
@@ -497,18 +495,18 @@ def site_nav() -> str:
     global _INDEX
     links = [elem('a', page, href=page) 
         for page in _INDEX['body'].keys() if page != 'index']
-    with site_context() as context: 
-        title = elem('span', context['site'])
-        brand = elem('a', title, href='/', cls='brand')
+    context = site_context()
+    title = elem('span', context['site'])
+    brand = elem('a', title, href='/', cls='brand')
     return brand, *links
 
 @hyper('section')
 def site_welcome() -> str:
     # TODO: Find why the line number is not being added to the section html.
-    with site_context() as context: 
-        site = context.get('site')
-        title = context.get('title') or site
-        description = context.get('description')
+    context = site_context()
+    site = context.get('site')
+    title = context.get('title') or site
+    description = context.get('description')
     return elem('section', elem_h1(title), elem_p(description))
 
 @hyper('section')
@@ -518,16 +516,11 @@ def site_functions() -> str:
         for func in _INDEX['body'].keys() if func != 'index']
     return elem('section', elem_h1('Functions'), *links)
 
-LINKS = {
-    'twitter': 'https://twitter.com/arthexis',
-    'github': 'https://github.com/arthexis/qaczar',
-}
-
 @hyper('footer')
 def site_footer() -> str:
-    global LINKS
+    context = site_context()
     links = [elem('a', f' [{name}] ', href=href, target='_blank') 
-        for name, href in LINKS.items()]
+        for name, href in context['links'].items()]
     return elem('a', f'Powered by qaczar.py (source)', href=f'/qaczar.py'), *links
 
 
@@ -546,8 +539,8 @@ def index() -> str:
 @hyper('body')  
 def debugger() -> str:
     """Let this page be used for experimentation.""" 
-    with site_context() as context:
-        reports = [elem_section('Context', elem_pre(context))]
+    context = site_context()
+    reports = [elem_section('Context', elem_pre(context))]
     reports.append(elem_section('Globals', elem_pre(_safe_globals())))
     # Remove the footer in case it messes up the debugger output, but keep the nav.
     return elem('main', site_nav(), *reports)
@@ -663,10 +656,10 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
             qs = parse.parse_qs(qs) if qs else {}
             site, *funcs = [func for func in pure_path[1:-5].split('/') if func]
             if not funcs: site, funcs = MAIN_SITE, [site]
-            with site_context(site, self._request_context(**qs, **data)):
-                for key, value in self.headers.items():
-                    if key.startswith('HX-'): qs[key[3:].lower().replace('-', '_')] = value
-                content = html_builder(*funcs)
+            for key, value in self.headers.items():
+                if key.startswith('HX-'): qs[key[3:].lower().replace('-', '_')] = value
+            site_context(site, self._request_context(**qs, **data))
+            content = html_builder(*funcs)
             self.work_path = os.path.join('.server', pure_path[1:])
             _write_file(self.work_path, content, encoding='utf-8')
         # If the file has not changed, we don't need to send it again.

@@ -1,2 +1,6 @@
 [context]
 description = "QACZAR is a thing!"
+
+[links]
+twitter = "https://twitter.com/arthexis"
+github = "https://github.com/arthexis/qaczar"
