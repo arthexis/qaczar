@@ -374,8 +374,7 @@ def elem(tag: str, *contents, data: dict=None, cls: str = None, **attrs) -> str:
     if data: 
         for k, v in data.items(): attrs[f'data-{k}'] = v
     attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
-    if len(contents) == 1 and isinstance(contents[0], (list, tuple)):
-        contents = contents[0]
+    contents = ''.join(str(c) for c in contents)
     if attrs and not contents: return f'<{tag} {attrs}/>'
     if not contents: return f'<{tag}/>'
     return f'<{tag} {attrs}>{contents}</{tag}>'
