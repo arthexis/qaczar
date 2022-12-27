@@ -620,15 +620,12 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
     # Check if the Session-ID is valid, and if not, create a new one.
     def _check_session(self) -> bool:
         global SESSIONS
-        address = self.address_string()
-        agent = self.headers['User-Agent']
+        agent, address = self.headers['User-Agent'], self.address_string()
         if address not in SESSIONS or agent not in SESSIONS[address]: 
             self.session_id = sid = secrets.token_urlsafe(32)
             SESSIONS[address][agent] = sid
             emit(f"Session '{sid[0:8]}' created for {address}: {agent}.")
-        else: 
-            self.session_id = sid = SESSIONS[address][agent]
-            emit(f"Session '{sid[0:8]}' found for {address}: {agent}.")
+        else: self.session_id = SESSIONS[address][agent]
         return True
     
     def _request_context(self, **kwargs) -> dict:
