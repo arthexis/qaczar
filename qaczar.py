@@ -397,7 +397,7 @@ def hyper(
     def _hyper_decorator(
             func: t.Callable, _tag=tag, _method=method, _attrs=attrs) -> t.Callable:
         _attrs[f'hx-{_method}'] = func.__name__
-        if DEBUG: _attrs['data-dbg'] = func.__code__.co_firstlineno
+        if DEBUG: _attrs['data-ln'] = func.__code__.co_firstlineno
         _INDEX[_tag][func.__name__] = func
         @functools.wraps(func)
         def _hyper(*args, **kwargs):
