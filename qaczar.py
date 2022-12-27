@@ -440,8 +440,9 @@ def site_endpoints() -> t.List[str]:
 def site_nav() -> str:
     # TODO: Fix the CSS (add transparent class in the .css file).
     links = [elem('a', page.upper(), href=page) for page in site_endpoints()]
-    with site_context() as context: site = context['site']
-    return elem('a', site, href='/', cls='brand'), *links
+    with site_context() as context: 
+        brand = elem('a', context['site'], href='/', cls='brand')
+    return brand, *links
 
 # A simple blog where articles are executable python code.
 @hyper('main')
