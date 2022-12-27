@@ -248,7 +248,7 @@ def site_context(site: str = None, **context) -> str:
         site_mtime = _mtime_file(site_fname)
         if site not in _CACHE or _CACHE[site][site_fname] != site_mtime:
             with open(site_fname, 'rb') as f:
-                emit(f"Loading site config for {site_fname=}.")
+                emit(f"Loading site config {site_fname=}.")
                 _CACHE[site] = {site_fname: site_mtime, **tomllib.load(f)}
             context.update(_CACHE[site])
         setattr(_LOCAL, 'context', context)
