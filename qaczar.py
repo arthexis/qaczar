@@ -749,7 +749,6 @@ def worker_role(*args, **kwargs) -> None:
             if time.time() >= next_run:
                 func = globals()[func_name]
                 result = func() 
-                emit(f"Ran {func_name} {result=}.")
                 SCHEDULE[func_name] = next_run + func.__interval__
         time.sleep(1)
 
