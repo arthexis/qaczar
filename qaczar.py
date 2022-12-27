@@ -425,13 +425,13 @@ def hyper(
     if trigger: attrs['hx-trigger'] = trigger
     if target: attrs['hx-target'] = target
     if history or (tag == 'body' and history is not False): attrs['hx-push-url'] = 'true'
-    def _hyper_decorator(
+    def _hyper(
             func: t.Callable, _tag=tag, _method=method, _attrs=attrs) -> t.Callable:
         _attrs[f'hx-{_method}'] = func.__name__
         if DEBUG: _attrs['data-ln'] = func.__code__.co_firstlineno
         _INDEX[_tag][func.__name__] = func
         @functools.wraps(func)
-        def _hyper(*args, **kwargs):
+        def __hyper(*args, **kwargs):
             try:
                 result = func(*args, **kwargs) or ()
                 if not result: emit(f"{func.__name__}({args=} {kwargs=}) -> Empty result.")
@@ -439,8 +439,8 @@ def hyper(
                 emit(f"Error: {e} {func.__name__}({args=} {kwargs=})"); raise e
             if _tag == 'body': return elem_html_body(*result, **_attrs)
             return elem(_tag, *result, **_attrs)
-        return _hyper
-    return _hyper_decorator
+        return __hyper
+    return _hyper
 
 def html_builder(*func_names: str) -> str:
     """Let all HTML content be built from pure functions and request context."""
