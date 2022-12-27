@@ -661,7 +661,7 @@ def request_factory(urllib3):
             assert '<!DOCTYPE html>' in (content := r.data.decode('utf-8'))
         if not session_id: session_id = r.headers['Session-ID']
         elif session_id != r.headers['Session-ID']:
-            emit(f"Session ID changed, possible server restart. Terminate session.")
+            emit(f"Session ID changed, possible server restart. Terminating.")
             sys.exit(1)  
         return content
     return _request
