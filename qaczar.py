@@ -447,8 +447,7 @@ def index() -> str:
     # Find all elements of type 'section' and render them.
     sections = [func() for func in INDEX['section'].values()]
     emit(f"Rendering {len(sections)} sections.")
-    main_content = elem('main', site_nav(), *sections, site_footer())
-    return (site_nav(), main_content, site_footer())
+    return elem('main', site_nav(), *sections, site_footer())
 
 @hyper('body')  
 def debugger() -> str:
