@@ -321,6 +321,7 @@ import inspect
 
 def elem(tag: str, *contents, data: dict=None, cls: str = None, **attrs) -> str:
     """Let all serialization happen through hypertext, as originally intended."""
+    # TODO: Consider defining a shorthand operator for this function.
     if cls and cls.strip(): attrs['class'] = cls
     if data: 
         for k, v in data.items(): attrs[f'data-{k}'] = v
