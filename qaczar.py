@@ -426,11 +426,10 @@ def html_builder(*func_names: str) -> str:
             funcs = [globals()[name] for name in func_names]
         except (KeyError, TypeError) as e:
             return elem('h1', f"Error: {e}")
-    for i, func in enumerate(reversed(funcs)): 
-        emit(f"Step #{i} {func.__name__}({context})")
-        block = func(**context)
-        context[func.__name__] = block
-    return block
+    for hyper_func in reversed(funcs): 
+        html_block = hyper_func()
+        context[hyper_func.__name__] = html_block
+    return html_block
 
 
 #@# SITE COMPONENTS
@@ -466,7 +465,7 @@ def site_footer() -> str:
 #@# SITE PAGES
 
 @hyper('body', css='documentation')  # Default page.
-def index(**context) -> str:
+def index() -> str:
     """Let this be the default page (minimal functionality).""" 
     # TODO: This will never receive an event, so it should be a static page?
     return (
@@ -476,7 +475,7 @@ def index(**context) -> str:
         )
 
 @hyper('body')  
-def scratchpad(**context) -> str:
+def scratchpad() -> str:
     """Let this page be used for experimentation.""" 
     # TODO: This will never receive an event, so it should be a static page?
     with site_context() as context:
@@ -568,12 +567,12 @@ class RequestHandler(hs.SimpleHTTPRequestHandler):
             qs = parse.parse_qs(qs) if qs else {}
             site, *funcs = [func for func in pure_path[1:-5].split('/') if func]
             if not funcs: site, funcs = MAIN_SITE, [site]
-            with site_context(site):
-                emit(f"Building {site=} {funcs=} {qs=} {data=}")
+            with site_context(site,  **qs, **data) as context:
+                emit(f"Building {site=} {funcs=} {context=}")
                 for key, value in self.headers.items():
                     # https://htmx.org/docs/#request-headers
                     if key.startswith('HX-'): qs[key[3:].lower().replace('-', '_')] = value
-                content = html_builder(*funcs, **qs, **data)
+                content = html_builder(*funcs)
             self.work_path = os.path.join('.server', pure_path[1:])
             _write_file(self.work_path, content, encoding='utf-8')
         # Everything else is served as-is. Nothing needs to be done.
