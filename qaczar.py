@@ -396,7 +396,7 @@ def elem_list(*items, tag: str='ul', attr_func: t.Callable = None) -> str:
 
 def elem_section(title: str = None, *content, **attrs) -> str:
     # Sections are full width, so they can contain a title.
-    if title: content = (elem_h2(title), *content)
+    if title: content = elem_h2(title), *content
     return elem('section', *content, **attrs)
 
 def elem_pre(*content, **attrs) -> str:
@@ -654,12 +654,12 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
             self._send_redirect(f'{pure_path}.html' + ('?' + qs if qs else ''))
         elif pure_path.endswith('.html'):  
             qs = parse.parse_qs(qs) if qs else {}
-            site, *funcs = [func for func in pure_path[1:-5].split('/') if func]
-            if not funcs: site, funcs = MAIN_SITE, [site]
+            site, *call_path = [func for func in pure_path[1:-5].split('/') if func]
+            if not call_path: site, call_path = MAIN_SITE, [site]
             for key, value in self.headers.items():
                 if key.startswith('HX-'): qs[key[3:].lower().replace('-', '_')] = value
             site_context(site, self._request_context(**qs, **data))
-            content = html_builder(*funcs)
+            content = html_builder(*call_path)
             self.work_path = os.path.join('.server', pure_path[1:])
             _write_file(self.work_path, content, encoding='utf-8')
         # If the file has not changed, we don't need to send it again.
