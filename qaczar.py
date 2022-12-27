@@ -596,12 +596,13 @@ class ThreadingSSLServer(ss.ThreadingTCPServer):
 def request_factory(urllib3):
     """Let us make requests to the server and check the response."""	
     # TODO: Design a string for the user-agent and use it to track tests.
+    # TODO: Add a way to stop the tester when the server is down.
     global HOST, PORT
     http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=_build_ssl_certs()[0])
     def _request(fname:str, data:dict = None, status:int = 200):
         if fname.startswith('/'): fname = fname[1:]
         url = f"https://{HOST}:{PORT}/{fname}"
-        r = http.request('POST' if data else 'GET', url, fields=data, timeout=30)
+        r = http.request('POST' if data else 'GET', url, fields=data, timeout=1)
         assert r.status == status, f"Request to {url} failed with status {r.status}"
         return r.data.decode('utf-8')
     return _request
@@ -659,7 +660,6 @@ def server_role(*args, **kwargs) -> t.NoReturn:
 def tester_role(*args, **kwargs) -> t.NoReturn:
     """Let us test the server by making http requests to it."""
     # TODO: Add automatic tests to prevent public API regressions.
-    # TODO: Keep the tester running and re-run tests when source changes.
     # TODO: Have a keep-alive ping to detect when the server is down.
     for passed, test in enumerate(globals().keys()):
         if test.startswith(f'test_'): 
@@ -677,14 +677,14 @@ def worker_role(*args, **kwargs) -> t.NoReturn:
 
 def _role_dispatch(*args, **kwargs) -> t.NoReturn:
     """Let each instance decide their own role, based on what's missing."""
-    if 'watcher' not in kwargs: role = watcher_role
-    elif 'server' not in kwargs: role = server_role
-    elif 'tester' not in kwargs: role = tester_role
-    else: role = worker_role  # A cluster can have multiple workers.
-    role_name = role.__name__.replace('_role', '')
+    if 'watcher' not in kwargs: role_func = watcher_role
+    elif 'server' not in kwargs: role_func = server_role
+    elif 'tester' not in kwargs: role_func = tester_role
+    else: role_func = worker_role  # A cluster can have multiple workers.
+    role_name = role_func.__name__.replace('_role', '')
     try:
         emit(f"Started '{role_name}' {args=} {kwargs=}.")
-        role(*args, **kwargs)
+        role_func(*args, **kwargs)
     except AssertionError as e:
         (halt if DEBUG else emit)(f"Assertion failed: {e}", trace=True)
     except KeyboardInterrupt:
