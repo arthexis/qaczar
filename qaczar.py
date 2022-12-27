@@ -633,8 +633,9 @@ def request_factory(urllib3):
         nonlocal session_id
         if path.startswith('/'): path = path[1:]
         url = f"https://{HOST}:{PORT}/{path}"
-        r = http.request('POST' if data else 'GET', url, fields=data, timeout=1)
-        assert r.status == 200, f"Request to {url} failed with status {r.status}"
+        method = 'POST' if data else 'GET'
+        r = http.request(method, url, fields=data, timeout=1)
+        assert r.status == 200, f"Request {method} {url} failed with status {r.status}"
         if path.endswith('.html'): 
             assert 'text/html' in r.headers['content-type']
             assert '<!DOCTYPE html>' in (content := r.data.decode('utf-8'))
