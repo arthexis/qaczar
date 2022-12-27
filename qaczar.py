@@ -353,14 +353,14 @@ def elem_label(css: str = '', *content, **attrs) -> str:
 def elem_html_body(*sections, **attrs) -> str:
     """Let there be some standard boilerplate HTML."""
     # TODO: Generate the CSS code dynamically instead of reading a file.
-    global HTMX_SRC
+    global HTMX_SRC, LANG
     with site_context() as context:
         site = context.get('site')
         title = context.get('title') or site
         body = elem('body', *sections, **attrs)
         # Don't break this boilerplate into smaller functions unless needed.
         return f"""
-        <!DOCTYPE html><html lang="en"><head>
+        <!DOCTYPE html><html lang="{LANG}"><head>
         <title>{title}</title>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
