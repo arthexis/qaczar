@@ -489,8 +489,6 @@ def debugger() -> str:
     """Let this page be used for experimentation.""" 
     with site_context() as context:
         reports = [elem_section('Context', elem_pre(context))]
-    # Find all variables in the global scope that are pprint-able.
-    # Exclude modules.
     reports.append(elem_section('Globals', elem_pre(_safe_globals())))
     # Remove the footer in case it messes up the debugger output, but keep the nav.
     return elem('main', site_nav(), *reports)
