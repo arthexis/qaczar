@@ -500,6 +500,14 @@ def site_nav() -> str:
     return brand, *links
 
 @hyper('section')
+def site_index() -> str:
+    global _INDEX
+    context = site_context()
+    links = [elem('a', f' [{name}] ', href=f'/{context["site"]}/{name}')
+        for name in _INDEX.keys()]
+    return elem('section', elem_h1('Index'), *links)
+
+@hyper('section')
 def site_welcome() -> str:
     # TODO: Find why the line number is not being added to the section html.
     context = site_context()
@@ -507,14 +515,6 @@ def site_welcome() -> str:
     title = context.get('title') or site
     description = context.get('description')
     return elem('section', elem_h1(title), elem_p(description))
-
-@hyper('section')
-def site_index() -> str:
-    global _INDEX
-    context = site_context()
-    links = [elem('a', f' [{name}] ', href=f'/{context["site"]}/{name}')
-        for name in _INDEX.keys()]
-    return elem('section', elem_h1('Index'), *links)
 
 @hyper('footer')
 def site_footer() -> str:
