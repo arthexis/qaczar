@@ -420,9 +420,7 @@ def html_builder(*func_names: str) -> str:
 
 
 #@# SITE COMPONENTS
-
-# TODO: Consider what is the benefit of using hyper on site components.
-# IE. how to make the nav bar and the footer be generated from pure functions.
+# The objective is to have a single set of function to generate all possible websites.
 
 def site_endpoints() -> t.List[str]:
     """Let there be a list of all the endpoints on the site."""
