@@ -682,7 +682,7 @@ def _commit_source() -> str:
 
 #@# SCHEDULED TASKS
 
-@scheduled(60)
+@scheduled(600)
 def _backup_database() -> None:
     """Let us backup the database to the git repository."""
     emit(f"Database backup (faked).")
