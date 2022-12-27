@@ -115,13 +115,13 @@ def scheduled(interval: int = 60, once: bool = False) -> t.Callable:
     global SCHEDULE
     def _scheduled(f):
         SCHEDULE[f.__name__] = time.time() + interval
+        f.__interval__ = interval
         @functools.wraps(f)
         def __scheduled(*args, **kwargs):
             result = f(*args, **kwargs)
             if not once: SCHEDULE[f.__name__] = time.time() + interval
             return result
         return __scheduled
-    _scheduled.__interval__ = interval
     return _scheduled
 
 
