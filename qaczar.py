@@ -224,7 +224,9 @@ def site_context(site: str = None, **context) -> str:
         context['work_path'] = wp = os.path.join(os.getcwd(), site)
         setattr(_LOCAL, 'site_context', context)
         if os.path.isfile(site_fname := os.path.join(wp, 'site.toml')):
-            with open(site_fname, 'rb') as f: context.update(tomllib.load(f))
+            with open(site_fname, 'rb') as f: 
+                emit(f"Loading {site_fname=}.")
+                context.update(tomllib.load(f))
     try: yield _LOCAL.site_context 
     finally:
         if site: delattr(_LOCAL, 'site_context')
