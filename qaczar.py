@@ -612,9 +612,7 @@ import random
 
 @imports('urllib3')
 def _request_factory(urllib3):
-    """Let us make requests to the server and check the response."""	
-    # TODO: Design a string for the user-agent and use it to track tests.
-    # TODO: Add a way to stop the tester when the server is down.
+    """Let us make requests to the server and check the responses are valid."""	
     global HOST, PORT
     http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=_build_ssl_certs()[0])
     def _request(path: str, data: dict = None):
@@ -622,11 +620,9 @@ def _request_factory(urllib3):
         url = f"https://{HOST}:{PORT}/{path}"
         r = http.request('POST' if data else 'GET', url, fields=data, timeout=1)
         assert r.status == 200, f"Request to {url} failed with status {r.status}"
-        # Ensure the result is hyper-text if the path ends with .html
         if path.endswith('.html'): 
             assert 'text/html' in r.headers['content-type']
-            content = r.data.decode('utf-8')
-            assert '<!DOCTYPE html>' in content
+            assert '<!DOCTYPE html>' in (content := r.data.decode('utf-8'))
         return content
     return _request
     
