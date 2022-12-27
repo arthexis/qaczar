@@ -507,10 +507,10 @@ def site_index() -> str:
 @hyper('section')
 def site_articles(*articles) -> str:
     # TODO: Find why the line number is not being added to the section html.
-    # TODO: Context also doesn't appear to be rendering.
+    # TODO: Context also doesn't contain the data from site.toml
     context = site_context()
     return (
-            elem_h1(context.get('title')), 
+            elem_h1('Articles'), 
             elem_p(context.get('description')),
         )
 
