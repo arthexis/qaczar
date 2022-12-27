@@ -210,6 +210,25 @@ def _watch_forever(proc: subprocess.Popen, fname: str) -> t.NoReturn:
             source, stable = _read_file(fname), True
         
 
+#@#  REPOSITORY
+
+def commit_hash() -> str:
+    """Let us get the hash of the last commit."""
+    try: return os.popen('git rev-parse HEAD').read().strip()[0:8]
+    except: return '00000000'
+
+COMMIT = commit_hash()
+
+def _commit_source() -> str:
+    """Let us commit the source code to the git repository."""
+    # TODO: Create missing branch if not exists when pushing to git.
+    global BRANCH
+    os.system('git add .')
+    os.system('git commit -m "auto commit" -q')
+    os.system(f'git push origin {BRANCH} -q')
+    return commit_hash()
+
+
 #@# SITE DIRECTORY
 
 import tomllib
@@ -628,6 +647,9 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
                 content = html_builder(*funcs)
             self.work_path = os.path.join('.server', pure_path[1:])
             _write_file(self.work_path, content, encoding='utf-8')
+        # If the file has not changed, we don't need to send it again.
+        if self.headers.get('If-None-Match') == self.session_id:
+            self.send_response(304); self.end_headers(); return
         # Everything else is served as-is by SimpleHTTPRequestHandler.
         
     def translate_path(self, path: str = None) -> str:
@@ -713,18 +735,6 @@ def test_server_load(*args, **kwargs) -> t.NoReturn:
     for _ in range(runs := 12): request(f'/{MAIN_SITE}/index.html')
     duration = time.time() - start
     emit(f"Avg. RT: {duration/runs:.6f} secs ({runs/duration:.2f} reqs/sec).")
-
-
-#@#  REPOSITORY
-
-def _commit_source() -> str:
-    """Let us commit the source code to the git repository."""
-    # TODO: Create missing branch if not exists when pushing to git.
-    global BRANCH
-    os.system('git add .')
-    os.system('git commit -m "auto commit" -q')
-    os.system(f'git push origin {BRANCH} -q')
-    return os.popen('git rev-parse HEAD').read().strip()[0:8]
 
 
 #@# SCHEDULED TASKS
