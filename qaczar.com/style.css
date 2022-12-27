@@ -18,9 +18,15 @@ header {
     max-width: 98%;
 }
 section {
-    padding: 0.5rem;
+    padding: 1rem;
     background-color: #333;
-    margin-bottom: 0.5rem;
+    width: -moz-fit-content;
+    width: fit-content;
+    display: inline-block;
+}
+/* Odd sections are a lighter grey */
+section:nth-child(odd) {
+    background-color: #444;
 }
 h1, h2, h3, h4, h5, h6 {
     font-weight: bold;
@@ -39,9 +45,6 @@ h2 {
 }
 h3 {
     font-size: 1.2rem;
-}
-p {
-    margin-bottom: 0.5rem;
 }
 .doc {
     color: #66FFFF;
@@ -109,10 +112,9 @@ button:hover {
 }
 footer {
     background-color: #702973;
-    padding: 0.5rem;
+    padding: 1rem;
 }
 footer a, footer a:visited, footer a:link {
-    
     color: black;
 }
 .traceback {
@@ -125,7 +127,7 @@ footer a, footer a:visited, footer a:link {
 }
 nav {
     display: inline-block;
-    padding: 0.5rem;
+    padding: 1rem;
     background-color: #021b02;
     width: 100%;
 }

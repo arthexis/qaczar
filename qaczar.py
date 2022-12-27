@@ -520,7 +520,7 @@ def site_functions() -> str:
 
 @hyper('footer')
 def site_footer() -> str:
-    return elem('a', f'Powered by the qaczar.py web system.', href=f'/qaczar.py')
+    return elem('a', f'Powered by qaczar.py', href=f'/qaczar.py')
 
 
 #@# SITE PAGES
