@@ -456,7 +456,7 @@ def site_footer() -> str:
 
 #@# SITE PAGES
 
-@hyper('body', css='documentation')  # Default page.
+@hyper('body')  # Default page.
 def index() -> str:
     """Let this be the default page (minimal functionality).""" 
     # TODO: This will never receive an event, so it should be a static page?
