@@ -688,8 +688,7 @@ def tester_role(*args, **kwargs) -> None:
         if gkey.startswith(f'test_'): 
             globals()[gkey](*args, **kwargs)
             passed += 1
-    commit_hash = _commit_source() 
-    kwargs['tester'] = commit_hash
+    kwargs['tester'] = commit_hash = _commit_source() 
     emit(f"Tests passed: {passed} -> Committed: {commit_hash}")
     _start_py(f'{APP}.py', *args, **kwargs)
     _keep_alive()
