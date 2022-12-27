@@ -599,7 +599,7 @@ def access_log(address: str, message: str) -> None:
     if address != '127.0.0.1':	
         emit(f"Access logged from {address} {message}")
 
-SESSIONS = {}
+SESSIONS = collections.defaultdict(dict)
 
 class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
     # TODO: Performance testing is needed to ensure this approach will work in the long run.
@@ -620,15 +620,15 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
     # Check if the Session-ID is valid, and if not, create a new one.
     def _check_session(self) -> bool:
         global SESSIONS
-        if (address := self.address_string()) not in SESSIONS: 
-            self.session_id = secrets.token_urlsafe(32)
-            SESSIONS[address] = (self.session_id, agent := self.headers['User-Agent'])
-            emit(f"Session '{self.session_id[0:8]}' created for {address}: {agent}.")
+        address = self.address_string()
+        agent = self.headers['User-Agent']
+        if address not in SESSIONS or agent not in SESSIONS[address]: 
+            self.session_id = sid = secrets.token_urlsafe(32)
+            SESSIONS[address][agent] = sid
+            emit(f"Session '{sid[0:8]}' created for {address}: {agent}.")
         else: 
-            self.session_id, agent = SESSIONS[address]
-            if agent != self.headers['User-Agent']:
-                emit(f"Session '{self.session_id[0:8]}' invalidated for {address}: {agent}.")
-                del SESSIONS[address]
+            self.session_id = sid = SESSIONS[address][agent]
+            emit(f"Session '{sid[0:8]}' found for {address}: {agent}.")
         return True
     
     def _request_context(self, **kwargs) -> dict:
