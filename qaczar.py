@@ -422,15 +422,12 @@ def html_builder(*func_names: str) -> str:
 #@# SITE COMPONENTS
 # The objective is to have a single set of functions to generate all possible websites.
 
-def site_endpoints() -> t.List[str]:
-    """Let there be a list of all the endpoints on the site."""
-    global INDEX
-    return [f'/{page}.html' for page in INDEX['body'].keys()]
 
 @hyper('nav')
 def site_nav() -> str:
     global INDEX
-    links = [elem('a', page.upper(), href=page) for page in site_endpoints()]
+    links = [elem('a', page, href=page) 
+        for page in INDEX['body'].keys() if page != 'index']
     with site_context() as context: 
         title = elem('span', context['site'])
         brand = elem('a', title, href='/', cls='brand')
@@ -441,7 +438,7 @@ def site_nav() -> str:
 def site_main(topic: str = None) -> str:
     global INDEX, MAIN_SITE
     header = elem('header', topic or MAIN_SITE, cls='hero', style='height: 40vh; background: #333;')
-    return header, elem('section', *site_endpoints())
+    return header, elem('section', elem('h1', 'Coming soon...'))
 
 @hyper('footer')
 def site_footer() -> str:
