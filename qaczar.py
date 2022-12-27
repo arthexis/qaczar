@@ -599,11 +599,11 @@ def request_factory(urllib3):
     # TODO: Add a way to stop the tester when the server is down.
     global HOST, PORT
     http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=_build_ssl_certs()[0])
-    def _request(fname:str, data:dict = None, status:int = 200):
-        if fname.startswith('/'): fname = fname[1:]
-        url = f"https://{HOST}:{PORT}/{fname}"
+    def _request(path: str, data: dict = None):
+        if path.startswith('/'): path = path[1:]
+        url = f"https://{HOST}:{PORT}/{path}"
         r = http.request('POST' if data else 'GET', url, fields=data, timeout=1)
-        assert r.status == status, f"Request to {url} failed with status {r.status}"
+        assert r.status == 200, f"Request to {url} failed with status {r.status}"
         return r.data.decode('utf-8')
     return _request
     
@@ -686,7 +686,7 @@ def _role_dispatch(*args, **kwargs) -> t.NoReturn:
         emit(f"Started '{role_name}' {args=} {kwargs=}.")
         role_func(*args, **kwargs)
     except AssertionError as e:
-        (halt if DEBUG else emit)(f"Assertion failed: {e}", trace=True)
+        halt(f"Assertion failed: {e}", trace=True)
     except KeyboardInterrupt:
         halt("Interrupted by user.")
 
