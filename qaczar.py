@@ -620,12 +620,6 @@ def _keep_alive(*args, **kwargs) -> t.NoReturn:
         assert 'qaczar' in request(f'/{MAIN_SITE}/index.html')
         time.sleep(30)
 
-def _test_server(*args, **kwargs) -> t.NoReturn:
-    """Let us test the server by making http requests to it."""
-    global MAIN_SITE
-    request = _request_factory()
-    assert 'qaczar' in request(f'/{MAIN_SITE}/index.html')
-
 def test_server_load(*args, **kwargs) -> t.NoReturn:
     """Let us test the server by making http requests to it."""
     global MAIN_SITE
@@ -633,7 +627,7 @@ def test_server_load(*args, **kwargs) -> t.NoReturn:
     start = time.time()
     for _ in range(runs := 60): request(f'/{MAIN_SITE}/index.html')
     duration = time.time() - start
-    emit(f"Average response time: {duration/60:.6f} seconds.")
+    emit(f"ART: {duration/60:.6f} seconds, {runs/duration:.2f} requests/second.")
 
 
 
