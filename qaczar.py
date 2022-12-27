@@ -367,6 +367,10 @@ def elem_article(tag: str = 'article', *content, **attrs) -> str:
 def elem_label(css: str = '', *content, **attrs) -> str:
     return elem('span', *content, cls=f'label {css}', **attrs)
 
+def elem_grid(*content, **attrs) -> str:
+    # TODO: Automatically generate the grid CSS code.
+    return elem('div', *content, cls='grid', **attrs)
+
 # https://htmx.org/docs/#introduction
 HTMX_SRC = 'https://unpkg.com/htmx.org@1.8.4'
 
