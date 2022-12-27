@@ -547,22 +547,19 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
         self.send_header('Location', path)
 
     # Check if the Session-ID is valid, and if not, create a new one.
-    def _check_session_auth(self) -> bool:
+    def _check_session(self) -> bool:
         global SESSIONS
-        self.session_id = self.headers.get('Session-ID')
-        if self.session_id is None or self.session_id not in SESSIONS:
-            emit(f"Creating new session for {self.address_string()}.")
-            self.session_id = secrets.token_urlsafe(32)
-            SESSIONS[self.session_id] = {}
+        if (address := self.address_string()) not in SESSIONS: 
+            SESSIONS[address] = self.session_id = secrets.token_urlsafe(32)
+        else: self.session_id = SESSIONS[address]
         return True
 
     def _build_response(self, method: str = None) -> None:
         global MAIN_SITE
         """Let each request be parsed and processed. If needed, overwrite the response file."""
         # I really hope I don't have to rewrite this one function forever. --Sysyphus
-        if not self._check_session_auth(): 
-            self.send_response(401); self.end_headers()
-            return
+        if not self._check_session(): 
+            self.send_response(401); self.end_headers(); return
         self.work_path, self.start = None, time.time()
         if self.path == '/' or not self.path: self.path = f'/index.html'
         if method != 'POST': data = {}
@@ -574,8 +571,7 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
             qs = parse.parse_qs(qs) if qs else {}
             site, *funcs = [func for func in pure_path[1:-5].split('/') if func]
             if not funcs: site, funcs = MAIN_SITE, [site]
-            with site_context(site,  **qs, **data) as context:
-                # emit(f"Building {site=} {funcs=} {context=}")
+            with site_context(site,  **qs, **data):
                 for key, value in self.headers.items():
                     if key.startswith('HX-'): qs[key[3:].lower().replace('-', '_')] = value
                 content = html_builder(*funcs)
@@ -626,12 +622,15 @@ class ThreadingSSLServer(ss.ThreadingTCPServer):
 
 import random
 
+SESSION_ID = None
+
 @imports('urllib3')
 def _request_factory(urllib3):
     """Let us make requests to the server and check the responses are valid."""	
     global HOST, PORT
     http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=_build_ssl_certs()[0])
     def _request(path: str, data: dict = None):
+        global SESSION_ID
         if path.startswith('/'): path = path[1:]
         url = f"https://{HOST}:{PORT}/{path}"
         r = http.request('POST' if data else 'GET', url, fields=data, timeout=1)
@@ -639,6 +638,8 @@ def _request_factory(urllib3):
         if path.endswith('.html'): 
             assert 'text/html' in r.headers['content-type']
             assert '<!DOCTYPE html>' in (content := r.data.decode('utf-8'))
+        if not SESSION_ID: SESSION_ID = r.headers['Session-ID']
+        else: assert SESSION_ID == r.headers['Session-ID'], f"Server restarted."
         return content
     return _request
     
