@@ -482,6 +482,7 @@ def site_nav() -> str:
 
 @hyper('section')
 def site_welcome() -> str:
+    # TODO: Find why the line number is not being added to the section html.
     with site_context() as context: 
         site = context.get('site')
         title = context.get('title') or site
