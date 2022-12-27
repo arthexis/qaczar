@@ -525,10 +525,8 @@ def site_footer() -> str:
 @hyper('body')  # Default page.
 def index() -> str:
     """Let this be the default page (showcase functionality).""" 
-    # Look all the section endpoints, render them and combine them in a main tag.
     global _INDEX
-    # emit(f"Rendering {len(sections)} sections.")
-    return elem('main', site_nav(), site_index(), site_footer())
+    return elem('main', site_nav(), site_index(), site_articles(), site_footer())
 
 @hyper('body')  
 def debugger() -> str:
