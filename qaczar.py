@@ -427,9 +427,9 @@ def site_endpoints() -> t.List[str]:
     global INDEX
     return [f'/{page}.html' for page in INDEX['body'].keys()]
 
-@hyper('nav', cls='transparent')
+@hyper('nav')
 def site_nav() -> str:
-    # TODO: Fix the CSS (add transparent class in the .css file).
+    global INDEX
     links = [elem('a', page.upper(), href=page) for page in site_endpoints()]
     with site_context() as context: 
         title = elem('span', context['site'])
