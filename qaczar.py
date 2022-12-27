@@ -422,7 +422,6 @@ def html_builder(*func_names: str) -> str:
 #@# SITE COMPONENTS
 # The objective is to have a single set of functions to generate all possible websites.
 
-
 @hyper('nav')
 def site_nav() -> str:
     global INDEX
@@ -449,18 +448,18 @@ def site_footer() -> str:
 
 @hyper('body')  # Default page.
 def index() -> str:
-    """Let this be the default page (minimal functionality).""" 
-    # TODO: This will never receive an event, so it should be a static page?
-    # Get all main sections and execute them.
+    """Let this be the default page (showcase functionality).""" 
+    # Look all the section endpoints, render them and combine them in a main tag.
+    main = elem('main', site_nav(), site_main(), site_footer())
     global INDEX
     return (site_nav(), site_main(), site_footer())
 
 @hyper('body')  
-def scratchpad() -> str:
+def debugger() -> str:
     """Let this page be used for experimentation.""" 
     # TODO: This will never receive an event, so it should be a static page?
     with site_context() as context:
-        return (site_nav(), f"Helloooo: {context}")
+        return (site_nav(), f"CONTEXT: {context}")
 
 # Blog where articles are executable python code.
 
