@@ -403,6 +403,7 @@ def elem_section(title: str = None, *content, **attrs) -> str:
 
 def elem_pre(*content, **attrs) -> str:
     if content and isinstance(content[0], dict):
+        # TODO: Pprint is fine for debugging, but it's not very readable.
         content = (pprint.pformat(content[0]), *content[1:])
     content = (html.escape(str(c)) for c in content)
     return elem('pre', *content, **attrs)
