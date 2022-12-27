@@ -470,20 +470,9 @@ def hyper(
         return __hyper
     return _hyper
 
-def html_builder(*func_names: str) -> str:
+def html_builder(*call_path: str) -> str:
     """Let all HTML content be built from pure functions and request context."""
-    try:
-        context = site_context()
-        site = context['site']
-        if site not in sys.path: sys.path.append(site)
-        site_module = importlib.import_module(site)
-        funcs = [getattr(site_module, name) for name in func_names]
-    except (ModuleNotFoundError, AttributeError):
-        try: funcs = [globals()[name] for name in func_names]
-        except (KeyError, TypeError) as e: return elem_h1(f"Error: {e}")
-    for hyper_func in reversed(funcs): 
-        context[hyper_func.__name__] = html_block = hyper_func()
-    return html_block
+    return globals()[call_path[0]](*call_path[1:])
 
 
 #@# SITE COMPONENTS
