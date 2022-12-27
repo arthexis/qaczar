@@ -370,7 +370,6 @@ def elem_section(title: str = None, *content, **attrs) -> str:
     return elem('section', *content, **attrs)
 
 def elem_pre(*content, **attrs) -> str:
-    # If the first element of content is a dict, pprint it.
     if content and isinstance(content[0], dict):
         content = (pprint.pformat(content[0]), *content[1:])
     content = (html.escape(str(c)) for c in content)
@@ -549,7 +548,7 @@ def _build_ssl_certs(x509, rsa, hashes, ser) -> tuple[str, str]:
 def access_log(address: str, message: str) -> None:
     """Let the access log be recorded in the database for analysis."""
     # TODO: Add more parameters to the access log.
-    # emit(f"Access from {address} {message}")
+    emit(f"Access from {address} {message}")
 
 SESSIONS = {}
 
