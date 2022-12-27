@@ -492,29 +492,29 @@ def html_builder(*func_names: str) -> str:
 @hyper('nav')
 def site_nav() -> str:
     global _INDEX
-    links = [elem('a', page, href=page) 
+    body_links = [elem('a', page, href=page) 
         for page in _INDEX['body'].keys() if page != 'index']
     context = site_context()
     title = elem('span', context['site'])
     brand = elem('a', title.upper(), href='/', cls='brand')
-    return brand, *links
+    return brand, *body_links
 
 @hyper('section')
 def site_index() -> str:
     global _INDEX
     context = site_context()
     site = context['site']
-    links = [elem('a', f' [{name}] ', href=f'/{site}/{name}')
-        for name in _INDEX.keys()]
-    return elem('section', elem_h1('Index'), *links)
+    links = [elem('p', f' [{name}] ', href=f'/{site}/{name}') for name in _INDEX.keys()]
+    return elem_h1('Index'), *links
 
 @hyper('section')
 def site_articles() -> str:
     # TODO: Find why the line number is not being added to the section html.
     context = site_context()
-    title = context.get('title')
-    description = context.get('description')
-    return elem('section', elem_h1(title), elem_p(description))
+    return (
+            elem_h1(context.get('title')), 
+            elem_p(context.get('description'))
+        )
 
 @hyper('footer')
 def site_footer() -> str:
