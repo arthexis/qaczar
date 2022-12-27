@@ -668,7 +668,7 @@ def request_factory(urllib3):
     return _request
     
 def _keep_alive(*args, **kwargs) -> t.NoReturn:
-    """Let us keep the server active by making periodic http requests to it."""
+    """Let us keep the server active by making periodic requests to it."""
     global MAIN_SITE
     request = request_factory()
     while True: 
