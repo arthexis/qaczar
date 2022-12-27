@@ -425,7 +425,7 @@ def html_builder(*func_names: str) -> str:
 def site_endpoints() -> t.List[str]:
     """Let there be a list of all the endpoints on the site."""
     global INDEX
-    return [f'/{page}' for page in INDEX['body'].keys()]
+    return [f'/{page}.html' for page in INDEX['body'].keys()]
 
 @hyper('nav', cls='transparent')
 def site_nav() -> str:
