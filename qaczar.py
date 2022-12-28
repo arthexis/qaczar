@@ -519,7 +519,7 @@ def site_article() -> str:
     if not (article := context.get('article')):
         article = latest_file('articles', ext='.md')
     emit(f"Showing article {article}.")
-    title = article[0].title().replace('_', ' ')
+    title = article.title().replace('_', ' ')
     content = read_file(f'{article}.md', encoding='utf-8', subpath='articles')
     return elem_h1(title), elem_p(content) 
 
