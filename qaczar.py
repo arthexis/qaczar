@@ -256,7 +256,7 @@ import collections
 _CACHE = collections.defaultdict(dict)
 
 def site_context(site: str = None, context: dict = None) -> str:
-    """Let us keep a running context for every request to a site."""
+    """Let us keep a running context for every request to our sites."""
     global _LOCAL, _CACHE
     if site: 
         context['site'] = site
@@ -272,7 +272,6 @@ def site_context(site: str = None, context: dict = None) -> str:
     return _LOCAL.context
 
 def _site_fname(fname: str, subpath: str = None) -> str:
-    """Let each site read files from their own directory first, and the base second."""
     context = site_context()
     site_fname = os.path.join(context['work_path'], fname)
     if subpath: site_fname = os.path.join(site_fname, subpath)
@@ -281,20 +280,16 @@ def _site_fname(fname: str, subpath: str = None) -> str:
     return site_fname
 
 def read_file(fname: str, encoding=None, subpath: str = None) -> str | bytes:
-    """Let each site read files from their own directory first, and the base second."""
     return _read_file(_site_fname(fname, subpath), encoding)
 
 def write_file(fname: str, data: bytes | str, encoding=None, subpath: str = None) -> None:
-    """Let each site write files to their own directory (never to the base)."""
     _write_file(_site_fname(fname, subpath), data, encoding)
 
 def list_files(subpath: str = None, ext: str = None) -> list[str]:
-    """Let each site list files from their own directory (never from the base)."""
     site_subpath = os.path.join(site_context()['work_path'], subpath)
     return _list_files(site_subpath, ext)
 
 def latest_file(subpath: str = None, ext: str = None) -> str:
-    """Let each site list files from their own directory (never from the base)."""
     site_subpath = os.path.join(site_context()['work_path'], subpath)
     return _latest_file(site_subpath, ext)
 
