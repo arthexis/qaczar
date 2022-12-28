@@ -408,16 +408,6 @@ def elem_pre(*content, **attrs) -> str:
     content = (html.escape(str(c)) for c in content)
     return elem('pre', *content, **attrs)
 
-def elem_article(tag: str = 'article', *content, **attrs) -> str:
-    return elem(tag, *content, cls='card', **attrs)
-
-def elem_label(css: str = '', *content, **attrs) -> str:
-    return elem('span', *content, cls=f'label {css}', **attrs)
-
-def elem_grid(*content, **attrs) -> str:
-    # TODO: Automatically generate the grid CSS code.
-    return elem('div', *content, cls='grid', **attrs)
-
 # https://htmx.org/docs/#introduction
 HTMX_SRC = 'https://unpkg.com/htmx.org@1.8.4'
 
@@ -493,16 +483,17 @@ def site_index() -> str:
     context = site_context()
     site = context['site']
     about = context.get('about')
-    links = [elem('a', elem_p(name[5:]), href=f'/{site}/index.html?section={name}') 
+    links = [elem('a', elem_p(name[5:]), href=f'/{site}/index.html?article={name}') 
         for name in _INDEX['section'].keys() if name.startswith('site_')]
     return elem_h1(about.get('title')), *links
 
 @hyper('section')
 def site_articles() -> str:
+    """Let us show a list of articles. If one is specified, show that one instead."""
     # TODO: Find why the line number is not being added to the section html.
     # TODO: Context also doesn't contain the data from site.toml
     context = site_context()
-    if section := context.get('section'):
+    if section := context.get('article'):
         return elem_h1(section[0].title().replace('_', ' ')), elem_p('Coming soon...')
     return elem_h1('Articles')
 
