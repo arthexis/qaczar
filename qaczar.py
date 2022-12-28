@@ -520,10 +520,9 @@ def site_footer() -> str:
 #@# SITE PAGES
 
 @hyper('body')  # Default page.
-def index(*articles) -> str:
+def index() -> str:
     """Let this be the default page (showcase functionality).""" 
-    global _INDEX
-    return elem('main', site_nav(), site_index(), site_articles(*articles), site_footer())
+    return elem('main', site_nav(), site_index(), site_articles(), site_footer())
 
 @hyper('body')  
 def debugger() -> str:
