@@ -511,7 +511,6 @@ def site_articles(*articles) -> str:
     context = site_context()
     return (
             elem_h1('Articles'), 
-            elem_p(context.get('description')),
         )
 
 @hyper('footer')
