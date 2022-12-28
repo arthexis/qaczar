@@ -472,12 +472,6 @@ def hyper(
         return __hyper
     return _hyper
 
-def html_builder(*func_names: str) -> str:
-    """Let all HTML content be built from pure functions and request context."""
-    try: funcs = [_safe_globals()[name] for name in func_names]
-    except (KeyError, TypeError) as e: return elem_h1(f"Error: {e}")
-    return funcs[0](*funcs[1:])
-
 
 #@# SITE COMPONENTS
 # The objective is to have a single set of functions to generate all possible websites.
@@ -644,14 +638,12 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
             self._send_redirect(f'{pure_path}.html' + ('?' + qs if qs else ''))
         elif pure_path.endswith('.html'):  
             qs = parse.parse_qs(qs) if qs else {}
-            site, *call_path = [func for func in pure_path[1:-5].split('/') if func]
-            if not call_path: 
-                self._send_redirect(f'/{MAIN_SITE}/{pure_path[1:]}' + ('?' + qs if qs else ''))
-                return
+            site, *folders, func_name = [func for func in pure_path[1:-5].split('/') if func]
             for key, value in self.headers.items():
                 if key.startswith('HX-'): qs[key[3:].lower().replace('-', '_')] = value
+            site = site + '/' + '/'.join(folders) if folders else site
             site_context(site, self._request_context(**qs, **data))
-            content = html_builder(*call_path)
+            content = _safe_globals()[func_name]
             self.work_path = os.path.join('.server', pure_path[1:])
             _write_file(self.work_path, content, encoding='utf-8')
         # Everything else is served as-is by SimpleHTTPRequestHandler.
@@ -712,14 +704,11 @@ def request_factory(urllib3):
         method = 'POST' if data else 'GET'
         r = http.request(method, url, fields=data, timeout=1)
         assert r.status == 200, f"Request {method} {url} failed with status {r.status}"
-        if path.endswith('.html'): 
-            assert 'text/html' in r.headers['content-type']
-            assert '<!DOCTYPE html>' in (content := r.data.decode('utf-8'))
         if not session_id: session_id = r.headers['Session-ID']
         elif session_id != r.headers['Session-ID']:
             emit(f"Session ID changed, possible server restart. Terminate {PID=}")
             sys.exit(1)  
-        return content
+        return r.data.decode('utf-8')
     return _request
     
 def _keep_alive(*args, **kwargs) -> t.NoReturn:
@@ -728,7 +717,7 @@ def _keep_alive(*args, **kwargs) -> t.NoReturn:
     request = request_factory()
     while True: 
         time.sleep(wait := 300)  # Every 5 minutes.
-        assert 'qaczar' in request(url := f'/{MAIN_SITE}/index.html')
+        request(url := f'/{MAIN_SITE}/index.html')
         emit(f"Keep-alive ({wait}s) to {url}")
 
 def test_server_load(*args, **kwargs) -> t.NoReturn:
@@ -773,10 +762,13 @@ def server_role(*args, **kwargs) -> t.NoReturn:
 def tester_role(*args, **kwargs) -> None:
     """Let us test the server by making http requests to it."""
     passed = 0
-    for gkey in globals().keys():
-        if gkey.startswith(f'test_'): 
-            globals()[gkey](*args, **kwargs)
-            passed += 1
+    try:
+        for gkey in globals().keys():
+            if gkey.startswith(f'test_'): 
+                globals()[gkey](*args, **kwargs)
+                passed += 1
+    except Exception as e: 
+        emit(f"Tests failed: {e}"); return
     kwargs['tester'] = commit_hash = _commit_source() 
     emit(f"Tests passed: {passed} -> Committed: {commit_hash}")
     _start_py(f'{APP}.py', *args, **kwargs)
@@ -809,7 +801,7 @@ def _role_dispatch(*args, **kwargs) -> t.NoReturn:
         emit(f"Started '{role_name}' {args=} {kwargs=}.")
         role_func(*args, **kwargs)
     except AssertionError as e:
-        halt(f"Assertion failed: {e}", trace=True)
+        halt(f"Assertion failed {e}", trace=True)
     except KeyboardInterrupt:
         halt("Interrupted by user.")
 
