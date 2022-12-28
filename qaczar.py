@@ -457,7 +457,6 @@ def elem_html_body(*sections, **attrs) -> str:
 
 #@# HTML GENERATOR
 
-# TODO: Consider tracking components with the database instead of a global.
 _INDEX = collections.defaultdict(dict)
 
 def hyper(
