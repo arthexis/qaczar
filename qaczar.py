@@ -493,16 +493,18 @@ def site_index() -> str:
     context = site_context()
     site = context['site']
     about = context.get('about')
-    links = [elem('a', elem_p(name[5:]), href=f'/{site}/{name}.html') 
+    links = [elem('a', elem_p(name[5:]), href=f'/{site}/index.html?section={name}') 
         for name in _INDEX['section'].keys() if name.startswith('site_')]
     return elem_h1(about.get('title')), *links
 
 @hyper('section')
-def site_articles(*articles) -> str:
+def site_articles() -> str:
     # TODO: Find why the line number is not being added to the section html.
     # TODO: Context also doesn't contain the data from site.toml
     context = site_context()
-    return elem_h1('Articles'), *articles
+    if section := context.get('section'):
+        return elem_h1(section.title()), elem_p('Coming soon...')
+    return elem_h1('Articles')
 
 @hyper('footer')
 def site_footer() -> str:
