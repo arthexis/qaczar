@@ -84,6 +84,12 @@ def _list_files(path: str, ext: str = '') -> list[str]:
                 files.append(path)
     return files
 
+def _lastest_file(path: str, ext: str = '') -> str:
+    """Let us find the last modified file in a directory."""
+    files = _list_files(path, ext)
+    if not files: return ''
+    return max(files, key=_mtime_file)
+
 #@# META-PROGRAMMING
 
 import importlib
