@@ -642,8 +642,8 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
             for key, value in self.headers.items():
                 if key.startswith('HX-'): qs[key[3:].lower().replace('-', '_')] = value
             site = site + '/' + '/'.join(folders) if folders else site
-            site_context(site, self._request_context(**qs, **data))
-            emit(f"Request {self.session_id[0:8]=} {self.path=} {self.command=} {self.headers=} {data=} {qs=}")
+            context = site_context(site, self._request_context(**qs, **data))
+            emit(f"Request {self.session_id[0:8]=} {self.path=} {context=}")
             content = _safe_globals()[func_name]
             self.work_path = os.path.join('.server', pure_path[1:])
             _write_file(self.work_path, content, encoding='utf-8')
