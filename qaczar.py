@@ -72,6 +72,13 @@ def _write_file(fname: str, data: bytes | str, encoding=None) -> None:
     if base_dir and not os.path.isdir(base_dir): os.makedirs(base_dir)
     with open(fname, 'wb' if not encoding else 'w', encoding=encoding) as f: f.write(data)
 
+def _list_files(path: str, ext: str = '') -> list[str]:
+    """Let us list all files in a directory, recursively."""
+    files = []
+    for root, _, file_list in os.walk(path):
+        for fname in file_list:
+            if not ext or fname.endswith(ext): files.append(os.path.join(root, fname))
+    return files
 
 #@# META-PROGRAMMING
 
@@ -254,19 +261,29 @@ def site_context(site: str = None, context: dict = None) -> str:
         setattr(_LOCAL, 'context', context)
     return _LOCAL.context
 
-def read_file(fname: str, encoding=None) -> str | bytes:
+def read_file(fname: str, encoding=None, subpath: str = None) -> str | bytes:
     """Let each site read files from their own directory first, and the base second."""
     context = site_context()
     site_fname = os.path.join(context['work_path'], fname)
+    if subpath: site_fname = os.path.join(site_fname, subpath)
     if not site_fname or not os.path.exists(site_fname):
         site_fname = os.path.join(os.getcwd(), fname)
     return _read_file(site_fname, encoding)
 
-def write_file(fname: str, data: bytes | str, encoding=None) -> None:
+def write_file(fname: str, data: bytes | str, encoding=None, subpath: str = None) -> None:
     """Let each site write files to their own directory (never to the base)."""
     context = site_context()
     site_fname = os.path.join(context['work_path'], fname)
+    if subpath: site_fname = os.path.join(site_fname, subpath)
     _write_file(site_fname, data, encoding)
+
+def list_files(subpath: str = None, ext: str = None) -> list[str]:
+    """Let each site list files from their own directory (never from the base)."""
+    context = site_context()
+    site_fname = os.path.join(context['work_path'], subpath)
+    if not site_fname or not os.path.exists(site_fname):
+        site_fname = os.path.join(os.getcwd(), subpath)
+    return _list_files(site_fname, ext)
 
 
 #@# DATABASE
@@ -495,11 +512,10 @@ def site_articles() -> str:
     context = site_context()
     if article := context.get('article'):
         title = article[0].title().replace('_', ' ')
-        content = read_file(f'articles/{article}.md', encoding='utf-8')
+        content = read_file(f'{article}.md', encoding='utf-8', subpath='articles')
         return elem_h1(title), content
     # Get the work dir for the current site.
-    article_dir = os.path.join(os.getcwd(), context['site'], 'articles')
-    articles = [f for f in article_dir if f.endswith('.md')]
+    articles = [f for f in list_files('articles', ext='.md') if not f.startswith('_')] 
     links = [elem('a', elem_p(name[:-3].title().replace('_', ' ')),
         href=f'/{context["site"]}/index.html?article={name[:-3]}') for name in articles]
     return elem_h1('Articles'), *links
