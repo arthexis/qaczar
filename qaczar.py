@@ -271,37 +271,32 @@ def site_context(site: str = None, context: dict = None) -> str:
         setattr(_LOCAL, 'context', context)
     return _LOCAL.context
 
-def read_file(fname: str, encoding=None, subpath: str = None) -> str | bytes:
+def _site_fname(fname: str, subpath: str = None) -> str:
     """Let each site read files from their own directory first, and the base second."""
     context = site_context()
     site_fname = os.path.join(context['work_path'], fname)
     if subpath: site_fname = os.path.join(site_fname, subpath)
     if not site_fname or not os.path.exists(site_fname):
         site_fname = os.path.join(os.getcwd(), fname)
-    return _read_file(site_fname, encoding)
+    return site_fname
+
+def read_file(fname: str, encoding=None, subpath: str = None) -> str | bytes:
+    """Let each site read files from their own directory first, and the base second."""
+    return _read_file(_site_fname(fname, subpath), encoding)
 
 def write_file(fname: str, data: bytes | str, encoding=None, subpath: str = None) -> None:
     """Let each site write files to their own directory (never to the base)."""
-    context = site_context()
-    site_fname = os.path.join(context['work_path'], fname)
-    if subpath: site_fname = os.path.join(site_fname, subpath)
-    _write_file(site_fname, data, encoding)
+    _write_file(_site_fname(fname, subpath), data, encoding)
 
 def list_files(subpath: str = None, ext: str = None) -> list[str]:
     """Let each site list files from their own directory (never from the base)."""
-    context = site_context()
-    site_fname = os.path.join(context['work_path'], subpath)
-    if not site_fname or not os.path.exists(site_fname):
-        site_fname = os.path.join(os.getcwd(), subpath)
-    return _list_files(site_fname, ext)
+    site_subpath = os.path.join(site_context()['work_path'], subpath)
+    return _list_files(site_subpath, ext)
 
 def latest_file(subpath: str = None, ext: str = None) -> str:
     """Let each site list files from their own directory (never from the base)."""
-    context = site_context()
-    site_fname = os.path.join(context['work_path'], subpath)
-    if not site_fname or not os.path.exists(site_fname):
-        site_fname = os.path.join(os.getcwd(), subpath)
-    return _latest_file(site_fname, ext)
+    site_subpath = os.path.join(site_context()['work_path'], subpath)
+    return _latest_file(site_subpath, ext)
 
 #@# DATABASE
 
