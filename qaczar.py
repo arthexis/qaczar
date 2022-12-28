@@ -493,8 +493,9 @@ def site_articles() -> str:
     # TODO: Find why the line number is not being added to the section html.
     # TODO: Context also doesn't contain the data from site.toml
     context = site_context()
-    if section := context.get('article'):
-        return elem_h1(section[0].title().replace('_', ' ')), elem_p('Coming soon...')
+    if article := context.get('article'):
+        title = article[0].title().replace('_', ' ')
+        return elem_h1(title), elem_p('Coming soon...')
     return elem_h1('Articles')
 
 @hyper('footer')
