@@ -495,10 +495,14 @@ def site_articles() -> str:
     context = site_context()
     if article := context.get('article'):
         title = article[0].title().replace('_', ' ')
-        # Read the file of this article from the filesystem.
         content = read_file(f'articles/{article}.md', encoding='utf-8')
         return elem_h1(title), content
-    return elem_h1('Articles')
+    # Get the work dir for the current site.
+    article_dir = os.path.join(os.getcwd(), context['site'], 'articles')
+    articles = [f for f in article_dir if f.endswith('.md')]
+    links = [elem('a', elem_p(name[:-3].title().replace('_', ' ')),
+        href=f'/{context["site"]}/index.html?article={name[:-3]}') for name in articles]
+    return elem_h1('Articles'), *links
 
 @hyper('footer')
 def site_footer() -> str:
