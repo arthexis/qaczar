@@ -84,7 +84,7 @@ def _list_files(path: str, ext: str = '') -> list[str]:
                 files.append(path)
     return files
 
-def _lastest_file(path: str, ext: str = '') -> str:
+def _latest_file(path: str, ext: str = '') -> str:
     """Let us find the last modified file in a directory."""
     files = _list_files(path, ext)
     if not files: return ''
@@ -295,6 +295,13 @@ def list_files(subpath: str = None, ext: str = None) -> list[str]:
         site_fname = os.path.join(os.getcwd(), subpath)
     return _list_files(site_fname, ext)
 
+def latest_file(subpath: str = None, ext: str = None) -> str:
+    """Let each site list files from their own directory (never from the base)."""
+    context = site_context()
+    site_fname = os.path.join(context['work_path'], subpath)
+    if not site_fname or not os.path.exists(site_fname):
+        site_fname = os.path.join(os.getcwd(), subpath)
+    return _latest_file(site_fname, ext)
 
 #@# DATABASE
 
