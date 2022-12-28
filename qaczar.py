@@ -503,8 +503,8 @@ def site_index() -> str:
     context = site_context()
     site = context['site']
     about = context.get('about')
-    links = [elem('a', elem_p(name[5:]), href=f'/{site}/index.html?article={name}') 
-        for name in _INDEX['section'].keys() if name.startswith('site_')]
+    links = [elem('a', elem_p(name), href=f'/{site}/index.html?article={name}') 
+        for name in list_files('articles', ext='.md') if not name.startswith('_')]
     return elem_h1(about.get('title')), *links
 
 @hyper('section')
