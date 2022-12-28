@@ -493,7 +493,8 @@ def site_index() -> str:
     context = site_context()
     site = context['site']
     about = context.get('about')
-    links = [elem('p', f' [{name}] ', href=f'/{site}/{name}') for name in _INDEX.keys()]
+    links = [elem('p', f' [{name}] ', href=f'/{site}/{name}') 
+        for name in _INDEX['section'].keys()]
     return elem_h1(about.get('title')), *links
 
 @hyper('section')
