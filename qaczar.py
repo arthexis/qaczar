@@ -493,7 +493,7 @@ def site_index() -> str:
     context = site_context()
     site = context['site']
     about = context.get('about')
-    links = [elem('a', elem_p(name), href=f'/{site}/{name}') 
+    links = [elem('a', elem_p(name), href=f'/{site}/{name}.html') 
         for name in _INDEX['section'].keys()]
     return elem_h1(about.get('title')), *links
 
