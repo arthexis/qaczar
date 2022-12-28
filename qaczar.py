@@ -495,7 +495,9 @@ def site_articles() -> str:
     context = site_context()
     if article := context.get('article'):
         title = article[0].title().replace('_', ' ')
-        return elem_h1(title), elem_p('Coming soon...')
+        # Read the file of this article from the filesystem.
+        content = read_file(f'articles/{article}.md', encoding='utf-8')
+        return elem_h1(title), content
     return elem_h1('Articles')
 
 @hyper('footer')
