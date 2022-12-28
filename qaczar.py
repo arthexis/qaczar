@@ -77,7 +77,10 @@ def _list_files(path: str, ext: str = '') -> list[str]:
     files = []
     for root, _, file_list in os.walk(path):
         for fname in file_list:
-            if not ext or fname.endswith(ext): files.append(os.path.join(root, fname))
+            if not ext or fname.endswith(ext): 
+                path = os.path.join(root, fname)
+                path = path.replace(DIR, '').lstrip(os.sep)
+                files.append(path)
     return files
 
 #@# META-PROGRAMMING
