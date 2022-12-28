@@ -522,9 +522,8 @@ def site_articles() -> str:
         return elem_h1(title), content
     # Get the work dir for the current site.
     articles = [f for f in list_files('articles', ext='.md') if not f.startswith('_')] 
-    links = [elem('a', elem_p(name.title().replace('_', ' ')),
-        href=f'/{context["site"]}/index.html?article={name[:-3]}') for name in articles]
-    return elem_h1('Articles'), *links
+    latest_article = latest_file('articles', ext='.md')
+    return elem_h1('Articles'), elem_p(f'Latest article: {latest_article}'), *articles
 
 @hyper('footer')
 def site_footer() -> str:
