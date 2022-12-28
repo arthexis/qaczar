@@ -272,8 +272,7 @@ def site_context(site: str = None, context: dict = None) -> str:
     return _LOCAL.context
 
 def _site_fname(fname: str, subpath: str = None) -> str:
-    context = site_context()
-    site_fname = os.path.join(context['work_path'], fname)
+    site_fname = os.path.join(site_context()['work_path'], fname)
     if subpath: site_fname = os.path.join(site_fname, subpath)
     if not site_fname or not os.path.exists(site_fname):
         site_fname = os.path.join(os.getcwd(), fname)
