@@ -632,6 +632,7 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
         return True
     
     def _request_context(self, **kwargs) -> dict:
+        kwargs = {k: v[0] if len(v) == 1 else v for k, v in kwargs.items()}
         return {
                 'session_id': self.session_id, 
                 'address': self.address_string(), 
