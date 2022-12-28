@@ -80,6 +80,7 @@ def _list_files(path: str, ext: str = '') -> list[str]:
             if not ext or fname.endswith(ext): 
                 path = os.path.join(root, fname)
                 path = path[len(path) - path[::-1].index(os.sep):]
+                if ext: path = path[:-len(ext)]
                 files.append(path)
     return files
 
