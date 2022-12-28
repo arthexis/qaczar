@@ -272,8 +272,8 @@ def site_context(site: str = None, context: dict = None) -> str:
     return _LOCAL.context
 
 def _site_fname(fname: str, subpath: str = None) -> str:
+    if subpath: fname = os.path.join(subpath, fname)
     site_fname = os.path.join(site_context()['work_path'], fname)
-    if subpath: site_fname = os.path.join(site_fname, subpath)
     if not site_fname or not os.path.exists(site_fname):
         site_fname = os.path.join(os.getcwd(), fname)
     return site_fname
@@ -511,19 +511,17 @@ def site_index() -> str:
     return elem_h1(about.get('title')), *links
 
 @hyper('section')
-def site_articles() -> str:
+def site_article() -> str:
     """Let us show a list of articles. If one is specified, show that one instead."""
     # TODO: Find why the line number is not being added to the section html.
     # TODO: Context also doesn't contain the data from site.toml
     context = site_context()
-    if article := context.get('article'):
-        title = article[0].title().replace('_', ' ')
-        content = read_file(f'{article}.md', encoding='utf-8', subpath='articles')
-        return elem_h1(title), content
-    # Get the work dir for the current site.
-    articles = [f for f in list_files('articles', ext='.md') if not f.startswith('_')] 
-    latest_article = latest_file('articles', ext='.md')
-    return elem_h1('Articles'), elem_p(f'Latest article: {latest_article}'), *articles
+    if not (article := context.get('article')):
+        article = latest_file('articles', ext='.md')
+    emit(f"Showing article {article}.")
+    title = article[0].title().replace('_', ' ')
+    content = read_file(f'{article}.md', encoding='utf-8', subpath='articles')
+    return elem_h1(title), elem_p(content) 
 
 @hyper('footer')
 def site_footer() -> str:
@@ -538,7 +536,7 @@ def site_footer() -> str:
 @hyper('body')  # Default page.
 def index() -> str:
     """Let this be the default page (showcase functionality).""" 
-    return elem('main', site_nav(), site_index(), site_articles(), site_footer())
+    return elem('main', site_nav(), site_index(), site_article(), site_footer())
 
 @hyper('body')  
 def debugger() -> str:
