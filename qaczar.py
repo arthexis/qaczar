@@ -634,7 +634,7 @@ class ComplexHTTPRequestHandler(hs.SimpleHTTPRequestHandler):
         else: data = parse.parse_qs(self._rfile_read().decode('utf-8'))
         pure_path, qs = self.path.split('?', 1) if '?' in self.path else (self.path, '')
         if '.' not in pure_path: 
-            self._send_redirect(f'{pure_path}.html' + ('?' + qs if qs else ''))
+            self._send_redirect(f'{pure_path}.html' + ('?' + qs if qs else '')); return
         elif pure_path.endswith('.html'):  
             qs = parse.parse_qs(qs) if qs else {}
             site, *folders, func_name = [func for func in pure_path[1:-5].split('/') if func]
