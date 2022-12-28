@@ -474,10 +474,10 @@ def hyper(
 
 def html_builder(*func_names: str) -> str:
     """Let all HTML content be built from pure functions and request context."""
-    try: funcs = [globals()[name] for name in func_names]
+    try: funcs = [_safe_globals()[name] for name in func_names]
     except (KeyError, TypeError) as e: return elem_h1(f"Error: {e}")
     kwargs = {}
-    for hyper_func in reversed(funcs): 
+    for hyper_func in funcs: 
         kwargs[hyper_func.__name__] = html_block = hyper_func(**kwargs)
     return html_block
 
@@ -501,6 +501,7 @@ def site_index() -> str:
     global _INDEX
     context = site_context()
     site = context['site']
+    about = context.get('about')
     links = [elem('p', f' [{name}] ', href=f'/{site}/{name}') for name in _INDEX.keys()]
     return elem_h1('Index'), *links
 
@@ -509,9 +510,7 @@ def site_articles(*articles) -> str:
     # TODO: Find why the line number is not being added to the section html.
     # TODO: Context also doesn't contain the data from site.toml
     context = site_context()
-    return (
-            elem_h1('Articles'), 
-        )
+    return elem_h1('Articles'), *articles
 
 @hyper('footer')
 def site_footer() -> str:
