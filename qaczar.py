@@ -167,7 +167,7 @@ def _setup_py_venv() -> None:
 def _start_py(script_path: str, *args: list[str], **kwargs: dict) -> subprocess.Popen:
     global PYTHON
     line_args = [str(a) for a in _args_line(*args, **kwargs)]
-    emit(f"Spawn'{script_path}' {line_args=}.")
+    emit(f"Spawn '{script_path}' {line_args=}.")
     # Popen is a context manager, but we want to keep proc alive and not wait for it.
     # We cannot use run() for this. Remember to manually terminate the process later.
     proc = subprocess.Popen([PYTHON, script_path, *line_args],
@@ -476,10 +476,7 @@ def html_builder(*func_names: str) -> str:
     """Let all HTML content be built from pure functions and request context."""
     try: funcs = [_safe_globals()[name] for name in func_names]
     except (KeyError, TypeError) as e: return elem_h1(f"Error: {e}")
-    kwargs = {}
-    for hyper_func in funcs: 
-        kwargs[hyper_func.__name__] = html_block = hyper_func(**kwargs)
-    return html_block
+    return funcs[0](*funcs[1:])
 
 
 #@# SITE COMPONENTS
