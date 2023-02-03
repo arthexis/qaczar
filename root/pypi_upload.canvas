@@ -1,0 +1,13 @@
+{
+	"nodes":[
+		{"id":"77ea5a17732afe88","x":-754,"y":-552,"width":315,"height":158,"type":"text","text":"### Build & Upload Settings\nVENV = `.venv`\nUSERNAME = `arthexis`\n"},
+		{"id":"b70c183f1bdc8a3b","x":-1121,"y":-579,"width":344,"height":185,"type":"text","text":"### Package Configuration\nCWD = `C:\\Users\\arthe\\Desktop\\qaczar`\nPACKAGE = `qaczar`\nCOMMAND = `smoke_test.canvas`"},
+		{"id":"aab35c18fd018fea","x":-1199,"y":-287,"width":422,"height":252,"type":"text","text":"### Build and Install Local Package\n>[PYTHON] -m pip install -e . --quiet\n>echo Installation completed:\n>[PYTHON] -m [PACKAGE] version\n### Run Test Commands\n>[PACKAGE] \"[COMMAND]\"\n>"},
+		{"id":"96d6c40270b3fb36","x":-681,"y":-287,"width":400,"height":400,"type":"file","file":"resources/smoke_test.md"}
+	],
+	"edges":[
+		{"id":"96cf2ce898a5e33c","fromNode":"77ea5a17732afe88","fromSide":"bottom","toNode":"aab35c18fd018fea","toSide":"top"},
+		{"id":"6fdf6df0cd636866","fromNode":"b70c183f1bdc8a3b","fromSide":"bottom","toNode":"aab35c18fd018fea","toSide":"top"},
+		{"id":"31acee603040ca0e","fromNode":"aab35c18fd018fea","fromSide":"right","toNode":"96d6c40270b3fb36","toSide":"left"}
+	]
+}

@@ -1,3 +1,14 @@
+markdown
 cryptography
 urllib3
 webcolors
+pyautogui
+pyperclip
+selenium
+pymsgbox
+opencv-python
+opencv-contrib-python
+python-dotenv
+sigils
+embedit
+docopt

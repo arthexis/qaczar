@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["qaczar"]
+
+[project]
+name = "qaczar"
+version = "0.1.3"
+authors = [
+    {name = "Rafael Jesús Guillén Osorio", email = "arthexis@gmail.com"},
+]
+description = "Graphical toolchain for designing and testing software."
+readme = "README.md"
+requires-python = ">=3.11"
+keywords = ["qaczar", "canvas", "prototyping", "testing"]
+license = {file = "LICENSE"}
+classifiers = [
+    'Development Status :: 3 - Alpha',
+    'Intended Audience :: Developers',
+    'Topic :: Software Development :: Libraries',
+    'Topic :: Utilities',
+    'License :: OSI Approved :: MIT License',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.11',
+]
+dependencies = [
+    'sigils>=0.1.3',
+    'docopt',
+]
+
+[urls]
+Source = "https://github.com/arthexis/qaczar"
+
+[project.scripts]
+qaczar = "qaczar.cli:main"
+
+
+

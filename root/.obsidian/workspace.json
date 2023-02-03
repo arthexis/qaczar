@@ -1,0 +1,171 @@
+{
+  "main": {
+    "id": "23f6ea3b62108c87",
+    "type": "split",
+    "children": [
+      {
+        "id": "decb7af7c1f28a72",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "bf822cee5f1d0e04",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {}
+            }
+          },
+          {
+            "id": "b005d2c89b0de43a",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {}
+            }
+          },
+          {
+            "id": "cd6fa44545dd71aa",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {}
+            }
+          }
+        ],
+        "currentTab": 2
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "b76bbb59e7dd3d09",
+    "type": "split",
+    "children": [
+      {
+        "id": "0f94e06793bd060e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b67ae44f1cdc086f",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "35f9ae49c4a96cab",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "b4b9c0cdff547e21",
+            "type": "leaf",
+            "state": {
+              "type": "starred",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 246.5
+  },
+  "right": {
+    "id": "9f831f2f755e9a10",
+    "type": "split",
+    "children": [
+      {
+        "id": "64bfc22933a0a828",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "3959a30a0d2bed64",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "8dd78fbf2fe4e029",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "2269d10ef185b814",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "eea69c6ec772e122",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false
+    }
+  },
+  "active": "cd6fa44545dd71aa",
+  "lastOpenFiles": [
+    "workloads/pypi_upload_9636.canvas",
+    "smoke_test.canvas",
+    "workloads/smoke_test_13528.canvas",
+    "workloads/smoke_test_13288.canvas",
+    "workloads/smoke_test_30880.canvas",
+    "workloads/smoke_test_12860.canvas",
+    "pypi_upload.canvas",
+    "resources/smoke_test.md",
+    "workloads/smoke_test_22068.canvas",
+    "workloads/pypi_upload_11696.canvas"
+  ]
+}

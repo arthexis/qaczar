@@ -1,0 +1,2 @@
+[console_scripts]
+qaczar = qaczar.cli:main

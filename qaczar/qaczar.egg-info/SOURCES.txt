@@ -1,0 +1,6 @@
+README.md
+setup.py
+qaczar/qaczar.egg-info/PKG-INFO
+qaczar/qaczar.egg-info/SOURCES.txt
+qaczar/qaczar.egg-info/dependency_links.txt
+qaczar/qaczar.egg-info/top_level.txt

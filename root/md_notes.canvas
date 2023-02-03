@@ -1,0 +1,13 @@
+{
+	"nodes":[
+		{"id":"7a9fcb25ec9fb2ef","x":-446,"y":-435,"width":196,"height":60,"type":"text","text":"> hostname"},
+		{"id":"0e3fe389d3a33980","x":-327,"y":-328,"width":275,"height":133,"type":"text","text":"## Variables\nUSER = Rafael\nORIGIN = [INPUTS=1]"},
+		{"id":"fb4d91700c7d2f16","x":37,"y":-435,"width":438,"height":371,"type":"text","text":"```python\nimport qaczar\n\nprint(\"Hello\", USER, \"from python!\")\n```"},
+		{"id":"2e468a972cf1a647","x":-371,"y":-64,"width":319,"height":111,"type":"text","text":"Hello [USER.UPPER], \nfrom [ORIGIN]!"}
+	],
+	"edges":[
+		{"id":"b319e3b811353e7e","fromNode":"7a9fcb25ec9fb2ef","fromSide":"right","toNode":"0e3fe389d3a33980","toSide":"top"},
+		{"id":"ec8c85f94b57abf6","fromNode":"0e3fe389d3a33980","fromSide":"right","toNode":"fb4d91700c7d2f16","toSide":"left"},
+		{"id":"b4f43b7411b582bf","fromNode":"fb4d91700c7d2f16","fromSide":"bottom","toNode":"2e468a972cf1a647","toSide":"right"}
+	]
+}

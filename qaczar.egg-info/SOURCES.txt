@@ -1,0 +1,12 @@
+.gitignore
+LICENSE
+README.md
+pyproject.toml
+requirements.txt
+.vscode/settings.json
+qaczar.egg-info/PKG-INFO
+qaczar.egg-info/SOURCES.txt
+qaczar.egg-info/dependency_links.txt
+qaczar.egg-info/entry_points.txt
+qaczar.egg-info/requires.txt
+qaczar.egg-info/top_level.txt
