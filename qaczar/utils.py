@@ -2,6 +2,10 @@ import os
 import sys
 import contextlib
 from typing import Generator
+from glob import glob
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 def parse_argfiles(mode: str, *exts) -> set:
@@ -94,17 +98,17 @@ def load_local_pyproject() -> dict:
     
 
 @contextlib.contextmanager
-def set_dir(path: str = "/") -> Generator[str, None, None]:
+def curr_work_dir(dirname: str = "") -> Generator[str, None, None]:
     """Change the current working directory temporarily.
     Args:
         path: Path to change to.
     """
-    if path.startswith("/"):
-        path = os.path.join(os.environ.get("QACZAR_ROOT_DIR", "."), path[1:])
+    root_dir = os.environ.get("QACZAR_ROOT_DIR", ".")
+    temp_path = os.path.join(root_dir, dirname)
     old_cwd = os.getcwd()
     try:
-        os.chdir(path)
-        yield path
+        os.chdir(temp_path)
+        yield temp_path
     finally:
         os.chdir(old_cwd)
 
@@ -121,11 +125,10 @@ def strip_quotes(value: str) -> str:
 
 def purge_work_files():
     """Remove old workloads."""
-    import shutil
-    import glob
-    with set_dir("/works"):
-        for canvas_file in glob.glob("*.canvas"):
-            shutil.rmtree(canvas_file)
+    with curr_work_dir("works"):
+        logger.info(f"Purging files from {os.getcwd()}")
+        for canvas_file in glob("*.canvas"):
+            os.unlink(canvas_file)
 
 
 __all__ = [
@@ -135,7 +138,7 @@ __all__ = [
     "list_local_files",
     "get_local_python",
     "load_local_pyproject",
-    "set_dir",	
+    "curr_work_dir",	
     "strip_quotes",
     "purge_work_files",
 ]

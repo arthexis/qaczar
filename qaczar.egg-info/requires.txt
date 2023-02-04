@@ -1,2 +1,3 @@
-sigils
-python-dotenv
+sigils>=0.1.3
+docopt
+plumbum

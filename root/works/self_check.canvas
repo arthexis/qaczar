@@ -1,0 +1,80 @@
+{
+    "nodes": [
+        {
+            "id": "51cf53da7d0d3f8a",
+            "x": -974,
+            "y": -735,
+            "width": 250,
+            "height": 60,
+            "type": "text",
+            "file": "",
+            "text": "",
+            "color": "4",
+            "url": ""
+        },
+        {
+            "id": "b70c183f1bdc8a3b",
+            "x": -1635,
+            "y": -868,
+            "width": 344,
+            "height": 193,
+            "type": "text",
+            "file": "",
+            "text": "### Test Configuration\nQACZAR = `qaczar`\nREPO = `C:\\Users\\arthe\\Desktop\\qaczar`\nTEST_CANVAS = `smoke_test`",
+            "color": "4",
+            "url": ""
+        },
+        {
+            "id": "3042f8d120f74595",
+            "x": -1635,
+            "y": -636,
+            "width": 344,
+            "height": 179,
+            "type": "file",
+            "file": "works/smoke_test.canvas",
+            "text": "",
+            "color": "4",
+            "url": ""
+        },
+        {
+            "id": "a5b1669aaacba71f",
+            "x": -1635,
+            "y": -427,
+            "width": 911,
+            "height": 170,
+            "type": "text",
+            "file": "",
+            "text": "## TODO\n\n- The above commands try to call qaczar, but the system installed version is not desired. Instead it should call it using the python inside the virtual environment.",
+            "color": "4",
+            "url": ""
+        },
+        {
+            "id": "aab35c18fd018fea",
+            "x": -1224,
+            "y": -868,
+            "width": 500,
+            "height": 411,
+            "type": "text",
+            "file": "",
+            "text": "### Global Install\nInstall the latest QACZAR version on the system.\n`python -m pip install -e C:\\Users\\arthe\\Desktop\\qaczar`\n\n> Obtaining file:///C:/Users/arthe/Desktop/qaczar\n>   Installing build dependencies: started\n>   Installing build dependencies: finished with status 'done'\n>   Checking if build backend supports build_editable: started\n>   Checking if build backend supports build_editable: finished with status 'done'\n>   Getting requirements to build editable: started\n>   Getting requirements to build editable: finished with status 'done'\n>   Installing backend dependencies: started\n>   Installing backend dependencies: finished with status 'done'\n>   Preparing editable metadata (pyproject.toml): started\n>   Preparing editable metadata (pyproject.toml): finished with status 'done'\n> Requirement already satisfied: sigils>=0.1.3 in c:\\users\\arthe\\desktop\\qaczar\\.venv\\lib\\site-packages (from qaczar==0.1.5) (0.1.3)\n> Requirement already satisfied: docopt in c:\\users\\arthe\\desktop\\qaczar\\.venv\\lib\\site-packages (from qaczar==0.1.5) (0.6.2)\n> Requirement already satisfied: plumbum in c:\\users\\arthe\\desktop\\qaczar\\.venv\\lib\\site-packages (from qaczar==0.1.5) (1.8.1)\n> Requirement already satisfied: lark in c:\\users\\arthe\\desktop\\qaczar\\.venv\\lib\\site-packages (from sigils>=0.1.3->qaczar==0.1.5) (1.1.5)\n> Requirement already satisfied: lark-parser in c:\\users\\arthe\\desktop\\qaczar\\.venv\\lib\\site-packages (from sigils>=0.1.3->qaczar==0.1.5) (0.12.0)\n> Requirement already satisfied: lru-dict in c:\\users\\arthe\\desktop\\qaczar\\.venv\\lib\\site-packages (from sigils>=0.1.3->qaczar==0.1.5) (1.1.8)\n> Requirement already satisfied: pywin32 in c:\\users\\arthe\\desktop\\qaczar\\.venv\\lib\\site-packages (from plumbum->qaczar==0.1.5) (305)\n> Building wheels for collected packages: qaczar\n>   Building editable for qaczar (pyproject.toml): started\n>   Building editable for qaczar (pyproject.toml): finished with status 'done'\n>   Created wheel for qaczar: filename=qaczar-0.1.5-0.editable-py3-none-any.whl size=4291 sha256=26ff57dba4262b71c1bcbb3be021adb471d75b6d2123cdba967bc9b4c7c2ffb6\n>   Stored in directory: C:\\Users\\arthe\\AppData\\Local\\Temp\\pip-ephem-wheel-cache-wu4iwd2q\\wheels\\ac\\5b\\5f\\32dbd1a8cc990e41228ebc99903fea8a773ccd68df2dcc4bbf\n> Successfully built qaczar\n> Installing collected packages: qaczar\n>   Attempting uninstall: qaczar\n>     Found existing installation: qaczar 0.1.5\n>     Uninstalling qaczar-0.1.5:\n>       Successfully uninstalled qaczar-0.1.5\n> Successfully installed qaczar-0.1.5\n\n### Test Suite\nGet the installed version of QACZAR, should be X.\n`python -m qaczar --version`\n\n> QACZAR 0.1.5\n\nRun the testing canvas and check it has been generated. \n`python -m qaczar smoke_test`\n\n> smoke_test.canvas",
+            "color": "4",
+            "url": ""
+        }
+    ],
+    "edges": [
+        {
+            "id": "04de82d124efed58",
+            "fromNode": "b70c183f1bdc8a3b",
+            "toNode": "aab35c18fd018fea",
+            "fromSide": "right",
+            "toSide": "left"
+        },
+        {
+            "id": "118e5cdbbfbe2622",
+            "fromNode": "aab35c18fd018fea",
+            "toNode": "3042f8d120f74595",
+            "fromSide": "left",
+            "toSide": "right"
+        }
+    ]
+}

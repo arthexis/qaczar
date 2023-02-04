@@ -30,9 +30,33 @@
               "type": "empty",
               "state": {}
             }
+          },
+          {
+            "id": "d388fda33ac1a09e",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {}
+            }
+          },
+          {
+            "id": "b4150f3e78bf9be7",
+            "type": "leaf",
+            "state": {
+              "type": "canvas",
+              "state": {
+                "file": "works/self_check.canvas",
+                "viewState": {
+                  "x": -1179.5,
+                  "y": -562.5,
+                  "zoom": 0,
+                  "snapToGrid": false
+                }
+              }
+            }
           }
         ],
-        "currentTab": 2
+        "currentTab": 4
       }
     ],
     "direction": "vertical"
@@ -98,6 +122,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "works/self_check.canvas",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -114,6 +139,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "works/self_check.canvas",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -135,7 +161,9 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {}
+              "state": {
+                "file": "works/self_check.canvas"
+              }
             }
           }
         ]
@@ -155,17 +183,17 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "cd6fa44545dd71aa",
+  "active": "b4150f3e78bf9be7",
   "lastOpenFiles": [
-    "workloads/pypi_upload_9636.canvas",
+    "self_check.canvas",
+    "works/self_check.canvas",
+    "md_notes.canvas",
     "smoke_test.canvas",
-    "workloads/smoke_test_13528.canvas",
-    "workloads/smoke_test_13288.canvas",
-    "workloads/smoke_test_30880.canvas",
-    "workloads/smoke_test_12860.canvas",
-    "pypi_upload.canvas",
-    "resources/smoke_test.md",
-    "workloads/smoke_test_22068.canvas",
-    "workloads/pypi_upload_11696.canvas"
+    "works/smoke_test.canvas",
+    "works/self_check_20516.canvas",
+    "works/self_check_23620.canvas",
+    "works/self_check_17588.canvas",
+    "scripts/PyPI Upload.md",
+    "works/self_check_15128.canvas"
   ]
 }

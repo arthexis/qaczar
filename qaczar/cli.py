@@ -3,37 +3,49 @@
 import os
 from docopt import docopt
 
-from .utils import set_dir, load_local_pyproject, purge_work_files
+from .utils import load_local_pyproject, purge_work_files
 from .builder import Canvas
+from .logger import init_logger
 
-usage = """ QACZAR command line interface.
+usage = """QACZAR command line interface.
 
 Usage:
   qaczar <canvas> [options]
   qaczar (-h | --help)
 
 Options:
-  -h --help     Show this screen.
-  --version     Show version.
-  --purge       Remove old workloads.
-  --root <dir>  Specify root directory.
-  --server      Start in server mode.
+  -h --help         Show this screen.
+  --version         Show version.
+  --purge           Remove old work files.
+  --root <dir>      Set root directory [default: root].
+  --server          Start in server mode.
+  --debug           Enable debug mode.
+  --log <level>     Set log level [default: INFO].
 
 """
 
 def main():
     """Main entry point for qaczar."""
+
     pyproject = load_local_pyproject()
-    args = docopt(usage, version=pyproject["version"])
-    if root_dir := args["--root"]:
-        os.environ["QACZAR_ROOT_DIR"] = root_dir
-    else:
-        assert "QACZAR_ROOT_DIR" in os.environ, "QACZAR_ROOT_DIR not set"
-    with set_dir("/"):
-        if args["--purge"]:
-            purge_work_files()
-        canvas = Canvas(args["<canvas>"])
-        canvas.build_prototypes()
+    version = pyproject["project"]["version"]
+    args = docopt(usage, version=f"QACZAR {version}")
+    init_logger(args["--log"])
+
+    root_dir = args["--root"] or "."
+    if not os.path.isabs(root_dir):
+        root_dir = os.path.join(os.getcwd(), root_dir)
+    os.environ["QACZAR_ROOT_DIR"] = root_dir
+    
+    if args["--purge"]: purge_work_files()
+    if args["--debug"]: os.environ["QACZAR_DEBUG"] = "1"
+    if args["--server"]: raise NotImplementedError("Server not implemented.")
+
+    canvas_filename = args["<canvas>"]
+    if not canvas_filename.endswith(".canvas"):
+        canvas_filename += ".canvas"
+    canvas = Canvas(canvas_filename)
+    canvas.build_prototype()
         
 
 __all__ = ["main"]

@@ -18,7 +18,7 @@
     {
       "id": "a4fk5u66f4",
       "platform_specific_commands": {
-        "default": "qaczar \"{{file_name}}\" --purge"
+        "default": "C:\\Python311\\python.exe -m qaczar \"{{file_name}}\" --purge "
       },
       "shells": {},
       "alias": "Prototype with QACZAR",
