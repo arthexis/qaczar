@@ -1,0 +1,9 @@
+{
+	"nodes":[
+		{"id":"75595c800de97110","x":-224,"y":-81,"width":449,"height":322,"color":"4","type":"file","file":"Utilities/User-Prompt.md"},
+		{"id":"da8f7075139cc365","x":-224,"y":-241,"width":359,"height":57,"color":"4","type":"text","text":"PROMPT = Are you OK with the image?"}
+	],
+	"edges":[
+		{"id":"738aa32506779b9f","fromNode":"da8f7075139cc365","fromSide":"bottom","toNode":"75595c800de97110","toSide":"top"}
+	]
+}

@@ -1,0 +1,14 @@
+{
+	"nodes":[
+		{"id":"aab35c18fd018fea","x":-1224,"y":-917,"width":500,"height":374,"type":"text","text":"### Global Install\nInstall the latest QACZAR version on the system.\n`python -m pip install -e [REPO]`\n\n### Test Suite\nGet the installed version of QACZAR, should be X.\n`python -m qaczar --version`\n\n"},
+		{"id":"b70c183f1bdc8a3b","x":-1710,"y":-662,"width":420,"height":205,"type":"text","text":"### Test Configuration\n- QACZAR = `qaczar`\n- REPO = `C:\\Users\\arthe\\Desktop\\qaczar`\n- TEST_CANVAS = `smoke_test`"},
+		{"id":"13f306ae6cfee9fc","x":-1678,"y":-423,"width":344,"height":155,"type":"text","text":"### Smoke Test Output\n[\"[OUTPUT]\"] ([OUTPUT])"},
+		{"id":"3042f8d120f74595","x":-1143,"y":-485,"width":339,"height":155,"type":"file","file":"Sources/Smoke-Test.canvas"},
+		{"id":"2aa6ae163c7e8053","x":-1713,"y":-1000,"width":415,"height":270,"type":"file","file":"Sources/TODO.md"}
+	],
+	"edges":[
+		{"id":"04de82d124efed58","fromNode":"b70c183f1bdc8a3b","fromSide":"right","toNode":"aab35c18fd018fea","toSide":"left"},
+		{"id":"a4d2da4bf061bcad","fromNode":"aab35c18fd018fea","fromSide":"bottom","toNode":"3042f8d120f74595","toSide":"top"},
+		{"id":"dadc782fcf5d10aa","fromNode":"3042f8d120f74595","fromSide":"left","toNode":"13f306ae6cfee9fc","toSide":"right"}
+	]
+}

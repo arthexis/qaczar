@@ -1,0 +1,19 @@
+{
+	"nodes":[
+		{"id":"164a7588077b8b9d","x":-615,"y":-794,"width":573,"height":476,"type":"file","file":"Utilities/Webcam-Capture.md"},
+		{"id":"928120a19df79c0f","x":72,"y":-839,"width":503,"height":283,"type":"file","file":"Products/last-web-capture.png"},
+		{"id":"716592e962ef5934","x":673,"y":-794,"width":573,"height":238,"type":"text","text":"### Cropping\nWe use smartcroppy to crop the image easily.\n`smartcroppy --width 1100 --height 800 [INPUT] [TARGET]`"},
+		{"id":"7edc0ac863e42106","x":72,"y":-384,"width":565,"height":490,"type":"file","file":"Utilities/Image-To-Text.md"},
+		{"id":"2e739c8bff230bed","x":742,"y":-384,"width":573,"height":413,"type":"file","file":"Products/cropped-img.png"},
+		{"id":"5f0b748fba14949d","x":-755,"y":-177,"width":713,"height":757,"type":"file","file":"Products/Webcam-Report.md"},
+		{"id":"0f497801e85c56df","x":-696,"y":-987,"width":596,"height":103,"type":"text","text":"# Test Webcam\nThis document tests various webcam functions and generates a report."}
+	],
+	"edges":[
+		{"id":"df7289e37e42758a","fromNode":"164a7588077b8b9d","fromSide":"right","toNode":"928120a19df79c0f","toSide":"left"},
+		{"id":"78da83d4b1590eba","fromNode":"928120a19df79c0f","fromSide":"right","toNode":"716592e962ef5934","toSide":"left"},
+		{"id":"c365c5cad139c50d","fromNode":"716592e962ef5934","fromSide":"bottom","toNode":"2e739c8bff230bed","toSide":"top"},
+		{"id":"79b2b5bc48613bb0","fromNode":"2e739c8bff230bed","fromSide":"left","toNode":"7edc0ac863e42106","toSide":"right"},
+		{"id":"4075f325491277c0","fromNode":"7edc0ac863e42106","fromSide":"left","toNode":"5f0b748fba14949d","toSide":"right"},
+		{"id":"e7a5265295086e11","fromNode":"0f497801e85c56df","fromSide":"left","toNode":"5f0b748fba14949d","toSide":"left"}
+	]
+}

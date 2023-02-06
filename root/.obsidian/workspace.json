@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "decb7af7c1f28a72",
+        "id": "e5808be48c032f1d",
         "type": "tabs",
         "children": [
           {
-            "id": "bf822cee5f1d0e04",
+            "id": "6248f55a8c34536c",
             "type": "leaf",
             "state": {
               "type": "empty",
@@ -16,7 +16,7 @@
             }
           },
           {
-            "id": "b005d2c89b0de43a",
+            "id": "13090444182aed4c",
             "type": "leaf",
             "state": {
               "type": "empty",
@@ -24,39 +24,35 @@
             }
           },
           {
-            "id": "cd6fa44545dd71aa",
+            "id": "d6542bdf2d4e5f9e",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {}
+              "type": "markdown",
+              "state": {
+                "file": "Products/Webcam-Report.md",
+                "mode": "preview",
+                "source": false
+              }
             }
           },
           {
-            "id": "d388fda33ac1a09e",
-            "type": "leaf",
-            "state": {
-              "type": "empty",
-              "state": {}
-            }
-          },
-          {
-            "id": "b4150f3e78bf9be7",
+            "id": "484797644e90c005",
             "type": "leaf",
             "state": {
               "type": "canvas",
               "state": {
-                "file": "works/self_check.canvas",
+                "file": "Sources/Smoke-Test.canvas",
                 "viewState": {
-                  "x": -1179.5,
-                  "y": -562.5,
-                  "zoom": 0,
+                  "x": -141.5,
+                  "y": 83.5,
+                  "zoom": -0.6001304815470389,
                   "snapToGrid": false
                 }
               }
             }
           }
         ],
-        "currentTab": 4
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -106,7 +102,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 246.5
+    "width": 266.5
   },
   "right": {
     "id": "9f831f2f755e9a10",
@@ -122,7 +118,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "works/self_check.canvas",
+                "file": "Sources/Smoke-Test.canvas",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -139,7 +135,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "works/self_check.canvas",
+                "file": "Sources/Smoke-Test.canvas",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -162,7 +158,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "works/self_check.canvas"
+                "file": "Sources/Smoke-Test.canvas"
               }
             }
           }
@@ -183,17 +179,17 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "b4150f3e78bf9be7",
+  "active": "484797644e90c005",
   "lastOpenFiles": [
-    "self_check.canvas",
-    "works/self_check.canvas",
-    "md_notes.canvas",
-    "smoke_test.canvas",
-    "works/smoke_test.canvas",
-    "works/self_check_20516.canvas",
-    "works/self_check_23620.canvas",
-    "works/self_check_17588.canvas",
-    "scripts/PyPI Upload.md",
-    "works/self_check_15128.canvas"
+    "Sources/Test-Prompts.canvas",
+    "Sources/Test-Sigils.md",
+    "Works/Smoke-Test.canvas",
+    "Sources/Smoke-Test.canvas",
+    "Sources/TODO.md",
+    "Sources/Webcam-Test.canvas",
+    "Sources/Self-Check.canvas",
+    "Utilities/Screenshot.md",
+    "Products/Webcam-Report.md",
+    "Works/Webcam-Test.canvas"
   ]
 }

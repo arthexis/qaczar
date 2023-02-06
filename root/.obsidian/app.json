@@ -1,6 +1,8 @@
 {
-  "showUnsupportedFiles": true,
+  "showUnsupportedFiles": false,
   "useTab": false,
   "tabSize": 4,
-  "attachmentFolderPath": "resources"
+  "attachmentFolderPath": "Elements",
+  "promptDelete": false,
+  "alwaysUpdateLinks": true
 }

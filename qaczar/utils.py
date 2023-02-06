@@ -3,6 +3,7 @@ import sys
 import contextlib
 from typing import Generator
 from glob import glob
+from pathlib import Path
 
 import logging
 logger = logging.getLogger(__name__)
@@ -125,11 +126,21 @@ def strip_quotes(value: str) -> str:
 
 def purge_work_files():
     """Remove old workloads."""
-    with curr_work_dir("works"):
-        logger.info(f"Purging files from {os.getcwd()}")
+    with curr_work_dir("Works"):
+        # logger.debug(f"Purging files from {os.getcwd()}")
         for canvas_file in glob("*.canvas"):
             os.unlink(canvas_file)
 
+
+def fix_path(path: str) -> str:
+    """ Use pathlib to fix path for current platform, and return the fixed string.
+    Args:
+        path: Path to fix or convert.
+    Returns:
+        Fixed path.
+    """
+    fixed_path = str(Path(path).resolve())
+    return fixed_path or path
 
 __all__ = [
     "parse_argfiles",

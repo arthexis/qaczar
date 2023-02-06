@@ -22,8 +22,6 @@ qaczar/qaczar.egg-info/PKG-INFO
 qaczar/qaczar.egg-info/SOURCES.txt
 qaczar/qaczar.egg-info/dependency_links.txt
 qaczar/qaczar.egg-info/top_level.txt
-root/md_notes.canvas
-root/smoke_test.canvas
 root/.obsidian/app.json
 root/.obsidian/appearance.json
 root/.obsidian/command-palette.json
@@ -36,9 +34,3 @@ root/.obsidian/plugins/obsidian-shellcommands/data.json
 root/.obsidian/plugins/obsidian-shellcommands/main.js
 root/.obsidian/plugins/obsidian-shellcommands/manifest.json
 root/.obsidian/plugins/obsidian-shellcommands/styles.css
-root/scripts/aruco.py
-root/scripts/download.py
-root/scripts/ocr.py
-root/scripts/screenshot.py
-root/sources/smoke_original.md
-root/sources/smoke_test.md

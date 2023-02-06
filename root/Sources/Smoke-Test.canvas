@@ -1,0 +1,18 @@
+{
+	"nodes":[
+		{"id":"03907bb891f3bcd7","x":-265,"y":-100,"width":286,"height":161,"type":"file","file":"Products/last-screenshot.png"},
+		{"id":"bebc939283c2af53","x":-778,"y":-129,"width":441,"height":721,"type":"file","file":"Products/Test-Report.md"},
+		{"id":"2874a450bd614872","x":-379,"y":-425,"width":400,"height":193,"type":"text","text":"### Platform Info\nUsing Python: `[PYTHON]`\nCurrent Directory: `[CWD]`\nName: `[NAME]`"},
+		{"id":"da677b7d95b82ee9","x":-778,"y":-391,"width":344,"height":126,"type":"text","text":"Independent nodes add context before everything else is evaluated, for example:\nNAME = `arthexis`"},
+		{"id":"61f81642f58d8bfa","x":95,"y":-376,"width":400,"height":357,"type":"file","file":"Utilities/Screenshot.md"},
+		{"id":"9833014ab40ef221","x":95,"y":61,"width":391,"height":120,"type":"text","text":"### Notes\nThis gets automatically copied to the target."},
+		{"id":"8f9b070331b6bb08","x":95,"y":232,"width":400,"height":310,"type":"file","file":"Sources/Test-Sigils.md"}
+	],
+	"edges":[
+		{"id":"2898f4c978a8c557","fromNode":"03907bb891f3bcd7","fromSide":"left","toNode":"bebc939283c2af53","toSide":"right"},
+		{"id":"3ff893c4b2f04eac","fromNode":"61f81642f58d8bfa","fromSide":"left","toNode":"03907bb891f3bcd7","toSide":"right"},
+		{"id":"b0cd61ea6ad7529f","fromNode":"2874a450bd614872","fromSide":"bottom","toNode":"bebc939283c2af53","toSide":"top"},
+		{"id":"76208e80f411d2de","fromNode":"9833014ab40ef221","fromSide":"left","toNode":"bebc939283c2af53","toSide":"right"},
+		{"id":"bd5e2fb86449f3e5","fromNode":"8f9b070331b6bb08","fromSide":"left","toNode":"bebc939283c2af53","toSide":"right"}
+	]
+}

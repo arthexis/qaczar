@@ -1,0 +1,18 @@
+{
+	"nodes":[
+		{"id":"03907bb891f3bcd7","x":-265,"y":-100,"width":286,"height":161,"type":"file","file":"Products/last-screenshot.png","text":"","color":"4","url":""},
+		{"id":"bebc939283c2af53","x":-778,"y":-129,"width":441,"height":721,"type":"file","file":"Products/Test-Report.md","text":"\nIndependent nodes add context before everything else is evaluated, for example:\nNAME = `arthexis`\n\n### Platform Info\nUsing Python: `C:\\Python311\\python.exe`\nCurrent Directory: `C:\\Users\\arthe\\Desktop\\qaczar\\root`\nName: `arthexis`\n\n## [Screenshot](Screenshot)\nUse Python to take a screenshot of the active window.\n\n```python\nimport pyautogui\n\nscreenshot = pyautogui.screenshot()\nscreenshot.save(r\"[TARGET.PATH]\")\n```\n\n![Products/last-screenshot.png](Products/last-screenshot.png)\n\n### Notes\nThis gets automatically copied to the target.\n\n## [Test-Sigils](Test-Sigils)\n```python\narray = []\narray.append(\"[INPUT]\")\nprint(array[0])\n```\n> ## (Screenshot)\n> Use Python to take a screenshot of the active window.\n> ```python\n> import pyautogui\n> screenshot = pyautogui.screenshot()\n> screenshot.save(r\"C:\\Users\\arthe\\Desktop\\qaczar\\root\\Products\\Test-Report.md\")\n> ```\n","color":"4","url":""},
+		{"id":"2874a450bd614872","x":-379,"y":-425,"width":400,"height":193,"type":"text","file":"","text":"### Platform Info\nUsing Python: `C:\\Python311\\python.exe`\nCurrent Directory: `C:\\Users\\arthe\\Desktop\\qaczar\\root`\nName: `arthexis`","color":"4","url":""},
+		{"id":"da677b7d95b82ee9","x":-778,"y":-391,"width":344,"height":126,"type":"text","file":"","text":"Independent nodes add context before everything else is evaluated, for example:\nNAME = `arthexis`","color":"4","url":""},
+		{"id":"61f81642f58d8bfa","x":95,"y":-376,"width":400,"height":357,"type":"text","file":"Utilities/Screenshot.md","text":"## [Screenshot](Screenshot)\nUse Python to take a screenshot of the active window.\n\n```python\nimport pyautogui\n\nscreenshot = pyautogui.screenshot()\nscreenshot.save(r\"[TARGET.PATH]\")\n```","color":"4","url":""},
+		{"id":"9833014ab40ef221","x":95,"y":61,"width":391,"height":120,"type":"text","file":"","text":"### Notes\nThis gets automatically copied to the target.","color":"4","url":""},
+		{"id":"8f9b070331b6bb08","x":95,"y":232,"width":400,"height":310,"type":"text","file":"Sources/Test-Sigils.md","text":"## [Test-Sigils](Test-Sigils)\n```python\narray = []\narray.append(\"[INPUT]\")\nprint(array[0])\n```\n> ## (Screenshot)\n> Use Python to take a screenshot of the active window.\n> ```python\n> import pyautogui\n> screenshot = pyautogui.screenshot()\n> screenshot.save(r\"C:\\Users\\arthe\\Desktop\\qaczar\\root\\Products\\Test-Report.md\")\n> ```","color":"4","url":""}
+	],
+	"edges":[
+		{"id":"2898f4c978a8c557","fromNode":"03907bb891f3bcd7","toNode":"bebc939283c2af53","fromSide":"left","toSide":"right"},
+		{"id":"3ff893c4b2f04eac","fromNode":"61f81642f58d8bfa","toNode":"03907bb891f3bcd7","fromSide":"left","toSide":"right"},
+		{"id":"b0cd61ea6ad7529f","fromNode":"2874a450bd614872","toNode":"bebc939283c2af53","fromSide":"bottom","toSide":"top"},
+		{"id":"76208e80f411d2de","fromNode":"9833014ab40ef221","toNode":"bebc939283c2af53","fromSide":"left","toSide":"right"},
+		{"id":"bd5e2fb86449f3e5","fromNode":"8f9b070331b6bb08","toNode":"bebc939283c2af53","fromSide":"left","toSide":"right"}
+	]
+}

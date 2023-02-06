@@ -1,0 +1,9 @@
+{
+  "items": [
+    {
+      "type": "file",
+      "title": "Test-Webcam",
+      "path": "Sources/Webcam-Test.canvas"
+    }
+  ]
+}

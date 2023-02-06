@@ -2,7 +2,7 @@
 	"nodes":[
 		{"id":"7a9fcb25ec9fb2ef","x":-446,"y":-435,"width":196,"height":60,"type":"text","text":"> hostname"},
 		{"id":"0e3fe389d3a33980","x":-327,"y":-328,"width":275,"height":133,"type":"text","text":"## Variables\nUSER = Rafael\nORIGIN = [INPUTS=1]"},
-		{"id":"fb4d91700c7d2f16","x":37,"y":-435,"width":438,"height":371,"type":"text","text":"```python\nimport qaczar\n\nprint(\"Hello\", USER, \"from python!\")\n```"},
+		{"id":"fb4d91700c7d2f16","x":37,"y":-435,"width":438,"height":371,"type":"text","text":"```python\nimport qaczar\nprint(dir(qaczar))\nprint(\"Hello\", USER, \"from python!\")\n```"},
 		{"id":"2e468a972cf1a647","x":-371,"y":-64,"width":319,"height":111,"type":"text","text":"Hello [USER.UPPER], \nfrom [ORIGIN]!"}
 	],
 	"edges":[

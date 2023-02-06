@@ -3,16 +3,18 @@
 import io
 import os
 import sys
+import ast
 import json
+import shutil
 import logging
 import subprocess
+import contextlib
 from enum import Enum
-from contextlib import redirect_stdout
 from typing import Optional, Any, Generator
 from dataclasses import dataclass
 
 import sigils  # type: ignore
-from .utils import get_local_python, curr_work_dir, strip_quotes
+from .utils import get_local_python, curr_work_dir, strip_quotes, fix_path
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +48,10 @@ class Node:
         return self.type == "text"
     
     def is_blank(self) -> bool:
-        return self.is_text() and not self.text
+        # Files are blank if they have 0 bytes
+        with curr_work_dir():
+            return ((self.is_text() and not self.text) or 
+                    (self.is_file() and os.path.getsize(self.file) == 0))
     
     def is_link(self) -> bool:
         return self.type == "link" and bool(self.url)
@@ -124,7 +129,7 @@ class Edge:
 class Canvas:
     """A canvas diagram used to construct software prototypes."""
 
-    def __init__(self, filename: str):
+    def __init__(self, filename: str, context: Optional[dict[str, Any]] = None) -> None:
         """Load a canvas diagram from a file in the root directory.
         Canvas files are used as blueprints to construct software prototypes.
         Args:
@@ -133,7 +138,7 @@ class Canvas:
             ValueError: If the canvas file is in the workloads directory
         """	
         self.source_filename = filename
-        if os.path.dirname(filename) == "works":
+        if os.path.dirname(filename) == "Works":
             raise ValueError("Canvas file must not be in the works directory")
         self.work_filename = os.path.basename(filename)
         # Print to stdout for Obsidian to capture the filename
@@ -145,7 +150,9 @@ class Canvas:
         self.nodes = [Node(**node) for node in canvas_data["nodes"]]
         self.edges = [Edge(**edge) for edge in canvas_data["edges"]]
         self.node_map = {node.id: node for node in self.nodes}
-        self.context: dict[str, Any] = {"CANVAS": self, "OUTPUTS": []} 
+        self.context: dict[str, Any] = context or {
+            "CANVAS": self, "OUTPUTS": [], 
+            "PATH": lambda x: fix_path(os.path.join(os.environ["QACZAR_ROOT_DIR"], x))}
     
     def save_work_file(self) -> None:
         """Save a copy of the canvas diagram to its working file.
@@ -155,9 +162,9 @@ class Canvas:
         """
         diagram = {
             "nodes": [node.__dict__ for node in self.nodes],
-            "edges": [edge.__dict__ for edge in self.edges]
+            "edges": [edge.__dict__ for edge in self.edges],
         }
-        with curr_work_dir("works"):
+        with curr_work_dir("Works"):
             with open(self.work_filename, "w") as f:
                 json.dump(diagram, f, indent=4)
     
@@ -192,6 +199,22 @@ class Canvas:
         upstream_nodes.sort(key=lambda node: (node.y, node.x))
         assert node not in upstream_nodes, f"Node {node.id} is upstream of itself"
         return upstream_nodes
+    
+    def find_downstream_nodes(self, node: Node) -> list[Node]:
+        """Find nodes with an outgoing edge from the given node.
+        These nodes are used to populate the TARGET context before executing the node.
+        Args:
+            node: The node to find downstream nodes for
+        Returns:
+            A list of downstream nodes
+        """
+        downstream_nodes = []
+        for edge in self.edges:
+            if edge.fromNode == node.id:
+                downstream_nodes.append(self.node_map[edge.toNode])
+        downstream_nodes.sort(key=lambda node: (node.y, node.x))
+        assert node not in downstream_nodes, f"Node {node.id} is downstream of itself"
+        return downstream_nodes
     
     def find_isolated_nodes(self) -> list[Node]:
         """Find nodes with no incoming or outgoing edges.
@@ -238,6 +261,10 @@ class Canvas:
         # No output is generated from isolated nodes, but they can set context
         isolated_nodes = self.find_isolated_nodes()
         target_nodes = self.find_target_nodes()
+        for node in target_nodes:
+            if node.type == "file":
+                with open(node.file, "w") as f:
+                    f.write("")
         self.process_node_list(isolated_nodes)
         target_outputs = self.process_node_list(target_nodes)
         self.save_work_file()
@@ -258,6 +285,16 @@ class Canvas:
                 results.extend(result)
         return results
     
+    def resolve_sigils(self, text: str) -> str:
+        """Resolve sigils in the given text using the current context.
+        Args:
+            text (str): Text to resolve sigils in
+        Returns:
+            str: Text with sigils resolved
+        """
+        with sigils.local_context(**self.context):
+            return sigils.resolve(text)
+    
     def save_node_changes(self, node: Node, status: Status, 
                 text: Optional[str] = None, file: Optional[str] = None, 
                 _type: Optional[str] = None) -> Node:
@@ -267,14 +304,12 @@ class Canvas:
             status (Status): New status of the node
             text (str, optional): New text of the node. Defaults to None.
             file (str, optional): New file of the node. Defaults to None.
+            _type (str, optional): New type of the node. Defaults to None.
         """
         node.set_status(status)
-        if text is not None:
-            node.text = text
-        if file is not None:
-            node.file = file
-        if _type is not None:
-            node.type = _type
+        if text is not None: node.text = text
+        if file is not None: node.file = file
+        if _type is not None: node.type = _type
         self.save_work_file()
         return node
 
@@ -288,33 +323,88 @@ class Canvas:
         self.context["NODE"] = node
         self.save_node_changes(node, Status.READY)
         upstream_nodes = self.find_upstream_nodes(node)
-        if input_results := self.process_node_list(upstream_nodes):
-            self.context["INPUT"] = input_results[0]
+        input_results = self.process_node_list(upstream_nodes)
+        self.context["INPUT"] = input_results[0] if input_results else None
         self.context["INPUTS"] = input_results
         if venv_context := self.context.get("VENV"):
             self.context["PYTHON"] = get_local_python(venv_context)
         else:
             self.context["PYTHON"] = sys.executable
+        downstream_nodes = self.find_downstream_nodes(node)
+        downstream_files = [fix_path(n.file) for n in downstream_nodes if n.is_file()]
+        self.context["TARGETS"] = downstream_files
+        self.context["TARGET"] = downstream_files[0] if downstream_files else None
 
         results, status_ok = [], False
+        self.save_node_changes(node, Status.ACTIVE)
         with curr_work_dir(self.context["CWD"]):   
             # Execution rules are based on node conditions.
             # Type is not used exclusively, for example a file node can be
             # executed as python, markdown, or just copied.
-            if node.is_markdown():
+
+            if node.is_blank():
+                # logger.debug(f"Copy output (blank) {self.context['OUTPUTS']}")
+                if node.is_file("md") or node.is_text():
+                    for output_node in self.context["OUTPUTS"]:
+                        if output_node.type == 'text':
+                            node.text = "\n".join([node.text, output_node.text]) + "\n"
+                        elif output_node.is_file("md", "txt", "log"):
+                            node.text = "\n".join([node.text, output_node.read_text_or_file()]) + "\n"
+                        elif output_node.is_file():
+                            node.text = "\n".join([node.text, f"![{output_node.file}]({output_node.file})"]) + "\n"
+                        else:
+                            node.text = "\n".join([node.text, f"### {output_node.file}"]) + "\n"
+                    if node.text and node.file:
+                        with curr_work_dir():
+                            with open(node.file, "w") as f: f.write(node.text)
+                    if node.type == 'text':
+                        # Make the header work as a link to the original file
+                        link_text = f"[{node.file}]({node.file})"
+                        node.text = f"### {link_text}  \n{node.text}"
+                    self.save_node_changes(node, Status.SUCCESS)
+                    results.append(node)
+
+                elif node.is_file():
+                    # If its any other kind of file, loop over the outputs and find the first file
+                    # that matches the node file name. If found, copy it to the node file.
+                    for output_node in self.context["OUTPUTS"]:
+                        if output_node.file == node.file:
+                            shutil.copyfile(output_node.file, node.file)
+                            self.save_node_changes(node, Status.SUCCESS)
+                            results.append(node)
+                            break
+
+            elif node.is_markdown():
                 # Markdown nodes are executed and the node is updated with the output
-                logger.debug(f"Resolve sigils (markdown) {node.id}")
+                # logger.debug(f"Resolve sigils (markdown) {node.file or '<text>'}")
                 node_text = node.read_text_or_file()
-                with sigils.local_context(**self.context):
-                    resolved_text = sigils.resolve(node_text)
-                self.save_node_changes(node, Status.ACTIVE, text=resolved_text)
-                logger.debug(f"Execute (markdown) {node.id}")
-                status_ok, markdown_output = self.exec_markdown(resolved_text)
+                # logger.debug(f"Execute (markdown) {node.id}")
+                status_ok, markdown_output = self.exec_markdown(node_text)
+                if node.file and not markdown_output.startswith("#"):
+                    node_filename = node.file.split("/")[-1].split(".")[0]
+                    link_text = f"[{node_filename}]({node_filename})"
+                    markdown_output = f"## {link_text}\n{markdown_output}"
                 node = self.save_node_changes(
                         node, Status.SUCCESS if status_ok else Status.FAILURE,
                         text=markdown_output, _type="text")
                 if status_ok:
                     results.append(node)
+
+            elif node.is_canvas():
+                # Canvas nodes are executed and the node is updated with the output
+                logger.info(f"Execute (sub-canvas) {node.file}")
+                canvas = Canvas(node.file, self.context)
+                try:
+                    output_nodes = canvas.build_prototype()
+                except AbortExecution as e:
+                    logger.error(f"Error executing sub-canvas {node.file}: {e}")
+                    raise AbortExecution(self, node, e.message) from e
+                if output_nodes:
+                    node = self.save_node_changes(node, Status.SUCCESS)
+                    results.extend(output_nodes)
+                else:
+                    raise AbortExecution(self, node, "No output from sub-canvas")
+                
             elif node.is_script():
                 # Script nodes are executed and not updated
                 script_filename = node.file
@@ -326,17 +416,22 @@ class Canvas:
                 if return_code != 0:
                     raise AbortExecution(self, node, script_out)
                 self.save_node_changes(node, Status.SUCCESS)
+
             elif node.is_file():
                 # Files are checked and added to the results
-                logger.debug(f"Validate product (file) {node.id}")
+                # logger.debug(f"Validate product (file) {node.id}")
                 if not self.check_product(node.file):
                     raise AbortExecution(self, node, 
                             f"Product file {node.file} not updated")
                 self.save_node_changes(node, Status.SUCCESS)
                 results.append(node)
+                
             else:
                 raise AbortExecution(self, node, "Unhandled node type")
 
+        self.context["OUTPUTS"].extend(results)
+        if len(results) > 0:
+            self.context["OUTPUT"] = results[0]
         return results  
 
     def exec_markdown(self, text: str) -> tuple[bool, str]:
@@ -350,45 +445,53 @@ class Canvas:
         # logger.info(f"Executing markdown:\n{text}")
         lines = text.splitlines()
         for i, line in enumerate(lines):
-            new_text += line + "\n"
             if ignore_until is not None:
                 if line.startswith(ignore_until): 
                     ignore_until = None
+                continue
+            line = self.resolve_sigils(line)
+            new_text += line + "\n"
             if line.startswith("#"):
                 # Interpret as a section header
                 self.context["SECTION"] = line.strip("#").strip()
             elif "=" in line:
                 # Interpret as a context assignment
                 var, value = line.split("=")
+                if var.startswith("-") or var.startswith("+") or var.startswith("*"):
+                    var = var[1:]
                 self.context[var.strip().upper()] = strip_quotes(value.strip())
             elif line.startswith("```"):
                 last_line = i + 1
-                while not lines[last_line].startswith("```"):
-                    last_line += 1
+                try:
+                    while not lines[last_line].startswith("```"):
+                        last_line += 1
+                except IndexError:
+                    last_line = len(lines)
                 code_block = "\n".join(lines[i+1:last_line])
                 if "python" in line:
-                    logger.debug(f"Execute block (python):\n{code_block}")
                     status_ok, output = self.exec_python_block(code_block)
-                    new_text += markdown_quote(output)
+                    output = markdown_quote(output.strip())
                     if not status_ok:
-                        return False, new_text.strip()
+                        return False, new_text + f"{code_block.strip()}\n```" + output 
+                    new_text = new_text + f"{code_block.strip()}\n```" + output 
                 elif "shell" in line:
-                    logger.debug(f"Execute block (shell):\n{code_block}")
                     for command_line in code_block.splitlines():
+                        command_line = self.resolve_sigils(command_line)
                         return_code, output = self.exec_command_line(command_line)
-                        new_text += markdown_quote(output)
+                        output = markdown_quote(output.strip())
                         if return_code != 0:
-                            return False, new_text.strip()
+                            return False,  new_text + f"{code_block.strip()}\n```" + output 
+                        new_text = new_text +f"{code_block.strip()}\n```" + output 
+                else:
+                    logger.warning(f"Unknown code block type: {line}")
+                    code_block = self.resolve_sigils(code_block)
+                    new_text += code_block + "\n```"
                 # TODO: If there already is quoted section after the code block, 
                 #       don't add another, instead check they are the same
-                else:
-                    new_text += markdown_quote("Unsupported code block")
-                    return False, new_text.strip()
                 ignore_until = "```" 
             elif line.startswith("`") and line.endswith("`"):
                 # Interpret as a command line
                 command_line = line.strip("`")
-                logger.debug(f"Execute command line: {command_line}")
                 return_code, output = self.exec_command_line(command_line)
                 new_text += markdown_quote(output)
                 if return_code != 0:
@@ -402,15 +505,29 @@ class Canvas:
         Returns:
             tuple[bool, str]: Status and output
         """
-        # TODO: Remove indentation from code block if needed
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        error = None
         try:
-            # TODO: Figure out how to capture stderr too
-            stdout = io.StringIO()
-            with redirect_stdout(stdout):
-                exec(code, self.context)
-            return True, stdout.getvalue().strip()
+            # logger.debug(f"Executing Python code:\n{code}")
+            with contextlib.redirect_stdout(stdout):
+                with contextlib.redirect_stderr(stderr):
+                    # Use AST to loop ver the strings in the code
+                    # and replace any variables with their values
+                    tree = ast.parse(code)
+                    for node in ast.walk(tree):
+                        if isinstance(node, ast.Str):
+                            # TODO: Use the sigils library to replace variables
+                            node.s = self.resolve_sigils(node.s)
+                    exec(compile(tree, "<string>", "exec"), self.context)
         except Exception as e:
-            return False, str(e)
+            error = e
+        stdout_value = stdout.getvalue()
+        if len(stderr.getvalue()) > 0:
+            stdout_value += "\n" + stderr.getvalue()
+        if error is not None:
+            return False, stdout_value.strip() + "\n" + str(error)
+        return True, stdout_value.strip()
 
     def exec_python_script(self, script_path: str) -> tuple[int, str]:
         """Execute a script and return the results.	
@@ -453,7 +570,7 @@ class AbortExecution(Exception):
 
 
 def markdown_quote(text: str) -> str:
-    return "\n" + "\n".join(["> " + ln for ln in text.splitlines()]) + "\n"
+    return "\n" + "\n".join(["> " + ln for ln in text.splitlines() if ln]) + "\n"
 
 
 __all__ = ["Canvas", "AbortExecution"]

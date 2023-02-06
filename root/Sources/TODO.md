@@ -1,0 +1,6 @@
+- Run upstream nodes in parallel.
+    - There are reasons to do and not to do this, we should justify the change.
+- Create a flashy use-case: maybe build an actual TODO app with QACZAR?
+- Ensure to proper display exceptions (ie import issues) from code blocks.
+- Figure out a way to reload the Obsidian window after starting the build, or after changes have been made to the canvas file.
+- Clean INPUT and INPUTs context always. Right now, then there are no upstream nodes, the old values are carried beyond their valid scope.

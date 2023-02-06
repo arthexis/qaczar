@@ -1,6 +1,7 @@
 # Command line interface for qaczar
 
 import os
+from pathlib import Path
 from docopt import docopt
 
 from .utils import load_local_pyproject, purge_work_files
@@ -21,6 +22,7 @@ Options:
   --server          Start in server mode.
   --debug           Enable debug mode.
   --log <level>     Set log level [default: INFO].
+  -- <args>...      Pass arguments to the canvas.
 
 """
 
@@ -41,11 +43,18 @@ def main():
     if args["--debug"]: os.environ["QACZAR_DEBUG"] = "1"
     if args["--server"]: raise NotImplementedError("Server not implemented.")
 
-    canvas_filename = args["<canvas>"]
-    if not canvas_filename.endswith(".canvas"):
-        canvas_filename += ".canvas"
-    canvas = Canvas(canvas_filename)
-    canvas.build_prototype()
+    canvas_filename = Path(args["<canvas>"])
+    if canvas_filename.parent.name == "Works":
+        canvas_filename = canvas_filename.parent.parent / "Sources" / canvas_filename.name
+    canvas = Canvas(str(canvas_filename))
+    try:
+        results = canvas.build_prototype()
+        for result in results:
+            print(str(result))
+    except Exception as e:
+        if args["--debug"]: raise
+        print(e)
+        return
         
 
 __all__ = ["main"]
