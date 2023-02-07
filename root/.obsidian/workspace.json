@@ -6,53 +6,123 @@
       {
         "id": "e5808be48c032f1d",
         "type": "tabs",
+        "dimension": 61.50081566068516,
         "children": [
-          {
-            "id": "6248f55a8c34536c",
-            "type": "leaf",
-            "state": {
-              "type": "empty",
-              "state": {}
-            }
-          },
-          {
-            "id": "13090444182aed4c",
-            "type": "leaf",
-            "state": {
-              "type": "empty",
-              "state": {}
-            }
-          },
           {
             "id": "d6542bdf2d4e5f9e",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Products/Webcam-Report.md",
-                "mode": "preview",
-                "source": false
-              }
+              "type": "empty",
+              "state": {}
             }
           },
           {
-            "id": "484797644e90c005",
+            "id": "2719966d9981bc96",
             "type": "leaf",
             "state": {
               "type": "canvas",
               "state": {
-                "file": "Sources/Smoke-Test.canvas",
+                "file": "Sources/Webcam-Test.canvas",
                 "viewState": {
-                  "x": -141.5,
-                  "y": 83.5,
-                  "zoom": -0.6001304815470389,
+                  "x": 280,
+                  "y": -203.5,
+                  "zoom": -1.2238159821621193,
                   "snapToGrid": false
                 }
               }
             }
+          },
+          {
+            "id": "30b15fa6b05727bb",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Products/Test-Report.md",
+                "mode": "source",
+                "backlinks": true,
+                "source": false
+              }
+            },
+            "group": "0e5218abad5a48e3"
+          },
+          {
+            "id": "484797644e90c005",
+            "type": "leaf",
+            "pinned": true,
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Sources/TODO.md",
+                "mode": "source",
+                "source": false
+              },
+              "pinned": true
+            }
+          },
+          {
+            "id": "d7cda28b6970a519",
+            "type": "leaf",
+            "pinned": true,
+            "state": {
+              "type": "canvas",
+              "state": {
+                "file": "Sources/Test-Edge-Labels.canvas",
+                "viewState": {
+                  "x": -23.5,
+                  "y": 269.75660569105696,
+                  "zoom": -0.29126492946734367,
+                  "snapToGrid": false
+                }
+              },
+              "pinned": true
+            }
           }
         ],
-        "currentTab": 3
+        "currentTab": 2
+      },
+      {
+        "id": "9af5d20faf6595df",
+        "type": "tabs",
+        "dimension": 38.499184339314844,
+        "children": [
+          {
+            "id": "d1b85713c3673046",
+            "type": "leaf",
+            "state": {
+              "type": "localgraph",
+              "state": {
+                "file": "Products/Test-Report.md",
+                "options": {
+                  "collapse-filter": true,
+                  "search": "",
+                  "localJumps": 1,
+                  "localBacklinks": true,
+                  "localForelinks": true,
+                  "localInterlinks": false,
+                  "showTags": false,
+                  "showAttachments": false,
+                  "hideUnresolved": false,
+                  "collapse-color-groups": true,
+                  "colorGroups": [],
+                  "collapse-display": true,
+                  "showArrow": false,
+                  "textFadeMultiplier": 0,
+                  "nodeSizeMultiplier": 1,
+                  "lineSizeMultiplier": 1,
+                  "collapse-forces": true,
+                  "centerStrength": 0.518713248970312,
+                  "repelStrength": 10,
+                  "linkStrength": 1,
+                  "linkDistance": 250,
+                  "scale": 1,
+                  "close": false
+                }
+              }
+            },
+            "group": "0e5218abad5a48e3"
+          }
+        ]
       }
     ],
     "direction": "vertical"
@@ -118,7 +188,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Sources/Smoke-Test.canvas",
+                "file": "Products/Test-Report.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -135,7 +205,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Sources/Smoke-Test.canvas",
+                "file": "Products/Test-Report.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -158,7 +228,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Sources/Smoke-Test.canvas"
+                "file": "Products/Test-Report.md"
               }
             }
           }
@@ -179,17 +249,17 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "484797644e90c005",
+  "active": "30b15fa6b05727bb",
   "lastOpenFiles": [
-    "Sources/Test-Prompts.canvas",
-    "Sources/Test-Sigils.md",
     "Works/Smoke-Test.canvas",
     "Sources/Smoke-Test.canvas",
-    "Sources/TODO.md",
-    "Sources/Webcam-Test.canvas",
-    "Sources/Self-Check.canvas",
-    "Utilities/Screenshot.md",
-    "Products/Webcam-Report.md",
-    "Works/Webcam-Test.canvas"
+    "Products/Test-Report.md",
+    "Works/Test-Edge-Labels.canvas",
+    "Sources/Test-Edge-Labels.canvas",
+    "Works/Test-Screenshots.canvas",
+    "Sources/Test-Screenshots.canvas",
+    "Utilities/Activate-Window.md",
+    "Sources/Untitled.md",
+    "Sources/Webcam-Test.canvas"
   ]
 }

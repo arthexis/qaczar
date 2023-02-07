@@ -4,6 +4,6 @@ Use Python to take a screenshot of the active window.
 import pyautogui
 
 screenshot = pyautogui.screenshot()
-screenshot.save(r"[TARGET.PATH]")
+screenshot.save(r"[TARGET]")
 ```
 

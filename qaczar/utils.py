@@ -140,6 +140,9 @@ def fix_path(path: str) -> str:
         Fixed path.
     """
     fixed_path = str(Path(path).resolve())
+    root_dir = os.environ.get("QACZAR_ROOT_DIR", ".")
+    if fixed_path.startswith(root_dir):
+        return os.path.relpath(fixed_path, root_dir)
     return fixed_path or path
 
 __all__ = [

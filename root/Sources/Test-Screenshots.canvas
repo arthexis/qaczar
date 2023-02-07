@@ -1,0 +1,13 @@
+{
+	"nodes":[
+		{"id":"2117bc13a6892709","x":-515,"y":-284,"width":584,"height":395,"type":"file","file":"Utilities/Activate-Window.md"},
+		{"id":"c243b9c2a65d05b1","x":282,"y":-152,"width":400,"height":400,"type":"file","file":"Utilities/Screenshot.md"},
+		{"id":"fd226816fbcbbbff","x":765,"y":-587,"width":773,"height":435,"type":"file","file":"Products/last-screenshot.png"},
+		{"id":"e2e1143accb95ba6","x":-430,"y":-468,"width":414,"height":60,"type":"text","text":"Opera"}
+	],
+	"edges":[
+		{"id":"c3d5da07b0941ef5","fromNode":"e2e1143accb95ba6","fromSide":"bottom","toNode":"2117bc13a6892709","toSide":"top","label":"WINDOW"},
+		{"id":"20c659728785dc1a","fromNode":"2117bc13a6892709","fromSide":"right","toNode":"c243b9c2a65d05b1","toSide":"left","label":"MATCH"},
+		{"id":"23cf783ccfe22eac","fromNode":"c243b9c2a65d05b1","fromSide":"right","toNode":"fd226816fbcbbbff","toSide":"bottom"}
+	]
+}

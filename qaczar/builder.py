@@ -123,7 +123,7 @@ class Edge:
     toNode: str
     fromSide: str
     toSide: str
-    # TODO: Handle edge labels
+    label: str = ""
 
 
 class Canvas:
@@ -152,7 +152,10 @@ class Canvas:
         self.node_map = {node.id: node for node in self.nodes}
         self.context: dict[str, Any] = context or {
             "CANVAS": self, "OUTPUTS": [], 
-            "PATH": lambda x: fix_path(os.path.join(os.environ["QACZAR_ROOT_DIR"], x))}
+            "PATH": lambda x: fix_path(os.path.join(os.environ["QACZAR_ROOT_DIR"], x)),
+            "IMG": lambda x, y: markdown_image(x, y)
+        }
+        
     
     def save_work_file(self) -> None:
         """Save a copy of the canvas diagram to its working file.
@@ -197,7 +200,7 @@ class Canvas:
             if edge.toNode == node.id:
                 upstream_nodes.append(self.node_map[edge.fromNode])
         upstream_nodes.sort(key=lambda node: (node.y, node.x))
-        assert node not in upstream_nodes, f"Node {node.id} is upstream of itself"
+        upstream_nodes = [n for n in upstream_nodes if n != node]
         return upstream_nodes
     
     def find_downstream_nodes(self, node: Node) -> list[Node]:
@@ -213,7 +216,7 @@ class Canvas:
             if edge.fromNode == node.id:
                 downstream_nodes.append(self.node_map[edge.toNode])
         downstream_nodes.sort(key=lambda node: (node.y, node.x))
-        assert node not in downstream_nodes, f"Node {node.id} is downstream of itself"
+        downstream_nodes = [n for n in downstream_nodes if n.id != node.id]
         return downstream_nodes
     
     def find_isolated_nodes(self) -> list[Node]:
@@ -255,16 +258,12 @@ class Canvas:
         if context is None:
             context = {"CWD": os.getcwd(), "BASE_PYTHON": sys.executable}
         self.context.update(context)
-        logger.info(f"Building {self.source_filename} -> {self.work_filename}")
+        logger.info(f"Building {self.source_filename} -> {self.work_filename}") 
         self.save_work_file()
         # Isolated nodes are executed first, then the target nodes
         # No output is generated from isolated nodes, but they can set context
         isolated_nodes = self.find_isolated_nodes()
         target_nodes = self.find_target_nodes()
-        for node in target_nodes:
-            if node.type == "file":
-                with open(node.file, "w") as f:
-                    f.write("")
         self.process_node_list(isolated_nodes)
         target_outputs = self.process_node_list(target_nodes)
         self.save_work_file()
@@ -293,7 +292,7 @@ class Canvas:
             str: Text with sigils resolved
         """
         with sigils.local_context(**self.context):
-            return sigils.resolve(text)
+            return sigils.resolve(text, recursion_limit=0)
     
     def save_node_changes(self, node: Node, status: Status, 
                 text: Optional[str] = None, file: Optional[str] = None, 
@@ -312,7 +311,20 @@ class Canvas:
         if _type is not None: node.type = _type
         self.save_work_file()
         return node
-
+    
+    def find_edge(self, from_node: Node, to_node: Node) -> Optional[Edge]:
+        """Find an edge between two nodes.
+        Args:
+            from_node (Node): Node to start from
+            to_node (Node): Node to end at
+        Returns:
+            Optional[Edge]: The edge between the nodes, or None if no edge exists
+        """
+        for edge in self.edges:
+            if edge.fromNode == from_node.id and edge.toNode == to_node.id:
+                return edge
+        return None
+    
     def process_node(self, node: Node) -> list[Node]:
         """Execute a single node of any node and return the results.
         Args:
@@ -324,8 +336,19 @@ class Canvas:
         self.save_node_changes(node, Status.READY)
         upstream_nodes = self.find_upstream_nodes(node)
         input_results = self.process_node_list(upstream_nodes)
+        unused_inputs = []
+        for input_node in input_results[:]:
+            edge = self.find_edge(input_node, node)
+            if edge is not None and edge.label:
+                edge.label = self.resolve_sigils(edge.label)
+                self.context[edge.label.upper().strip()] = input_node
+                self.save_work_file()
+            else:
+                unused_inputs.append(input_node)
+        input_results = unused_inputs
         self.context["INPUT"] = input_results[0] if input_results else None
         self.context["INPUTS"] = input_results
+        
         if venv_context := self.context.get("VENV"):
             self.context["PYTHON"] = get_local_python(venv_context)
         else:
@@ -386,7 +409,7 @@ class Canvas:
                     markdown_output = f"## {link_text}\n{markdown_output}"
                 node = self.save_node_changes(
                         node, Status.SUCCESS if status_ok else Status.FAILURE,
-                        text=markdown_output, _type="text")
+                        text=markdown_output, _type="text", file=None)
                 if status_ok:
                     results.append(node)
 
@@ -473,6 +496,7 @@ class Canvas:
                     output = markdown_quote(output.strip())
                     if not status_ok:
                         return False, new_text + f"{code_block.strip()}\n```" + output 
+                    code_block = self.resolve_sigils(code_block)
                     new_text = new_text + f"{code_block.strip()}\n```" + output 
                 elif "shell" in line:
                     for command_line in code_block.splitlines():
@@ -512,12 +536,9 @@ class Canvas:
             # logger.debug(f"Executing Python code:\n{code}")
             with contextlib.redirect_stdout(stdout):
                 with contextlib.redirect_stderr(stderr):
-                    # Use AST to loop ver the strings in the code
-                    # and replace any variables with their values
                     tree = ast.parse(code)
                     for node in ast.walk(tree):
                         if isinstance(node, ast.Str):
-                            # TODO: Use the sigils library to replace variables
                             node.s = self.resolve_sigils(node.s)
                     exec(compile(tree, "<string>", "exec"), self.context)
         except Exception as e:
@@ -571,6 +592,11 @@ class AbortExecution(Exception):
 
 def markdown_quote(text: str) -> str:
     return "\n" + "\n".join(["> " + ln for ln in text.splitlines() if ln]) + "\n"
+
+def markdown_image(image_path: str, caption: Optional[str] = None) -> str:
+    if caption is None:
+        return f"![{image_path}]({image_path})"
+    return f"![{caption}]({image_path})"
 
 
 __all__ = ["Canvas", "AbortExecution"]

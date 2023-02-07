@@ -7,7 +7,7 @@ py-modules = ["qaczar"]
 
 [project]
 name = "qaczar"
-version = "0.1.5"
+version = "0.1.6"
 authors = [
     {name = "Rafael Jesús Guillén Osorio", email = "arthexis@gmail.com"},
 ]
@@ -28,7 +28,7 @@ classifiers = [
 dependencies = [
     'sigils>=0.1.3',
     'docopt',
-    'plumbum',
+    'pywinauto',
 ]
 
 [urls]
