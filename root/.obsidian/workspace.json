@@ -6,32 +6,7 @@
       {
         "id": "e5808be48c032f1d",
         "type": "tabs",
-        "dimension": 61.50081566068516,
         "children": [
-          {
-            "id": "d6542bdf2d4e5f9e",
-            "type": "leaf",
-            "state": {
-              "type": "empty",
-              "state": {}
-            }
-          },
-          {
-            "id": "2719966d9981bc96",
-            "type": "leaf",
-            "state": {
-              "type": "canvas",
-              "state": {
-                "file": "Sources/Webcam-Test.canvas",
-                "viewState": {
-                  "x": 280,
-                  "y": -203.5,
-                  "zoom": -1.2238159821621193,
-                  "snapToGrid": false
-                }
-              }
-            }
-          },
           {
             "id": "30b15fa6b05727bb",
             "type": "leaf",
@@ -40,11 +15,25 @@
               "state": {
                 "file": "Products/Test-Report.md",
                 "mode": "source",
-                "backlinks": true,
                 "source": false
               }
-            },
-            "group": "0e5218abad5a48e3"
+            }
+          },
+          {
+            "id": "b4a4bbd33919b533",
+            "type": "leaf",
+            "state": {
+              "type": "canvas",
+              "state": {
+                "file": "Works/Test-Screenshots.canvas",
+                "viewState": {
+                  "x": 436,
+                  "y": 45.5,
+                  "zoom": -1.12079068560743,
+                  "snapToGrid": false
+                }
+              }
+            }
           },
           {
             "id": "484797644e90c005",
@@ -79,50 +68,7 @@
             }
           }
         ],
-        "currentTab": 2
-      },
-      {
-        "id": "9af5d20faf6595df",
-        "type": "tabs",
-        "dimension": 38.499184339314844,
-        "children": [
-          {
-            "id": "d1b85713c3673046",
-            "type": "leaf",
-            "state": {
-              "type": "localgraph",
-              "state": {
-                "file": "Products/Test-Report.md",
-                "options": {
-                  "collapse-filter": true,
-                  "search": "",
-                  "localJumps": 1,
-                  "localBacklinks": true,
-                  "localForelinks": true,
-                  "localInterlinks": false,
-                  "showTags": false,
-                  "showAttachments": false,
-                  "hideUnresolved": false,
-                  "collapse-color-groups": true,
-                  "colorGroups": [],
-                  "collapse-display": true,
-                  "showArrow": false,
-                  "textFadeMultiplier": 0,
-                  "nodeSizeMultiplier": 1,
-                  "lineSizeMultiplier": 1,
-                  "collapse-forces": true,
-                  "centerStrength": 0.518713248970312,
-                  "repelStrength": 10,
-                  "linkStrength": 1,
-                  "linkDistance": 250,
-                  "scale": 1,
-                  "close": false
-                }
-              }
-            },
-            "group": "0e5218abad5a48e3"
-          }
-        ]
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -188,7 +134,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Products/Test-Report.md",
+                "file": "Works/Test-Screenshots.canvas",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -205,7 +151,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Products/Test-Report.md",
+                "file": "Works/Test-Screenshots.canvas",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -228,7 +174,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Products/Test-Report.md"
+                "file": "Works/Test-Screenshots.canvas"
               }
             }
           }
@@ -249,17 +195,17 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "30b15fa6b05727bb",
+  "active": "b4a4bbd33919b533",
   "lastOpenFiles": [
+    "Sources/Test-Screenshots.canvas",
+    "Sources/TODO.md",
+    "Works/Test-Screenshots.canvas",
+    "Sources/Test-Prompts.canvas",
+    "Products/edited-screenshot.png",
+    "Products/Webcam-Report.md",
     "Works/Smoke-Test.canvas",
     "Sources/Smoke-Test.canvas",
-    "Products/Test-Report.md",
-    "Works/Test-Edge-Labels.canvas",
-    "Sources/Test-Edge-Labels.canvas",
-    "Works/Test-Screenshots.canvas",
-    "Sources/Test-Screenshots.canvas",
-    "Utilities/Activate-Window.md",
-    "Sources/Untitled.md",
-    "Sources/Webcam-Test.canvas"
+    "Utilities/Zero-File.md",
+    "Utilities/Match-Template.md"
   ]
 }

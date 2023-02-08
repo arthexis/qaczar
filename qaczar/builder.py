@@ -14,7 +14,7 @@ from typing import Optional, Any, Generator
 from dataclasses import dataclass
 
 import sigils  # type: ignore
-from .utils import get_local_python, curr_work_dir, strip_quotes, fix_path
+from .utils import get_local_python, curr_work_dir, strip_quotes
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +110,7 @@ class Node:
         self.color = status.value
 
     def get_status(self) -> Status:
-        return Status(self.color)
+        return Status(self.color if self.color else "7")
 
 
 @dataclass
@@ -152,8 +152,8 @@ class Canvas:
         self.node_map = {node.id: node for node in self.nodes}
         self.context: dict[str, Any] = context or {
             "CANVAS": self, "OUTPUTS": [], 
-            "PATH": lambda x: fix_path(os.path.join(os.environ["QACZAR_ROOT_DIR"], x)),
-            "IMG": lambda x, y: markdown_image(x, y)
+            "IMG": lambda x, y: markdown_image(x, y),
+            "LINK": lambda x, y: markdown_link(x, y),
         }
         
     
@@ -244,6 +244,7 @@ class Canvas:
         # TODO: Include other validation checks here
         try:
             with curr_work_dir():
+                assert os.path.exists(filename), f"File not found: {filename}"
                 return self.source_mtime < os.path.getmtime(filename)
         except FileNotFoundError:
             return False
@@ -332,10 +333,16 @@ class Canvas:
         Returns:
             list[Node]: List of results (a single node for most cases)
         """
+        if not node.is_canvas():
+            if node.get_status() == Status.SUCCESS:
+                return [node]
+            if node.get_status() == Status.FAILURE:
+                return []
         self.context["NODE"] = node
         self.save_node_changes(node, Status.READY)
         upstream_nodes = self.find_upstream_nodes(node)
         input_results = self.process_node_list(upstream_nodes)
+
         unused_inputs = []
         for input_node in input_results[:]:
             edge = self.find_edge(input_node, node)
@@ -354,7 +361,7 @@ class Canvas:
         else:
             self.context["PYTHON"] = sys.executable
         downstream_nodes = self.find_downstream_nodes(node)
-        downstream_files = [fix_path(n.file) for n in downstream_nodes if n.is_file()]
+        downstream_files = [n.file for n in downstream_nodes if n.is_file()]
         self.context["TARGETS"] = downstream_files
         self.context["TARGET"] = downstream_files[0] if downstream_files else None
 
@@ -368,7 +375,7 @@ class Canvas:
             if node.is_blank():
                 # logger.debug(f"Copy output (blank) {self.context['OUTPUTS']}")
                 if node.is_file("md") or node.is_text():
-                    for output_node in self.context["OUTPUTS"]:
+                    for output_node in self.context["INPUTS"]:
                         if output_node.type == 'text':
                             node.text = "\n".join([node.text, output_node.text]) + "\n"
                         elif output_node.is_file("md", "txt", "log"):
@@ -401,7 +408,7 @@ class Canvas:
                 # Markdown nodes are executed and the node is updated with the output
                 # logger.debug(f"Resolve sigils (markdown) {node.file or '<text>'}")
                 node_text = node.read_text_or_file()
-                # logger.debug(f"Execute (markdown) {node.id}")
+                logger.debug(f"Execute (markdown) {node.id}")
                 status_ok, markdown_output = self.exec_markdown(node_text)
                 if node.file and not markdown_output.startswith("#"):
                     node_filename = node.file.split("/")[-1].split(".")[0]
@@ -429,7 +436,7 @@ class Canvas:
                     raise AbortExecution(self, node, "No output from sub-canvas")
                 
             elif node.is_script():
-                # Script nodes are executed and not updated
+                # Script nodes are executed 
                 script_filename = node.file
                 if not os.path.exists(script_filename):
                     raise AbortExecution(self, node, "Script file not found")
@@ -441,11 +448,10 @@ class Canvas:
                 self.save_node_changes(node, Status.SUCCESS)
 
             elif node.is_file():
-                # Files are checked and added to the results
-                # logger.debug(f"Validate product (file) {node.id}")
-                if not self.check_product(node.file):
-                    raise AbortExecution(self, node, 
-                            f"Product file {node.file} not updated")
+                # Check the file exists
+                with curr_work_dir():
+                    if not os.path.exists(node.file):
+                        raise AbortExecution(self, node, "File not found")
                 self.save_node_changes(node, Status.SUCCESS)
                 results.append(node)
                 
@@ -464,6 +470,7 @@ class Canvas:
         Returns:
             tuple[bool, str]: Tuple of status and output text
         """
+        # TODO: Fix error duplicating output of python scripts
         new_text, ignore_until = "", None
         # logger.info(f"Executing markdown:\n{text}")
         lines = text.splitlines()
@@ -492,24 +499,20 @@ class Canvas:
                     last_line = len(lines)
                 code_block = "\n".join(lines[i+1:last_line])
                 if "python" in line:
-                    status_ok, output = self.exec_python_block(code_block)
-                    output = markdown_quote(output.strip())
+                    status_ok, output, code_block = self.exec_python_block(code_block)
+                    # logger.info(f"Python block output: {output}")
+                    output = self.mark_output_block(output.strip())
                     if not status_ok:
                         return False, new_text + f"{code_block.strip()}\n```" + output 
-                    code_block = self.resolve_sigils(code_block)
                     new_text = new_text + f"{code_block.strip()}\n```" + output 
                 elif "shell" in line:
                     for command_line in code_block.splitlines():
                         command_line = self.resolve_sigils(command_line)
                         return_code, output = self.exec_command_line(command_line)
-                        output = markdown_quote(output.strip())
+                        output = self.mark_output_block(output.strip())
                         if return_code != 0:
                             return False,  new_text + f"{code_block.strip()}\n```" + output 
                         new_text = new_text +f"{code_block.strip()}\n```" + output 
-                else:
-                    logger.warning(f"Unknown code block type: {line}")
-                    code_block = self.resolve_sigils(code_block)
-                    new_text += code_block + "\n```"
                 # TODO: If there already is quoted section after the code block, 
                 #       don't add another, instead check they are the same
                 ignore_until = "```" 
@@ -517,12 +520,29 @@ class Canvas:
                 # Interpret as a command line
                 command_line = line.strip("`")
                 return_code, output = self.exec_command_line(command_line)
-                new_text += markdown_quote(output)
+                new_text += self.mark_output_block(output)
                 if return_code != 0:
                     return False, new_text.strip()
         return True, new_text.strip()
 
-    def exec_python_block(self, code: str) -> tuple[bool, str]:
+    def mark_output_block(self, text: str) -> str:
+        """Prepare the output of a code block for markdown.
+        This includes parsing the output for sigils and adding to context.
+        Args:
+            text (str): Text to mark
+        Returns:
+            str: Text with sigil
+        """
+        resolved = self.resolve_sigils(text.strip())
+        for line in resolved.splitlines():
+            if "=" in line:
+                var, value = line.split("=")
+                if var.startswith("-") or var.startswith("+") or var.startswith("*"):
+                    var = var[1:]
+                self.context[var.strip().upper()] = strip_quotes(value.strip())
+        return markdown_quote(resolved)
+
+    def exec_python_block(self, code: str) -> tuple[bool, str, str]:
         """Execute a Python code block and return the results.
         Args:
             code (str): Python code to execute
@@ -532,23 +552,32 @@ class Canvas:
         stdout = io.StringIO()
         stderr = io.StringIO()
         error = None
+        tree = ast.parse(code)
+        replacements = {}
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Str):
+                resolved = self.resolve_sigils(node.s)
+                if resolved != node.s:
+                    replacements[node.s] = resolved
+                    node.s = resolved
+
+        compiled = compile(tree, "<string>", "exec")
+        # Apply the replacements to the original code
+        for original, replacement in replacements.items():
+            code = code.replace(original, replacement)
         try:
             # logger.debug(f"Executing Python code:\n{code}")
             with contextlib.redirect_stdout(stdout):
                 with contextlib.redirect_stderr(stderr):
-                    tree = ast.parse(code)
-                    for node in ast.walk(tree):
-                        if isinstance(node, ast.Str):
-                            node.s = self.resolve_sigils(node.s)
-                    exec(compile(tree, "<string>", "exec"), self.context)
+                    with curr_work_dir():
+                        exec(compiled, self.context)
         except Exception as e:
             error = e
         stdout_value = stdout.getvalue()
-        if len(stderr.getvalue()) > 0:
-            stdout_value += "\n" + stderr.getvalue()
         if error is not None:
-            return False, stdout_value.strip() + "\n" + str(error)
-        return True, stdout_value.strip()
+            stderr_value = stderr.getvalue()
+            return False, f"{stdout_value}{stderr_value}{error}", code
+        return True, stdout_value.strip(), code
 
     def exec_python_script(self, script_path: str) -> tuple[int, str]:
         """Execute a script and return the results.	
@@ -559,7 +588,8 @@ class Canvas:
         """
         # TODO: Add support for running modules
         python = self.context.get("PYTHON", "python")
-        return self.exec_command_line(f"{python} {script_path}")
+        with curr_work_dir():
+            return self.exec_command_line(f"{python} {script_path}")
         
     def exec_command_line(self, command_line: str) -> tuple[int, str]:
         """Execute a command line and return the results.
@@ -591,12 +621,17 @@ class AbortExecution(Exception):
 
 
 def markdown_quote(text: str) -> str:
-    return "\n" + "\n".join(["> " + ln for ln in text.splitlines() if ln]) + "\n"
+    return "\n" + "\n".join(["> " + ln for ln in text.splitlines()]) + "\n"
 
-def markdown_image(image_path: str, caption: Optional[str] = None) -> str:
-    if caption is None:
+def markdown_image(image_path: str, caption: str = "") -> str:
+    if not caption:
         return f"![{image_path}]({image_path})"
     return f"![{caption}]({image_path})"
+
+def markdown_link(link: str, caption: str = "") -> str:
+    if not caption:
+        return f"[{link}]({link})"
+    return f"[{caption}]({link})"
 
 
 __all__ = ["Canvas", "AbortExecution"]

@@ -4,6 +4,8 @@ README.md
 pyproject.toml
 requirements.txt
 .vscode/settings.json
+dist/qaczar-0.1.6-py3-none-any.whl
+dist/qaczar-0.1.6.tar.gz
 qaczar/__init__.py
 qaczar/__main__.py
 qaczar/builder.py
@@ -45,9 +47,12 @@ root/Sources/MD-Notes.canvas
 root/Sources/Self-Check.canvas
 root/Sources/Smoke-Test.canvas
 root/Sources/TODO.md
+root/Sources/Test-Edge-Labels.canvas
 root/Sources/Test-Prompts.canvas
+root/Sources/Test-Screenshots.canvas
 root/Sources/Test-Sigils.md
 root/Sources/Webcam-Test.canvas
+root/Utilities/Activate-Window.md
 root/Utilities/Image-To-Text.md
 root/Utilities/PyPI-Upload.md
 root/Utilities/Screenshot.md

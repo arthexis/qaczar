@@ -9,5 +9,5 @@ time.sleep(1)
 ret, frame = cap.read()
 cap.release()
 assert frame is not None and frame.any(), "Cam busy or invalid."
-cv2.imwrite(r"[TARGET]" or "untitled-frame.png", frame)
+cv2.imwrite(r"[TARGET]", frame)
 ```

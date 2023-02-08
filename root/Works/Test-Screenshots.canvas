@@ -1,0 +1,158 @@
+{
+    "nodes": [
+        {
+            "id": "fd226816fbcbbbff",
+            "x": 765,
+            "y": -587,
+            "width": 773,
+            "height": 435,
+            "type": "file",
+            "file": "Products/last-screenshot.png",
+            "text": "",
+            "color": "4",
+            "url": ""
+        },
+        {
+            "id": "c243b9c2a65d05b1",
+            "x": 213,
+            "y": -684,
+            "width": 463,
+            "height": 400,
+            "type": "text",
+            "file": "Utilities/Screenshot.md",
+            "text": "## [Screenshot](Screenshot)\nUse Python to take a screenshot of the active window.\n\n```python\nimport pyautogui\n\nscreenshot = pyautogui.screenshot()\nscreenshot.save(r\"Products/last-screenshot.png\")\n```",
+            "color": "4",
+            "url": ""
+        },
+        {
+            "id": "efd491545f982bc2",
+            "x": 245,
+            "y": -147,
+            "width": 400,
+            "height": 122,
+            "type": "file",
+            "file": "Sources/template-image.png",
+            "text": "",
+            "color": "4",
+            "url": ""
+        },
+        {
+            "id": "7290cfe9109598de",
+            "x": 890,
+            "y": -9,
+            "width": 648,
+            "height": 784,
+            "type": "text",
+            "file": "Utilities/Match-Template.md",
+            "text": "## [Match-Template](Match-Template)\nHighlight instances of a template found within a given image.\n\n```python\nimport cv2\nimport numpy as np\nfrom matplotlib import pyplot as plt\n\nimg_rgb = cv2.imread(r'Products/last-screenshot.png')\nimg_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)\ntemplate = cv2.imread(r'Sources/template-image.png', 0)\nw, h = template.shape[::-1]\n\nres = cv2.matchTemplate(img_gray,template,cv2.TM_CCOEFF_NORMED)\nthreshold = 0.8\nloc = np.where( res >= threshold)\nx1, y1, x2, y2 = 0, 0, 0, 0\nfor pt in zip(*loc[::-1]):\n    x1, y1, x2, y2 = pt[0], pt[1], pt[0] + w, pt[1] + h\n    cv2.rectangle(img_rgb, pt, (x2, y2), (0,0,255), 2)\n\ncv2.imwrite(r'Products/edited-screenshot.png', img_rgb)\nprint(f\"X1 = {x1}\")\nprint(f\"Y1 = {y1}\")\nprint(f\"X2 = {x2}\")\nprint(f\"Y2 = {y2}\")\n```\n> X1 = 216\n> Y1 = 88\n> X2 = 429\n> Y2 = 153",
+            "color": "4",
+            "url": ""
+        },
+        {
+            "id": "2117bc13a6892709",
+            "x": -539,
+            "y": -481,
+            "width": 584,
+            "height": 395,
+            "type": "text",
+            "file": "Utilities/Activate-Window.md",
+            "text": "## [Activate-Window](Activate-Window)\nFind a window by approximate name and bring it to the fore.\n\n```python\nfrom pywinauto.application import Application\napp = Application().connect(title_re=r\".*Opera.*\")\nwin = app.top_window()\nwin.set_focus()\nprint(win.title)\n```\n> <pywinauto.application.WindowSpecification object at 0x000001E7F6EC60D0>",
+            "color": "4",
+            "url": ""
+        },
+        {
+            "id": "e2e1143accb95ba6",
+            "x": -454,
+            "y": -665,
+            "width": 414,
+            "height": 60,
+            "type": "text",
+            "file": "",
+            "text": "Opera",
+            "color": "4",
+            "url": ""
+        },
+        {
+            "id": "637a2da069b4f044",
+            "x": -411,
+            "y": 98,
+            "width": 584,
+            "height": 108,
+            "type": "text",
+            "file": "",
+            "text": "216, 429",
+            "color": "4",
+            "url": ""
+        },
+        {
+            "id": "b94eefd59eeb9f70",
+            "x": -666,
+            "y": 303,
+            "width": 839,
+            "height": 472,
+            "type": "file",
+            "file": "Products/edited-screenshot.png",
+            "text": "",
+            "color": "4",
+            "url": ""
+        }
+    ],
+    "edges": [
+        {
+            "id": "c3d5da07b0941ef5",
+            "fromNode": "e2e1143accb95ba6",
+            "toNode": "2117bc13a6892709",
+            "fromSide": "bottom",
+            "toSide": "top",
+            "label": "APP"
+        },
+        {
+            "id": "20c659728785dc1a",
+            "fromNode": "2117bc13a6892709",
+            "toNode": "c243b9c2a65d05b1",
+            "fromSide": "right",
+            "toSide": "left",
+            "label": ""
+        },
+        {
+            "id": "00ecb4c1aadd9ccb",
+            "fromNode": "fd226816fbcbbbff",
+            "toNode": "7290cfe9109598de",
+            "fromSide": "bottom",
+            "toSide": "top",
+            "label": ""
+        },
+        {
+            "id": "987dc89fb2cfde75",
+            "fromNode": "7290cfe9109598de",
+            "toNode": "b94eefd59eeb9f70",
+            "fromSide": "left",
+            "toSide": "right",
+            "label": ""
+        },
+        {
+            "id": "93c51641eb9cf739",
+            "fromNode": "c243b9c2a65d05b1",
+            "toNode": "fd226816fbcbbbff",
+            "fromSide": "right",
+            "toSide": "left",
+            "label": ""
+        },
+        {
+            "id": "3b8fc89b22453b82",
+            "fromNode": "efd491545f982bc2",
+            "toNode": "7290cfe9109598de",
+            "fromSide": "bottom",
+            "toSide": "left",
+            "label": "TEMPLATE"
+        },
+        {
+            "id": "47196374d0f78e5a",
+            "fromNode": "7290cfe9109598de",
+            "toNode": "637a2da069b4f044",
+            "fromSide": "left",
+            "toSide": "right",
+            "label": ""
+        }
+    ]
+}
