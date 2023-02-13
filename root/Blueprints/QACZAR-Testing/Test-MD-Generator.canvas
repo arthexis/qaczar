@@ -1,13 +1,13 @@
 {
 	"nodes":[
-		{"id":"03907bb891f3bcd7","x":-265,"y":-100,"width":286,"height":161,"type":"file","file":"Products/last-screenshot.png"},
-		{"id":"bebc939283c2af53","x":-778,"y":-129,"width":441,"height":721,"type":"file","file":"Products/Test-Report.md"},
-		{"id":"61f81642f58d8bfa","x":95,"y":-376,"width":400,"height":357,"type":"file","file":"Utilities/Screenshot.md"},
-		{"id":"680168e7a2a203be","x":-779,"y":-540,"width":400,"height":273,"type":"file","file":"Utilities/Zero-File.md"},
+		{"id":"03907bb891f3bcd7","x":-265,"y":-100,"width":286,"height":161,"type":"file","file":"Prototypes/Products/last-screenshot.png"},
+		{"id":"bebc939283c2af53","x":-778,"y":-129,"width":441,"height":721,"type":"file","file":"Prototypes/Reports/Test-Report.md"},
+		{"id":"61f81642f58d8bfa","x":95,"y":-376,"width":400,"height":357,"type":"file","file":"Blueprints/Utilities/Task-Automation/Screenshot.md"},
+		{"id":"680168e7a2a203be","x":-779,"y":-540,"width":400,"height":273,"type":"file","file":"Blueprints/Utilities/File-Management/Zero-File.md"},
 		{"id":"2874a450bd614872","x":-337,"y":-460,"width":400,"height":193,"type":"text","text":"### Platform Info\nUsing Python: `[PYTHON]`\nCurrent Directory: `[CWD]`\nName: `[NAME]`"},
 		{"id":"da677b7d95b82ee9","x":-337,"y":-627,"width":344,"height":126,"type":"text","text":"Independent nodes add context before everything else is evaluated, for example:\nNAME = `arthexis`"},
 		{"id":"9833014ab40ef221","x":-174,"y":112,"width":391,"height":120,"type":"text","text":"### Notes\nThis gets automatically copied to the target."},
-		{"id":"8f9b070331b6bb08","x":157,"y":289,"width":400,"height":259,"type":"file","file":"Sources/Test-Sigils.md"},
+		{"id":"8f9b070331b6bb08","x":157,"y":289,"width":400,"height":259,"type":"file","file":"Blueprints/References/Test-Sigils.md"},
 		{"id":"1e41d471ddfe4db0","x":295,"y":112,"width":250,"height":60,"type":"text","text":"Example Input"}
 	],
 	"edges":[

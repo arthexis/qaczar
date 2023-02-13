@@ -1,0 +1,15 @@
+{
+	"nodes":[
+		{"id":"df98506e5a0af957","x":159,"y":-66,"width":441,"height":149,"type":"text","text":"# Website Analyzer\nExtract as much information as possible from the \nwebsite given above and generates a report.\n"},
+		{"id":"772c9f5d2aeac286","x":-440,"y":382,"width":501,"height":401,"type":"file","file":"Blueprints/Utilities/Task-Automation/Read-Website.md"},
+		{"id":"0c9e7e43e1be86f2","x":-472,"y":9,"width":565,"height":234,"type":"link","url":"https://github.com/psf/requests"},
+		{"id":"bd87aade2cb98103","x":380,"y":243,"width":400,"height":216,"type":"text","text":""},
+		{"id":"5710b577cf20ef82","x":206,"y":553,"width":250,"height":60,"type":"text","text":""}
+	],
+	"edges":[
+		{"id":"cbc699588942daef","fromNode":"0c9e7e43e1be86f2","fromSide":"bottom","toNode":"772c9f5d2aeac286","toSide":"top","label":"URL"},
+		{"id":"702d38876f4f6784","fromNode":"772c9f5d2aeac286","fromSide":"right","toNode":"5710b577cf20ef82","toSide":"left"},
+		{"id":"1c359adececf7a09","fromNode":"df98506e5a0af957","fromSide":"bottom","toNode":"bd87aade2cb98103","toSide":"top"},
+		{"id":"d581bf1efe6086ef","fromNode":"5710b577cf20ef82","fromSide":"right","toNode":"bd87aade2cb98103","toSide":"bottom"}
+	]
+}

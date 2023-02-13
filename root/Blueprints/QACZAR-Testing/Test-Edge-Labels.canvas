@@ -1,8 +1,8 @@
 {
 	"nodes":[
-		{"id":"09ebf6c2c9d44110","x":61,"y":-283,"width":400,"height":225,"type":"file","file":"Products/last-screenshot.png"},
-		{"id":"169d67b94552487a","x":-545,"y":-283,"width":435,"height":343,"type":"file","file":"Utilities/Screenshot.md"},
-		{"id":"5d0728422c651491","x":-545,"y":138,"width":400,"height":400,"type":"file","file":"Products/Test-Report.md"},
+		{"id":"09ebf6c2c9d44110","x":61,"y":-283,"width":400,"height":225,"type":"file","file":"Prototypes/Products/last-screenshot.png"},
+		{"id":"169d67b94552487a","x":-545,"y":-283,"width":435,"height":343,"type":"file","file":"Blueprints/Utilities/Task-Automation/Screenshot.md"},
+		{"id":"5d0728422c651491","x":-545,"y":138,"width":400,"height":400,"type":"file","file":"Prototypes/Reports/Test-Report.md"},
 		{"id":"ba16d412bb700e36","x":136,"y":78,"width":362,"height":260,"type":"text","text":"Test we can user label variables to reorder the outputs or selectively include them:\n\n[SCREENSHOT.IMG=\"Screenshot\"]\n\n---\n\n[SCRIPT]"},
 		{"id":"f4e6aae60fbb8449","x":136,"y":387,"width":362,"height":90,"type":"text","text":"Test dynamic variable label assignment:\nREPORT = TEST_REPORT"}
 	],

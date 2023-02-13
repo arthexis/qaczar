@@ -3,7 +3,12 @@
     {
       "type": "file",
       "title": "Test-Webcam",
-      "path": "Sources/Webcam-Test.canvas"
+      "path": "Blueprints/QACZAR-Testing/Test-Webcam.canvas"
+    },
+    {
+      "type": "file",
+      "title": "TODO",
+      "path": "TODO.md"
     }
   ]
 }

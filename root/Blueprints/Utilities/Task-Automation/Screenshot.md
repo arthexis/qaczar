@@ -1,4 +1,4 @@
-Use Python to take a screenshot of the active window.
+Take a screenshot of the active window.
 
 ```python
 import pyautogui

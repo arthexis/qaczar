@@ -18,7 +18,7 @@
     {
       "id": "a4fk5u66f4",
       "platform_specific_commands": {
-        "default": "C:\\Python311\\python.exe -m qaczar \"{{file_path:relative}}\" --purge --root {{vault_path}}"
+        "default": "C:\\Python311\\python.exe -m qaczar \"{{file_path:relative}}\" --root {{vault_path}} --log INFO"
       },
       "shells": {},
       "alias": "Prototype with QACZAR",
@@ -38,6 +38,34 @@
       },
       "output_channel_order": "stdout-first",
       "output_handling_mode": "realtime",
+      "events": {},
+      "command_palette_availability": "enabled",
+      "preactions": [],
+      "variable_default_values": {}
+    },
+    {
+      "id": "ixp4m2cbss",
+      "platform_specific_commands": {
+        "default": "C:\\Python311\\python.exe -m qaczar \"{{file_path:relative}}\" --purge --root {{vault_path}} --debug --log DEBUG"
+      },
+      "shells": {},
+      "alias": "Prototype with QACZAR (Debug)",
+      "icon": "bug",
+      "confirm_execution": false,
+      "ignore_error_codes": [],
+      "input_contents": {
+        "stdin": null
+      },
+      "output_channels": {
+        "stdout": "ignore",
+        "stderr": "notification"
+      },
+      "output_wrappers": {
+        "stdout": null,
+        "stderr": null
+      },
+      "output_channel_order": "stdout-first",
+      "output_handling_mode": "buffered",
       "events": {},
       "command_palette_availability": "enabled",
       "preactions": [],

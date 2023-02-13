@@ -7,7 +7,7 @@ py-modules = ["qaczar"]
 
 [project]
 name = "qaczar"
-version = "0.1.6"
+version = "0.1.7"
 authors = [
     {name = "Rafael Jesús Guillén Osorio", email = "arthexis@gmail.com"},
 ]
@@ -32,6 +32,8 @@ dependencies = [
     'numpy',
     'opencv-python',
     'matplotlib',
+    'requests',
+    'beautifulsoup4',
 ]
 
 [urls]

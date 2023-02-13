@@ -99,13 +99,13 @@ def load_local_pyproject() -> dict:
     
 
 @contextlib.contextmanager
-def curr_work_dir(dirname: str = "") -> Generator[str, None, None]:
+def curr_work_dir(*dirnames) -> Generator[str, None, None]:
     """Change the current working directory temporarily.
     Args:
         path: Path to change to.
     """
-    root_dir = os.environ.get("QACZAR_ROOT_DIR", ".")
-    temp_path = os.path.join(root_dir, dirname)
+    root_dir = os.environ.get("QACZAR_ROOT_DIR", ".").strip()
+    temp_path = os.path.join(root_dir, *dirnames)
     old_cwd = os.getcwd()
     try:
         os.chdir(temp_path)
@@ -126,7 +126,7 @@ def strip_quotes(value: str) -> str:
 
 def purge_work_files():
     """Remove old workloads."""
-    with curr_work_dir("Works"):
+    with curr_work_dir("Prototypes"):
         # logger.debug(f"Purging files from {os.getcwd()}")
         for canvas_file in glob("*.canvas"):
             os.unlink(canvas_file)

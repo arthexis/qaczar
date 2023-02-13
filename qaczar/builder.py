@@ -7,6 +7,7 @@ import ast
 import json
 import shutil
 import logging
+import requests
 import subprocess
 import contextlib
 from enum import Enum
@@ -50,11 +51,12 @@ class Node:
     def is_blank(self) -> bool:
         # Files are blank if they have 0 bytes
         with curr_work_dir():
-            return ((self.is_text() and not self.text) or 
-                    (self.is_file() and os.path.getsize(self.file) == 0))
+            return (self.is_text() and not self.text) \
+                or (self.is_file() and os.path.getsize(self.file) == 0)
     
-    def is_link(self) -> bool:
-        return self.type == "link" and bool(self.url)
+    def is_remote(self) -> bool:
+        return (self.type == "link" and bool(self.url)) or self.is_file("url") \
+            or (bool(self.text) and self.text.startswith("http"))
 
     def get_ext(self) -> str:
         return self.file.split(".")[-1] if self.is_file() else ""
@@ -100,7 +102,7 @@ class Node:
     def __str__(self) -> str:
         if self.is_text(): return self.text
         elif self.is_file(): return self.file
-        elif self.is_link(): return self.url
+        elif self.is_remote(): return self.url
         else: return self.type
 
     def __repr__(self) -> str:
@@ -111,6 +113,12 @@ class Node:
 
     def get_status(self) -> Status:
         return Status(self.color if self.color else "7")
+    
+    def build_temp_filename(self) -> str:
+        if self.file:
+            return os.path.join(os.getcwd(), 
+                    f"Temp-{self.file.split('/')[-1].split('.')[0]}.md")
+        return os.path.join(os.getcwd(), f"Temp-Node.md")
 
 
 @dataclass
@@ -138,7 +146,7 @@ class Canvas:
             ValueError: If the canvas file is in the workloads directory
         """	
         self.source_filename = filename
-        if os.path.dirname(filename) == "Works":
+        if os.path.dirname(filename) == "Prototypes":
             raise ValueError("Canvas file must not be in the works directory")
         self.work_filename = os.path.basename(filename)
         # Print to stdout for Obsidian to capture the filename
@@ -167,7 +175,7 @@ class Canvas:
             "nodes": [node.__dict__ for node in self.nodes],
             "edges": [edge.__dict__ for edge in self.edges],
         }
-        with curr_work_dir("Works"):
+        with curr_work_dir("Prototypes"):
             with open(self.work_filename, "w") as f:
                 json.dump(diagram, f, indent=4)
     
@@ -367,26 +375,41 @@ class Canvas:
 
         results, status_ok = [], False
         self.save_node_changes(node, Status.ACTIVE)
-        with curr_work_dir(self.context["CWD"]):   
+        with curr_work_dir():   
             # Execution rules are based on node conditions.
             # Type is not used exclusively, for example a file node can be
             # executed as python, markdown, or just copied.
 
             if node.is_blank():
                 # logger.debug(f"Copy output (blank) {self.context['OUTPUTS']}")
-                if node.is_file("md") or node.is_text():
+                if node.type == "text" or node.is_file("md"):
                     for output_node in self.context["INPUTS"]:
+                        # Checking for temp files should be done here
+                        with curr_work_dir("Prototypes", "Products"):
+                            temp_filename = output_node.build_temp_filename()
+                            if os.path.exists(temp_filename):
+                                # Read the contents of the temp file
+                                with open(temp_filename, "r") as f:
+                                    output_node_text = f.read()
+                                node.text = "\n".join([node.text, output_node_text]) + "\n"
+                                continue
                         if output_node.type == 'text':
                             node.text = "\n".join([node.text, output_node.text]) + "\n"
                         elif output_node.is_file("md", "txt", "log"):
                             node.text = "\n".join([node.text, output_node.read_text_or_file()]) + "\n"
                         elif output_node.is_file():
                             node.text = "\n".join([node.text, f"![{output_node.file}]({output_node.file})"]) + "\n"
-                        else:
+                        elif output_node.file:
                             node.text = "\n".join([node.text, f"### {output_node.file}"]) + "\n"
+
                     if node.text and node.file:
-                        with curr_work_dir():
-                            with open(node.file, "w") as f: f.write(node.text)
+                        # Check if a tempfile was generated and read that instead
+                        # Maybe this should be higher up?
+                        node_text = node.text
+                        
+                        if node_text:
+                            with curr_work_dir():
+                                with open(node.file, "w") as f: f.write(node_text)
                     if node.type == 'text':
                         # Make the header work as a link to the original file
                         link_text = f"[{node.file}]({node.file})"
@@ -408,7 +431,14 @@ class Canvas:
                 # Markdown nodes are executed and the node is updated with the output
                 # logger.debug(f"Resolve sigils (markdown) {node.file or '<text>'}")
                 node_text = node.read_text_or_file()
-                logger.debug(f"Execute (markdown) {node.id}")
+                if 'TARGET' in node_text and not self.context.get("TARGET"):
+                    with curr_work_dir("Prototypes", "Products"):
+                        temp_filename = node.build_temp_filename()
+                        self.context["TARGET"] = temp_filename
+                        if os.path.exists(temp_filename):
+                            os.remove(temp_filename)
+                        logger.debug(f"Use temporary TARGET: {temp_filename}")
+                # logger.debug(f"Execute (markdown) {node.id}")
                 status_ok, markdown_output = self.exec_markdown(node_text)
                 if node.file and not markdown_output.startswith("#"):
                     node_filename = node.file.split("/")[-1].split(".")[0]
@@ -440,7 +470,7 @@ class Canvas:
                 script_filename = node.file
                 if not os.path.exists(script_filename):
                     raise AbortExecution(self, node, "Script file not found")
-                logger.debug(f"Execute (script) {node.id}")
+                # logger.debug(f"Execute (script) {node.id}")
                 self.save_node_changes(node, Status.ACTIVE)
                 return_code, script_out = self.exec_python_script(script_filename)
                 if return_code != 0:
@@ -452,6 +482,11 @@ class Canvas:
                 with curr_work_dir():
                     if not os.path.exists(node.file):
                         raise AbortExecution(self, node, "File not found")
+                self.save_node_changes(node, Status.SUCCESS)
+                results.append(node)
+
+            elif node.is_remote():
+                # Do nothing for remote nodes for now
                 self.save_node_changes(node, Status.SUCCESS)
                 results.append(node)
                 
@@ -536,7 +571,7 @@ class Canvas:
         resolved = self.resolve_sigils(text.strip())
         for line in resolved.splitlines():
             if "=" in line:
-                var, value = line.split("=")
+                var, value = line.split("=", 1)
                 if var.startswith("-") or var.startswith("+") or var.startswith("*"):
                     var = var[1:]
                 self.context[var.strip().upper()] = strip_quotes(value.strip())
@@ -560,7 +595,6 @@ class Canvas:
                 if resolved != node.s:
                     replacements[node.s] = resolved
                     node.s = resolved
-
         compiled = compile(tree, "<string>", "exec")
         # Apply the replacements to the original code
         for original, replacement in replacements.items():
@@ -573,11 +607,12 @@ class Canvas:
                         exec(compiled, self.context)
         except Exception as e:
             error = e
-        stdout_value = stdout.getvalue()
-        if error is not None:
-            stderr_value = stderr.getvalue()
-            return False, f"{stdout_value}{stderr_value}{error}", code
-        return True, stdout_value.strip(), code
+        stdout_value = stdout.getvalue().strip()
+        stderr_value = stderr.getvalue().strip()
+        if error is not None or stderr_value:
+            logger.warning(f"Python block failed:\n{code}\n{stdout_value}\n{stderr_value}\n{error}")
+            return False, f"{stdout_value}{stderr_value}{error or ''}", code
+        return True, stdout_value, code
 
     def exec_python_script(self, script_path: str) -> tuple[int, str]:
         """Execute a script and return the results.	

@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Products/Test-Report.md",
+                "file": "Prototypes/Reports/Test-Report.md",
                 "mode": "source",
                 "source": false
               }
@@ -23,52 +23,72 @@
             "id": "b4a4bbd33919b533",
             "type": "leaf",
             "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Blueprints/Utilities/Task-Automation/Activate-Window.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "a31096792fe76d7d",
+            "type": "leaf",
+            "state": {
               "type": "canvas",
               "state": {
-                "file": "Works/Test-Screenshots.canvas",
+                "file": "Blueprints/Inventions/Website-Analyzer.canvas",
                 "viewState": {
-                  "x": 436,
-                  "y": 45.5,
-                  "zoom": -1.12079068560743,
+                  "x": 0,
+                  "y": -116.25,
+                  "zoom": 0,
                   "snapToGrid": false
                 }
               }
             }
           },
           {
-            "id": "484797644e90c005",
+            "id": "ba5147aa227b5133",
             "type": "leaf",
-            "pinned": true,
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Sources/TODO.md",
-                "mode": "source",
-                "source": false
-              },
-              "pinned": true
-            }
-          },
-          {
-            "id": "d7cda28b6970a519",
-            "type": "leaf",
-            "pinned": true,
             "state": {
               "type": "canvas",
               "state": {
-                "file": "Sources/Test-Edge-Labels.canvas",
+                "file": "Prototypes/Website-Analyzer.canvas",
                 "viewState": {
-                  "x": -23.5,
-                  "y": 269.75660569105696,
-                  "zoom": -0.29126492946734367,
+                  "x": 154,
+                  "y": 358.5,
+                  "zoom": -0.3396472612425776,
                   "snapToGrid": false
                 }
-              },
-              "pinned": true
+              }
+            }
+          },
+          {
+            "id": "922e1d844395e852",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Blueprints/Inventions/Mask-Generator.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "30aef54899c7a8a5",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Blueprints/Inventions/Encuesta-RPGs.md",
+                "mode": "source",
+                "source": false
+              }
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 5
       }
     ],
     "direction": "vertical"
@@ -118,7 +138,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 266.5
+    "width": 269.5
   },
   "right": {
     "id": "9f831f2f755e9a10",
@@ -134,7 +154,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Works/Test-Screenshots.canvas",
+                "file": "Blueprints/Inventions/Encuesta-RPGs.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -151,7 +171,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Works/Test-Screenshots.canvas",
+                "file": "Blueprints/Inventions/Encuesta-RPGs.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -174,7 +194,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Works/Test-Screenshots.canvas"
+                "file": "Blueprints/Inventions/Encuesta-RPGs.md"
               }
             }
           }
@@ -195,17 +215,17 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "b4a4bbd33919b533",
+  "active": "30aef54899c7a8a5",
   "lastOpenFiles": [
-    "Sources/Test-Screenshots.canvas",
-    "Sources/TODO.md",
-    "Works/Test-Screenshots.canvas",
-    "Sources/Test-Prompts.canvas",
-    "Products/edited-screenshot.png",
-    "Products/Webcam-Report.md",
-    "Works/Smoke-Test.canvas",
-    "Sources/Smoke-Test.canvas",
-    "Utilities/Zero-File.md",
-    "Utilities/Match-Template.md"
+    "Blueprints/Inventions/Mask-Generator.md",
+    "Prototypes/Website-Analyzer.canvas",
+    "Blueprints/Inventions/Website-Analyzer.canvas",
+    "Prototypes/Products/Temp-772c9f5d2aeac286.md",
+    "Prototypes/Products/Temp-Read-Website.md",
+    "Temp-772c9f5d2aeac286.md",
+    "TODO.md",
+    "Prototypes/Reports/Website-Report.md",
+    "Prototypes/Reports/Webcam-Report.md",
+    "Blueprints/QACZAR-Testing/Test-Edge-Labels.canvas"
   ]
 }

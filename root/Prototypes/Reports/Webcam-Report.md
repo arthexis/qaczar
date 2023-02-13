@@ -2,7 +2,7 @@
 # Test Webcam
 This document tests various webcam functions and generates a report.
 
-## [Webcam-Capture](Webcam-Capture)
+## [Webcam-Capture](Webcam-Capture.md)
 This script takes a snaptshot using the webcam.
 
 ```python
@@ -17,15 +17,15 @@ assert frame is not None and frame.any(), "Cam busy or invalid."
 cv2.imwrite(r"[TARGET]" or "untitled-frame.png", frame)
 ```
 
-![Products/last-web-capture.png](Products/last-web-capture.png)
+![last-web-capture.png](last-web-capture.png)
 
 ### Cropping
 We use smartcroppy to crop the image easily.
 `smartcroppy --width 1100 --height 800 Products/last-web-capture.png C:\Users\arthe\Desktop\qaczar\root\Products\cropped-img.png`
 
-![Products/cropped-img.png](Products/cropped-img.png)
+![cropped-img.png](cropped-img.png)
 
-## [Image-To-Text](Image-To-Text)
+## [Image-To-Text](Image-To-Text.md)
 Use OCR (Tesseract) to extract text from an image.
 
 ```python

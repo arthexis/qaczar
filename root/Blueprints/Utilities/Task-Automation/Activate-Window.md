@@ -5,5 +5,4 @@ from pywinauto.application import Application
 app = Application().connect(title_re=r".*[APP].*")
 win = app.top_window()
 win.set_focus()
-print(win.title)
 ```

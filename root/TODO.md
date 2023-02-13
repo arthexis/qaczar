@@ -1,6 +1,10 @@
-- Resolve sigils and try to capture additional context in script output.
-    - Test-Screenshots should work properly after that.
-- 
+- When the TARGET node is a blank node, the TARGET sigil should resolve to a temporary filename, then if that file was populated, its contents are copied to the node and the file is deleted.
+    - The file is created in the Protoytypes/Products directory.
+    - The name of the file is generated based on the name of the input nodes.
+    - If multiple files get generated, combine them into the block in order.
+- Accessing information from websites:
+    - Handling authentication.
+    - Specifying payloads, HTTP methods, query params, etc.
 
 ## IDEAS
 - Run upstream nodes in parallel.
@@ -12,6 +16,7 @@
 
 
 ## DONE
+- Resolve sigils and try to capture additional context in script output.
 - Remove duplicated outputs produced by markdown python code blocks. 
     - CAUSE: Nodes are being evaluated twice because there are two target nodes at the end and each triggers a separate run. Choose what to do:
         - **Option 1: Avoid re-running a node twice, ie by checking if it is already green.**

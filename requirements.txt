@@ -12,4 +12,6 @@ python-dotenv
 sigils
 embedit
 docopt
-plumbum
+beautifulsoup4
+requests
+matplotlib

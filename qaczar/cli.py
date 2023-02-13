@@ -44,8 +44,9 @@ def main():
     if args["--server"]: raise NotImplementedError("Server not implemented.")
 
     canvas_filename = Path(args["<canvas>"])
-    if canvas_filename.parent.name == "Works":
-        canvas_filename = canvas_filename.parent.parent / "Sources" / canvas_filename.name
+    if str(canvas_filename).startswith("Prototypes"):
+        print("Prototype already built.")
+        return
     canvas = Canvas(str(canvas_filename))
     try:
         results = canvas.build_prototype()

@@ -4,3 +4,5 @@ pywinauto
 numpy
 opencv-python
 matplotlib
+requests
+beautifulsoup4
