@@ -1,0 +1,11 @@
+{
+	"nodes":[
+		{"id":"ff6edf4c7d25816e","x":-452,"y":-290,"width":555,"height":400,"type":"link","url":"https://www.twitch.tv/directory/game/Software%20and%20Game%20Development"},
+		{"id":"120f8989edad5062","x":292,"y":-226,"width":400,"height":417,"type":"file","file":"Blueprints/Utilities/Task-Automation/Read-Website.md"},
+		{"id":"08669db8ef8a9aee","x":-22,"y":349,"width":486,"height":273,"type":"text","text":""}
+	],
+	"edges":[
+		{"id":"c361f946fc9ae047","fromNode":"ff6edf4c7d25816e","fromSide":"right","toNode":"120f8989edad5062","toSide":"left","label":"URL"},
+		{"id":"a1d03cc1e0de867b","fromNode":"120f8989edad5062","fromSide":"bottom","toNode":"08669db8ef8a9aee","toSide":"top"}
+	]
+}

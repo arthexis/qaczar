@@ -1,0 +1,16 @@
+{
+	"nodes":[
+		{"type":"file","file":"Blueprints/Utilities/Task-Automation/Webcam-Capture.md","id":"bef5378a768d5fb8","x":-820,"y":-260,"width":700,"height":440},
+		{"type":"file","file":"Prototypes/Products/last-doc-capture.png","id":"2a88c605dcd18d9c","x":131,"y":-180,"width":400,"height":225},
+		{"type":"file","file":"Blueprints/Utilities/Computer-Vision/Aruco-Detector.md","id":"493eaa81d2c4de43","x":148,"y":176,"width":692,"height":864},
+		{"type":"file","file":"Prototypes/Products/edited-screenshot.png","id":"7917424230736785","x":-1025,"y":337,"width":1001,"height":563},
+		{"type":"file","file":"Blueprints/Utilities/Computer-Vision/Aruco-Generator.md","id":"6303f40ce4233aaa","x":-870,"y":-900,"width":690,"height":480},
+		{"type":"file","file":"Prototypes/Products/aruco-marker.png","id":"d0790cb9752ba1c2","x":131,"y":-760,"width":399,"height":288}
+	],
+	"edges":[
+		{"id":"66d91e6d880d6436","fromNode":"bef5378a768d5fb8","fromSide":"right","toNode":"2a88c605dcd18d9c","toSide":"left"},
+		{"id":"2e48d43b37c6930e","fromNode":"2a88c605dcd18d9c","fromSide":"bottom","toNode":"493eaa81d2c4de43","toSide":"top"},
+		{"id":"48cf312a116ef4ca","fromNode":"493eaa81d2c4de43","fromSide":"left","toNode":"7917424230736785","toSide":"right"},
+		{"id":"738f686b2eb4e00c","fromNode":"6303f40ce4233aaa","fromSide":"right","toNode":"d0790cb9752ba1c2","toSide":"left"}
+	]
+}

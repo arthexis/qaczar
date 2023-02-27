@@ -53,6 +53,8 @@
 
 
 
+
+
 GitHub - psf/requests: A simple, yet elegant, HTTP library.
 
 
@@ -100,7 +102,9 @@ GitHub - psf/requests: A simple, yet elegant, HTTP library.
 
 
 
+
 Skip to content
+
 
 
 
@@ -573,8 +577,9 @@ No suggested jump to results
 
 
 
-psf
 
+        psf
+ 
 /
 
 requests
@@ -605,7 +610,7 @@ Fork
 
 
           Star
- 49k
+ 49.1k
   
 
 
@@ -640,7 +645,7 @@ License
 
 
 
-49k
+49.1k
           stars
  
 
@@ -687,7 +692,7 @@ Code
 
 
 Issues
-201
+203
 
 
 
@@ -695,7 +700,7 @@ Issues
 
 
 Pull requests
-65
+67
 
 
 
@@ -1099,6 +1104,7 @@ Git stats
 
 
 Files
+
 Permalink
 
 
@@ -1127,12 +1133,10 @@ Commit time
 .github
 
 
-
-ci: add minimum GitHub token permissions for workflows (#6236)
-
+ 
 
 
-January 11, 2023 15:06
+ 
 
 
 
@@ -1145,12 +1149,10 @@ January 11, 2023 15:06
 docs
 
 
-
-Replace git protocol URL in docs with an HTTPS URL
-
+ 
 
 
-November 21, 2022 14:01
+ 
 
 
 
@@ -1163,12 +1165,10 @@ November 21, 2022 14:01
 ext
 
 
-
-The Principle of Polarity
-
+ 
 
 
-September 23, 2019 14:17
+ 
 
 
 
@@ -1181,12 +1181,10 @@ September 23, 2019 14:17
 requests
 
 
-
-v2.28.2
-
+ 
 
 
-January 12, 2023 09:16
+ 
 
 
 
@@ -1199,12 +1197,10 @@ January 12, 2023 09:16
 tests
 
 
-
-Support missing SNIMissingWarning in tests (#6336)
-
+ 
 
 
-January 21, 2023 01:44
+ 
 
 
 
@@ -1217,12 +1213,10 @@ January 21, 2023 01:44
 .coveragerc
 
 
-
-Add automatic code formatting to Requests (#6095)
-
+ 
 
 
-April 29, 2022 13:16
+ 
 
 
 
@@ -1235,12 +1229,10 @@ April 29, 2022 13:16
 .git-blame-ignore-revs
 
 
-
-Add .git-blame-ignore-revs
-
+ 
 
 
-April 29, 2022 15:39
+ 
 
 
 
@@ -1253,12 +1245,10 @@ April 29, 2022 15:39
 .gitignore
 
 
-
-Switch LGPL'd chardet for MIT licensed charset_normalizer (#5797)
-
+ 
 
 
-July 6, 2021 18:55
+ 
 
 
 
@@ -1271,12 +1261,10 @@ July 6, 2021 18:55
 .pre-commit-config.yaml
 
 
-
-Update flake8 repo and version (#6317)
-
+ 
 
 
-December 25, 2022 21:24
+ 
 
 
 
@@ -1289,12 +1277,10 @@ December 25, 2022 21:24
 AUTHORS.rst
 
 
-
-Send only one Host header in chunked request
-
+ 
 
 
-September 2, 2021 00:53
+ 
 
 
 
@@ -1307,12 +1293,10 @@ September 2, 2021 00:53
 HISTORY.md
 
 
-
-v2.28.2
-
+ 
 
 
-January 12, 2023 09:16
+ 
 
 
 
@@ -1325,12 +1309,10 @@ January 12, 2023 09:16
 LICENSE
 
 
-
-Apply the Apache-2.0 license correctly
-
+ 
 
 
-August 27, 2020 09:44
+ 
 
 
 
@@ -1343,12 +1325,10 @@ August 27, 2020 09:44
 MANIFEST.in
 
 
-
-Remove Pipfile/Pipfile.lock
-
+ 
 
 
-November 11, 2020 10:29
+ 
 
 
 
@@ -1361,12 +1341,10 @@ November 11, 2020 10:29
 Makefile
 
 
-
-Remove Python 2 mention from tox (#6200)
-
+ 
 
 
-July 20, 2022 17:13
+ 
 
 
 
@@ -1379,12 +1357,10 @@ July 20, 2022 17:13
 NOTICE
 
 
-
-Apply the Apache-2.0 license correctly
-
+ 
 
 
-August 27, 2020 09:44
+ 
 
 
 
@@ -1397,12 +1373,10 @@ August 27, 2020 09:44
 README.md
 
 
-
-Farewell, sweet Concorde!
-
+ 
 
 
-March 25, 2022 10:50
+ 
 
 
 
@@ -1415,12 +1389,10 @@ March 25, 2022 10:50
 pyproject.toml
 
 
-
-Add automatic code formatting to Requests (#6095)
-
+ 
 
 
-April 29, 2022 13:16
+ 
 
 
 
@@ -1433,12 +1405,10 @@ April 29, 2022 13:16
 requirements-dev.txt
 
 
-
-Fix jinja
-
+ 
 
 
-February 18, 2022 18:33
+ 
 
 
 
@@ -1451,12 +1421,10 @@ February 18, 2022 18:33
 setup.cfg
 
 
-
-Allow charset normalizer >=2 and <4 (#6261)
-
+ 
 
 
-October 20, 2022 12:26
+ 
 
 
 
@@ -1469,12 +1437,10 @@ October 20, 2022 12:26
 setup.py
 
 
-
-fix: Remove '<4' from python_requires (#6333)
-
+ 
 
 
-January 18, 2023 22:37
+ 
 
 
 
@@ -1487,18 +1453,17 @@ January 18, 2023 22:37
 tox.ini
 
 
-
-Switch to Python 3.11 final on CI and add to tox file (#6325)
-
+ 
 
 
-January 6, 2023 11:32
+ 
 
 
 
 
     View code
  
+
 
 
 
@@ -1672,7 +1637,7 @@ Stars
 
 
 
-49k
+49.1k
     stars
 
 Watchers
@@ -1742,7 +1707,7 @@ https://www.python.org/psf/sponsorship/
 
 
 
-        Used by 1.8m
+        Used by 1.9m
  
 
 
@@ -1769,10 +1734,7 @@ https://www.python.org/psf/sponsorship/
 
 
 
-
-
-
-            + 1,818,532
+            + 1,919,489
           
 
 

@@ -1,0 +1,11 @@
+{
+	"nodes":[
+		{"id":"ff6edf4c7d25816e","x":-452,"y":-290,"width":555,"height":400,"type":"link","file":"","text":"","color":"4","url":"https://www.twitch.tv/directory/game/Software%20and%20Game%20Development"},
+		{"id":"120f8989edad5062","x":292,"y":-226,"width":400,"height":417,"type":"text","file":"Blueprints/Utilities/Task-Automation/Read-Website.md","text":"## [Read-Website](Read-Website)\nUse BS4 to read all text from a website.\n\n```python\nfrom bs4 import BeautifulSoup\nfrom urllib.request import urlopen\n\nwith urlopen(r\"https://www.twitch.tv/directory/game/Software%20and%20Game%20Development\") as f:\n    html = f.read().decode('utf-8')\nsoup = BeautifulSoup(html, 'html.parser')\nwith open(f\"C:\\Users\\arthe\\Desktop\\qaczar\\root\\Prototypes\\Products\\Temp-Read-Website.md\", 'w', encoding='utf-8') as f:\n    f.write(soup.get_text())\n```","color":"4","url":""},
+		{"id":"08669db8ef8a9aee","x":-22,"y":349,"width":486,"height":273,"type":"text","file":"","text":"### []()  \n\nTwitch\n","color":"4","url":""}
+	],
+	"edges":[
+		{"id":"c361f946fc9ae047","fromNode":"ff6edf4c7d25816e","toNode":"120f8989edad5062","fromSide":"right","toSide":"left","label":"URL"},
+		{"id":"a1d03cc1e0de867b","fromNode":"120f8989edad5062","toNode":"08669db8ef8a9aee","fromSide":"bottom","toSide":"top","label":""}
+	]
+}

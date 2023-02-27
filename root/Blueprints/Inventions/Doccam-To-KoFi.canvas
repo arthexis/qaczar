@@ -1,0 +1,9 @@
+{
+	"nodes":[
+		{"type":"file","file":"Blueprints/Utilities/Task-Automation/Doccam-Capture.md","id":"670a45c9a6e7df37","x":-720,"y":-440,"width":700,"height":460},
+		{"id":"91c2224f571136e3","x":140,"y":-340,"width":400,"height":225,"type":"file","file":"Prototypes/Products/last-doc-capture.png"}
+	],
+	"edges":[
+		{"id":"ec2f9df7ef48f192","fromNode":"670a45c9a6e7df37","fromSide":"right","toNode":"91c2224f571136e3","toSide":"left"}
+	]
+}

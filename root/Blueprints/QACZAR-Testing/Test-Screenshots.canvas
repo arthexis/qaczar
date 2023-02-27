@@ -1,13 +1,13 @@
 {
 	"nodes":[
-		{"id":"fd226816fbcbbbff","x":765,"y":-587,"width":773,"height":435,"type":"file","file":"Prototypes/Products/last-screenshot.png"},
-		{"id":"c243b9c2a65d05b1","x":213,"y":-684,"width":463,"height":400,"type":"file","file":"Blueprints/Utilities/Task-Automation/Screenshot.md"},
-		{"id":"efd491545f982bc2","x":245,"y":-147,"width":400,"height":122,"type":"file","file":"Blueprints/References/template-image.png"},
-		{"id":"7290cfe9109598de","x":890,"y":-9,"width":648,"height":784,"type":"file","file":"Blueprints/Utilities/Computer-Vision/Match-Template.md"},
-		{"id":"2117bc13a6892709","x":-539,"y":-481,"width":584,"height":395,"type":"file","file":"Blueprints/Utilities/Task-Automation/Activate-Window.md"},
-		{"id":"e2e1143accb95ba6","x":-454,"y":-665,"width":414,"height":60,"type":"text","text":"Opera"},
-		{"id":"637a2da069b4f044","x":-411,"y":98,"width":584,"height":108,"type":"text","text":"[X1], [X2]"},
-		{"id":"b94eefd59eeb9f70","x":-666,"y":303,"width":839,"height":472,"type":"file","file":"Prototypes/Products/edited-screenshot.png"}
+		{"type":"file","file":"Prototypes/Products/last-screenshot.png","id":"fd226816fbcbbbff","x":765,"y":-587,"width":773,"height":435},
+		{"type":"file","file":"Blueprints/Utilities/Task-Automation/Screenshot.md","id":"c243b9c2a65d05b1","x":213,"y":-684,"width":463,"height":400},
+		{"type":"file","file":"Blueprints/References/template-image.png","id":"efd491545f982bc2","x":245,"y":-147,"width":400,"height":122},
+		{"type":"file","file":"Blueprints/Utilities/Computer-Vision/Match-Template.md","id":"7290cfe9109598de","x":890,"y":-9,"width":648,"height":784},
+		{"type":"file","file":"Blueprints/Utilities/Task-Automation/Activate-Window.md","id":"2117bc13a6892709","x":-539,"y":-481,"width":584,"height":395},
+		{"type":"text","text":"Opera","id":"e2e1143accb95ba6","x":-454,"y":-665,"width":414,"height":60},
+		{"type":"text","text":"[X1], [X2]","id":"637a2da069b4f044","x":-411,"y":98,"width":584,"height":108},
+		{"type":"file","file":"Prototypes/Products/edited-screenshot.png","id":"b94eefd59eeb9f70","x":-666,"y":303,"width":629,"height":354}
 	],
 	"edges":[
 		{"id":"c3d5da07b0941ef5","fromNode":"e2e1143accb95ba6","fromSide":"bottom","toNode":"2117bc13a6892709","toSide":"top","label":"APP"},

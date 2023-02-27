@@ -4,91 +4,25 @@
     "type": "split",
     "children": [
       {
-        "id": "e5808be48c032f1d",
+        "id": "d6c97bfb521fd579",
         "type": "tabs",
         "children": [
           {
-            "id": "30b15fa6b05727bb",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Prototypes/Reports/Test-Report.md",
-                "mode": "source",
-                "source": false
-              }
-            }
-          },
-          {
-            "id": "b4a4bbd33919b533",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Blueprints/Utilities/Task-Automation/Activate-Window.md",
-                "mode": "source",
-                "source": false
-              }
-            }
-          },
-          {
-            "id": "a31096792fe76d7d",
+            "id": "853bf69632bb83a5",
             "type": "leaf",
             "state": {
               "type": "canvas",
               "state": {
-                "file": "Blueprints/Inventions/Website-Analyzer.canvas",
+                "file": "Prototypes/Doccam-To-KoFi.canvas",
                 "viewState": {
-                  "x": 0,
-                  "y": -116.25,
-                  "zoom": 0,
-                  "snapToGrid": false
+                  "x": -90,
+                  "y": -210,
+                  "zoom": 0
                 }
-              }
-            }
-          },
-          {
-            "id": "ba5147aa227b5133",
-            "type": "leaf",
-            "state": {
-              "type": "canvas",
-              "state": {
-                "file": "Prototypes/Website-Analyzer.canvas",
-                "viewState": {
-                  "x": 154,
-                  "y": 358.5,
-                  "zoom": -0.3396472612425776,
-                  "snapToGrid": false
-                }
-              }
-            }
-          },
-          {
-            "id": "922e1d844395e852",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Blueprints/Inventions/Mask-Generator.md",
-                "mode": "source",
-                "source": false
-              }
-            }
-          },
-          {
-            "id": "30aef54899c7a8a5",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Blueprints/Inventions/Encuesta-RPGs.md",
-                "mode": "source",
-                "source": false
               }
             }
           }
-        ],
-        "currentTab": 5
+        ]
       }
     ],
     "direction": "vertical"
@@ -138,7 +72,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 269.5
+    "width": 288.5
   },
   "right": {
     "id": "9f831f2f755e9a10",
@@ -154,7 +88,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Blueprints/Inventions/Encuesta-RPGs.md",
+                "file": "Prototypes/Doccam-To-KoFi.canvas",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -171,7 +105,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Blueprints/Inventions/Encuesta-RPGs.md",
+                "file": "Prototypes/Doccam-To-KoFi.canvas",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -194,7 +128,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Blueprints/Inventions/Encuesta-RPGs.md"
+                "file": "Prototypes/Doccam-To-KoFi.canvas"
               }
             }
           }
@@ -215,17 +149,38 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "30aef54899c7a8a5",
+  "active": "853bf69632bb83a5",
   "lastOpenFiles": [
+    "Prototypes/Test-Screenshots.canvas",
+    "Prototypes/Doccam-To-KoFi.canvas",
+    "Blueprints/Inventions/Doccam-To-KoFi.canvas",
+    "Blueprints/Inventions/Twitch-Analyzer.canvas",
+    "Blueprints/Inventions/Aruco-Labeler.canvas",
     "Blueprints/Inventions/Mask-Generator.md",
-    "Prototypes/Website-Analyzer.canvas",
+    "Blueprints/Inventions/Encuesta-RPGs.md",
+    "Blueprints/QACZAR-Testing/Test-Webcam.canvas",
+    "Blueprints/QACZAR-Testing/Test-Screenshots.canvas",
+    "Blueprints/Utilities/Computer-Vision/Image-To-Text.md",
+    "Blueprints/Utilities/Computer-Vision/Aruco-Detector.md",
     "Blueprints/Inventions/Website-Analyzer.canvas",
-    "Prototypes/Products/Temp-772c9f5d2aeac286.md",
+    "Prototypes/Untitled.canvas",
+    "Prototypes/Twitch-Analyzer.canvas",
+    "Prototypes/Website-Analyzer.canvas",
+    "Blueprints/Utilities/Task-Automation/Doccam-Capture.md",
+    "Blueprints/Utilities/Task-Automation/Activate-Window.md",
+    "Blueprints/Utilities/Python-Development/PyPI-Upload.md",
+    "Blueprints/Utilities/Task-Automation/Webcam-Capture.md",
     "Prototypes/Products/Temp-Read-Website.md",
-    "Temp-772c9f5d2aeac286.md",
-    "TODO.md",
-    "Prototypes/Reports/Website-Report.md",
     "Prototypes/Reports/Webcam-Report.md",
-    "Blueprints/QACZAR-Testing/Test-Edge-Labels.canvas"
+    "Prototypes/Reports/Test-Report.md",
+    "Prototypes/Products/last-web-capture.png",
+    "Prototypes/Products/aruco-marker.png",
+    "Blueprints/Utilities/Computer-Vision/Aruco-Generator.md",
+    "Prototypes/Reports/Website-Report.md",
+    "Prototypes/Products/last-doc-capture.png",
+    "Prototypes/Products/last-screenshot.png",
+    "Blueprints/Untitled",
+    "Blueprints/Utilities/Task-Automation/Read-Website.md",
+    "Blueprints/Utilities/Task-Automation/Screenshot.md"
   ]
 }

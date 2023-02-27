@@ -1,12 +1,12 @@
 {
 	"nodes":[
-		{"id":"164a7588077b8b9d","x":-615,"y":-794,"width":573,"height":476,"type":"file","file":"Blueprints/Utilities/Task-Automation/Webcam-Capture.md"},
-		{"id":"928120a19df79c0f","x":72,"y":-839,"width":503,"height":283,"type":"file","file":"Prototypes/Products/last-web-capture.png"},
-		{"id":"716592e962ef5934","x":673,"y":-794,"width":573,"height":238,"type":"text","text":"### Cropping\nWe use smartcroppy to crop the image easily.\n`smartcroppy --width 1100 --height 800 [INPUT] [TARGET]`"},
-		{"id":"7edc0ac863e42106","x":72,"y":-384,"width":565,"height":490,"type":"file","file":"Blueprints/Utilities/Computer-Vision/Image-To-Text.md"},
-		{"id":"2e739c8bff230bed","x":742,"y":-384,"width":573,"height":413,"type":"file","file":"Prototypes/Products/cropped-img.png"},
-		{"id":"5f0b748fba14949d","x":-755,"y":-177,"width":713,"height":757,"type":"file","file":"Prototypes/Reports/Webcam-Report.md"},
-		{"id":"0f497801e85c56df","x":-696,"y":-987,"width":596,"height":103,"type":"text","text":"# Test Webcam\nThis document tests various webcam functions and generates a report."}
+		{"type":"file","file":"Blueprints/Utilities/Task-Automation/Webcam-Capture.md","id":"164a7588077b8b9d","x":-615,"y":-794,"width":573,"height":476},
+		{"type":"file","file":"Prototypes/Products/last-web-capture.png","id":"928120a19df79c0f","x":72,"y":-839,"width":503,"height":283},
+		{"type":"text","text":"### Cropping\nWe use smartcroppy to crop the image easily.\n`smartcroppy --width 1100 --height 800 [INPUT] [TARGET]`","id":"716592e962ef5934","x":673,"y":-794,"width":573,"height":238},
+		{"type":"file","file":"Blueprints/Utilities/Computer-Vision/Image-To-Text.md","id":"7edc0ac863e42106","x":72,"y":-384,"width":565,"height":490},
+		{"type":"file","file":"Prototypes/Products/cropped-img.png","id":"2e739c8bff230bed","x":742,"y":-384,"width":573,"height":413},
+		{"type":"file","file":"Prototypes/Reports/Webcam-Report.md","id":"5f0b748fba14949d","x":-755,"y":-177,"width":713,"height":757},
+		{"type":"text","text":"# Test Webcam\nThis document tests various webcam functions and generates a report.","id":"0f497801e85c56df","x":-696,"y":-987,"width":596,"height":103}
 	],
 	"edges":[
 		{"id":"df7289e37e42758a","fromNode":"164a7588077b8b9d","fromSide":"right","toNode":"928120a19df79c0f","toSide":"left"},

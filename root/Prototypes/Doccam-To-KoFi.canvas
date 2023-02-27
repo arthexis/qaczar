@@ -1,0 +1,9 @@
+{
+	"nodes":[
+		{"id":"670a45c9a6e7df37","x":-720,"y":-440,"width":700,"height":460,"type":"text","file":"Blueprints/Utilities/Task-Automation/Doccam-Capture.md","text":"## [Doccam-Capture](Doccam-Capture)\nThis script takes a snaptshot using the webcam.\n\n```python\nimport cv2, time\ncap = cv2.VideoCapture(int(\"\" or 0))\ncap.set(cv2.CAP_PROP_FRAME_WIDTH, int(\"\" or 1920))\ncap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(\"\" or 1080))\ntime.sleep(1)\nret, frame = cap.read()\ncap.release()\nassert frame is not None and frame.any(), \"Cam busy or invalid.\"\ncv2.imwrite(r\"Prototypes/Products/last-doc-capture.png\", frame)\n```","color":"4","url":""},
+		{"id":"91c2224f571136e3","x":140,"y":-340,"width":400,"height":225,"type":"file","file":"Prototypes/Products/last-doc-capture.png","text":"","color":"4","url":""}
+	],
+	"edges":[
+		{"id":"ec2f9df7ef48f192","fromNode":"670a45c9a6e7df37","toNode":"91c2224f571136e3","fromSide":"right","toSide":"left","label":""}
+	]
+}
