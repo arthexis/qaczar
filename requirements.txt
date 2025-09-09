@@ -15,3 +15,5 @@ docopt
 beautifulsoup4
 requests
 matplotlib
+fastapi
+uvicorn

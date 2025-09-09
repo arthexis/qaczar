@@ -1,37 +1,44 @@
-# Description: Server for qaczar
+"""Minimal FastAPI server used to preview canvas diagrams in the browser."""
+
+from pathlib import Path
 
 import fastapi
 import uvicorn
-import qaczar
+from fastapi.staticfiles import StaticFiles
 
 
 app = fastapi.FastAPI()
 
-@app.get("/canvas/{canvas}")
-def get_canvas(canvas: str):
-    if not canvas.endswith(".canvas"):
-        canvas += ".canvas"
-    # The idea is that final output of the canvas is returned
-    # If it is already up to date, nothing is done
-    # If it is out of date, the entire workflow is executed
-    filenames = qaczar.execute_canvas(canvas)
-    if len(filenames) == 1:
-        return fastapi.responses.FileResponse(filenames[0])
-    else:
-        return filenames
-    
+# Directories for canvases and the simple web app
+BASE_DIR = Path(__file__).resolve().parent.parent / "root"
+WEB_DIR = Path(__file__).resolve().parent / "web"
 
-# Return static files
-@app.get("/file/{filename}")
-def get_static(filename: str):
-    return fastapi.responses.FileResponse(filename)
 
-    
+@app.get("/")
+def index() -> fastapi.responses.FileResponse:
+    """Serve the viewer HTML page."""
+    return fastapi.responses.FileResponse(WEB_DIR / "index.html")
+
+
+app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
+
+
 @app.get("/canvas")
-def get_canvases():
-    return qaczar.list_canvas_files()
+def list_canvases() -> list[str]:
+    """Return all available ``.canvas`` files under the root directory."""
+    return [str(p.relative_to(BASE_DIR)) for p in BASE_DIR.rglob("*.canvas")]
 
 
-def start_local_server():
+@app.get("/canvas/{canvas:path}")
+def get_canvas(canvas: str) -> fastapi.responses.FileResponse:
+    """Return the raw ``.canvas`` file so the frontend can render it."""
+    path = (BASE_DIR / canvas).with_suffix(".canvas")
+    if not path.exists():
+        raise fastapi.HTTPException(status_code=404, detail="Canvas not found")
+    return fastapi.responses.FileResponse(path)
+
+
+def start_local_server() -> None:
+    """Start a development server on http://localhost:8000."""
     uvicorn.run(app, host="localhost", port=8000)
 
